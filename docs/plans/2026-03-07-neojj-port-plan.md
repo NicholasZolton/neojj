@@ -29,30 +29,30 @@ Hard fork of Neogit to create a Magit-style Neovim UI for jj (Jujutsu VCS).
 Replace git internals with jj equivalents.
 
 ### CLI Builder (`lib/jj/cli.lua`)
-- [ ] Create jj fluent CLI builder (replacing git CLI builder)
-- [ ] Commands: `status`, `log`, `diff`, `show`, `describe`, `new`, `commit`, `squash`, `split`, `bookmark`, `git push`, `git fetch`, `rebase`, `abandon`, `restore`, `resolve`, `undo`, `op log`
-- [ ] Use `--no-pager`, `--color=never` for programmatic use
-- [ ] Use `-T 'json(self)'` template for machine-readable output where possible
+- [x] Create jj fluent CLI builder (replacing git CLI builder)
+- [x] Commands: `status`, `log`, `diff`, `show`, `describe`, `new`, `commit`, `squash`, `split`, `bookmark`, `git push`, `git fetch`, `rebase`, `abandon`, `restore`, `resolve`, `undo`, `op log`
+- [x] Use `--no-pager`, `--color=never` for programmatic use
+- [x] Use `-T 'json(self)'` template for machine-readable output where possible
 
 ### Repository State (`lib/jj/repository.lua`)
-- [ ] Define `NeoJJRepoState`:
+- [x] Define `NeoJJRepoState`:
   - `head`: current change (change_id, commit_id, description, empty, conflict)
   - `parent`: parent change (change_id, commit_id, description, bookmarks[])
   - `files`: modified files in working-copy change (single flat list, no staged/unstaged)
   - `conflicts`: files with first-class conflict status
   - `recent`: recent changes (change_id primary, commit_id secondary)
   - `bookmarks`: local and remote bookmarks
-- [ ] Populate state from `jj status`, `jj log -T 'json(self)'`, `jj bookmark list`
+- [x] Populate state from `jj status`, `jj log -T 'json(self)'`, `jj bookmark list`
 
 ### Status Parsing (`lib/jj/status.lua`)
-- [ ] Parse `jj status` output for modified/added/deleted files
-- [ ] Parse `jj diff --summary` for file-level change info
-- [ ] No index/staging concepts
+- [x] Parse `jj status` output for modified/added/deleted files
+- [x] Parse `jj diff --summary` for file-level change info
+- [x] No index/staging concepts
 
 ### Log Parsing (`lib/jj/log.lua`)
-- [ ] Parse `jj log` with JSON templates
-- [ ] Change ID as primary identifier, commit ID secondary
-- [ ] Track: change_id, commit_id, description, author, bookmarks, empty, conflict, immutable
+- [x] Parse `jj log` with JSON templates
+- [x] Change ID as primary identifier, commit ID secondary
+- [x] Track: change_id, commit_id, description, author, bookmarks, empty, conflict, immutable
 
 ---
 
