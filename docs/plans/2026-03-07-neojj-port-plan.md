@@ -175,10 +175,10 @@ Replace git internals with jj equivalents.
 
 ## Phase 7: Polish
 
-- [ ] Clean up config.lua (remove git-specific options, add jj-specific ones)
-- [ ] Update all highlights and signs
+- [x] Clean up config.lua (remove git-specific options, add jj-specific ones)
+- [x] Update all highlights and signs
 - [ ] Write documentation (doc/ help files)
-- [ ] Remove dead code (git-only modules: stash, bisect, cherry_pick, index, worktree, etc.)
+- [x] Remove dead code (git-only modules: stash, bisect, cherry_pick, index, worktree, etc.)
 - [ ] Update README
 
 ---
