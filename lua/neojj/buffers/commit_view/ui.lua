@@ -21,40 +21,56 @@ function M.OverviewFile(file)
   }
 end
 
-local function commit_header_arg(info)
-  if info.oid ~= info.commit_arg then
-    return row { text(info.commit_arg .. " "), text.highlight("NeoJJObjectId")(info.oid) }
-  else
-    return row {}
-  end
-end
-
 function M.CommitHeader(info)
-  return col {
-    text.line_hl("NeoJJCommitViewHeader")("Commit " .. info.commit_arg),
-    commit_header_arg(info),
-    row {
-      text.highlight("NeoJJSubtleText")("Author:     "),
-      text((info.author_name or "") .. " <" .. (info.author_email or "") .. ">"),
-    },
-    row { text.highlight("NeoJJSubtleText")("AuthorDate: "), text(info.author_date) },
-    row {
-      text.highlight("NeoJJSubtleText")("Committer:  "),
-      text((info.committer_name or "") .. " <" .. (info.committer_email or "") .. ">"),
-    },
-    row { text.highlight("NeoJJSubtleText")("CommitDate: "), text(info.committer_date) },
+  local header_items = {
+    text.line_hl("NeoJJCommitViewHeader")("Change " .. (info.change_id or info.commit_arg or "")),
   }
-end
 
-function M.SignatureBlock(signature_block)
-  if vim.tbl_isempty(signature_block or {}) then
-    return text("")
+  -- Show commit ID secondary
+  if info.commit_id and info.commit_id ~= "" then
+    table.insert(header_items, row {
+      text.highlight("NeoJJSubtleText")("Commit ID:  "),
+      text.highlight("NeoJJObjectId")(info.commit_id),
+    })
   end
 
-  return col(util.merge(map(signature_block, text), { text("") }), { tag = "Signature" })
+  -- Author info
+  table.insert(header_items, row {
+    text.highlight("NeoJJSubtleText")("Author:     "),
+    text((info.author_name or "") .. " <" .. (info.author_email or "") .. ">"),
+  })
+  table.insert(header_items, row {
+    text.highlight("NeoJJSubtleText")("Date:       "),
+    text(info.author_date or ""),
+  })
+
+  -- Bookmarks
+  if info.bookmarks and #info.bookmarks > 0 then
+    table.insert(header_items, row {
+      text.highlight("NeoJJSubtleText")("Bookmarks:  "),
+      text.highlight("NeoJJBranch")(table.concat(info.bookmarks, ", ")),
+    })
+  end
+
+  -- Status markers
+  local status_parts = {}
+  if info.conflict then
+    table.insert(status_parts, "conflict")
+  end
+  if info.empty then
+    table.insert(status_parts, "empty")
+  end
+  if #status_parts > 0 then
+    table.insert(header_items, row {
+      text.highlight("NeoJJSubtleText")("Status:     "),
+      text.highlight("NeoJJDiffDeletions")(table.concat(status_parts, ", ")),
+    })
+  end
+
+  return col(header_items)
 end
 
-function M.CommitView(info, overview, signature_block, item_filter)
+function M.CommitView(info, overview, item_filter)
   if item_filter then
     overview.files = util.filter_map(overview.files, function(file)
       if vim.tbl_contains(item_filter, vim.trim(file.path)) then
@@ -74,7 +90,6 @@ function M.CommitView(info, overview, signature_block, item_filter)
     text(""),
     col(map(info.description, text), { highlight = "NeoJJCommitViewDescription", tag = "Description" }),
     text(""),
-    M.SignatureBlock(signature_block),
     text(overview.summary),
     col(map(overview.files, M.OverviewFile), { tag = "OverviewFileList" }),
     text(""),

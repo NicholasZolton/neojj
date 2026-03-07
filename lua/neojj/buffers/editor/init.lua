@@ -2,7 +2,7 @@ local Buffer = require("neojj.lib.buffer")
 local config = require("neojj.config")
 local input = require("neojj.lib.input")
 local util = require("neojj.lib.util")
-local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
 local logger = require("neojj.logger")
 local process = require("neojj.process")
 
@@ -34,6 +34,22 @@ function M.new(filename, on_unload, show_diff)
   return instance
 end
 
+---Get a previous change description for message cycling
+---@param index number 0-based index into recent changes
+---@return string[]
+local function log_message(index)
+  local ok, repo = pcall(function() return jj.repo end)
+  if ok and repo and repo.state and repo.state.recent then
+    local items = repo.state.recent.items
+    -- index is 0-based from the caller perspective, offset by 1 for past entries
+    local entry = items[index + 1]
+    if entry and entry.description and entry.description ~= "" then
+      return vim.split(entry.description, "\n")
+    end
+  end
+  return { "" }
+end
+
 function M:open(kind)
   assert(kind, "Editor must specify a kind")
   logger.debug("[EDITOR] Opening editor as " .. kind)
@@ -46,12 +62,12 @@ function M:open(kind)
   local message_buffer = { { "" } }
   local amend_header, footer
 
-  local function log_message(index)
-    return git.log.log_message(index - 2)
+  local function get_log_message(index)
+    return log_message(index - 2)
   end
 
   local function commit_message()
-    return message_buffer[message_index] or log_message(message_index)
+    return message_buffer[message_index] or get_log_message(message_index)
   end
 
   local function current_message(buffer)
@@ -63,7 +79,7 @@ function M:open(kind)
 
   self.buffer = Buffer.create {
     name = self.filename,
-    filetype = "gitcommit",
+    filetype = "jjcommit",
     load = true,
     spell_check = config.values.commit_editor.spell_check,
     buftype = "",
@@ -110,8 +126,9 @@ function M:open(kind)
         return pad(mapping[name] and mapping[name][1] or "<NOP>", padding)
       end
 
-      local comment_char = git.config.get("core.commentChar"):read() or "#"
-      logger.debug("[EDITOR] Using comment character '" .. comment_char .. "'")
+      -- jj uses JJ: as comment prefix in commit messages
+      local comment_char = "JJ:"
+      logger.debug("[EDITOR] Using comment prefix '" .. comment_char .. "'")
 
       -- stylua: ignore
       local help_lines = {
@@ -131,15 +148,16 @@ function M:open(kind)
         end
       end)
 
-      local line = vim.fn.search(string.format("^%s$", comment_char)) - 1
-      buffer:set_lines(line, line, false, help_lines)
+      local line = vim.fn.search(string.format("^%s$", vim.pesc(comment_char))) - 1
+      if line >= 0 then
+        buffer:set_lines(line, line, false, help_lines)
+      end
       buffer:write()
       buffer:move_cursor(1)
 
       amend_header = buffer:get_lines(0, 2)
       if amend_header[1]:match("^amend! %x+$") then
         logger.debug("[EDITOR] Found 'amend!' header")
-
         buffer:set_lines(0, 2, false, {}) -- remove captured header from buffer
       else
         amend_header = nil
@@ -156,17 +174,19 @@ function M:open(kind)
         vim.cmd(":startinsert")
       end
 
-      if git.branch.current() then
-        vim.fn.matchadd("NeoJJBranch", git.branch.current(), 100)
-      end
-
-      if git.branch.upstream() then
-        vim.fn.matchadd("NeoJJRemote", git.branch.upstream(), 100)
+      -- Highlight current bookmarks if available
+      local ok, repo = pcall(function() return jj.repo end)
+      if ok and repo and repo.state then
+        for _, bm in ipairs(repo.state.head.bookmarks or {}) do
+          if bm and bm ~= "" then
+            vim.fn.matchadd("NeoJJBranch", vim.pesc(bm), 100)
+          end
+        end
       end
 
       if self.show_diff and kind ~= "floating" then
-        logger.debug("[EDITOR] Opening Diffview for staged changes")
-        self.diff_view = DiffViewBuffer:new("Staged Changes"):open()
+        logger.debug("[EDITOR] Opening Diffview for current changes")
+        self.diff_view = DiffViewBuffer:new("Current Changes"):open()
       end
     end,
     mappings = {
@@ -262,7 +282,7 @@ function M:open(kind)
         [mapping["ResetMessage"]] = function(buffer)
           logger.debug("[EDITOR] Action N: ResetMessage")
           local message = current_message(buffer)
-          buffer:set_lines(0, #message, false, log_message(message_index))
+          buffer:set_lines(0, #message, false, get_log_message(message_index))
           buffer:move_cursor(1)
         end,
       },

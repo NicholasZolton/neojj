@@ -6,26 +6,24 @@ local status_maps = require("neojj.config").get_reversed_status_maps()
 local CommitViewBuffer = require("neojj.buffers.commit_view")
 local util = require("neojj.lib.util")
 local a = require("plenary.async")
-local notification = require("neojj.lib.notification")
-local git = require("neojj.lib.git")
 
 ---@class LogViewBuffer
----@field commits CommitLogEntry[]
+---@field commits NeoJJChangeLogEntry[]
 ---@field remotes string[]
 ---@field internal_args table
 ---@field files string[]
 ---@field buffer Buffer
 ---@field header string
----@field fetch_func fun(offset: number): CommitLogEntry[]
+---@field fetch_func fun(offset: number): NeoJJChangeLogEntry[]
 ---@field refresh_lock Semaphore
 local M = {}
 M.__index = M
 
 ---Opens a popup for selecting a commit
----@param commits CommitLogEntry[]|nil
+---@param commits NeoJJChangeLogEntry[]|nil
 ---@param internal_args table|nil
 ---@param files string[]|nil list of files to filter by
----@param fetch_func fun(offset: number): CommitLogEntry[]
+---@param fetch_func fun(offset: number): NeoJJChangeLogEntry[]
 ---@param header string
 ---@param remotes string[]
 ---@return LogViewBuffer
@@ -48,7 +46,7 @@ end
 
 function M:commit_count()
   return #util.filter_map(self.commits, function(commit)
-    if commit.oid then
+    if commit.change_id then
       return 1
     end
   end)
@@ -87,19 +85,10 @@ function M:open()
     status_column = not config.values.disable_signs and "" or nil,
     mappings = {
       v = {
-        [popups.mapping_for("CherryPickPopup")] = popups.open("cherry_pick", function(p)
-          p { commits = self.buffer.ui:get_commits_in_selection() }
-        end),
-        [popups.mapping_for("BranchPopup")] = popups.open("branch", function(p)
-          p { commits = self.buffer.ui:get_commits_in_selection() }
-        end),
         [popups.mapping_for("CommitPopup")] = popups.open("commit", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [popups.mapping_for("FetchPopup")] = popups.open("fetch"),
-        [popups.mapping_for("MergePopup")] = popups.open("merge", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
         [popups.mapping_for("PushPopup")] = popups.open("push", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
@@ -107,19 +96,6 @@ function M:open()
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [popups.mapping_for("RemotePopup")] = popups.open("remote"),
-        [popups.mapping_for("RevertPopup")] = popups.open("revert", function(p)
-          p { commits = self.buffer.ui:get_commits_in_selection() }
-        end),
-        [popups.mapping_for("ResetPopup")] = popups.open("reset", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
-        [popups.mapping_for("TagPopup")] = popups.open("tag", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
-        [popups.mapping_for("PullPopup")] = popups.open("pull"),
-        [popups.mapping_for("BisectPopup")] = popups.open("bisect", function(p)
-          p { commits = self.buffer.ui:get_commits_in_selection() }
-        end),
         [popups.mapping_for("DiffPopup")] = popups.open("diff", function(p)
           local items = self.buffer.ui:get_ordered_commits_in_selection()
           p {
@@ -127,43 +103,21 @@ function M:open()
             item = { name = items },
           }
         end),
+        [popups.mapping_for("BookmarkPopup")] = popups.open("bookmark", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
+        [popups.mapping_for("SquashPopup")] = popups.open("squash", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
+        [popups.mapping_for("ChangePopup")] = popups.open("change", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
       },
       n = {
-        ["o"] = function()
-          if not vim.ui.open then
-            notification.warn("Requires Neovim >= 0.10")
-            return
-          end
-
-          local oid = self.buffer.ui:get_commit_under_cursor()
-          if not oid then
-            return
-          end
-
-          local uri = git.remote.commit_url(oid)
-          if uri then
-            notification.info(("Opening %q in your browser."):format(uri))
-            vim.ui.open(uri)
-          else
-            notification.warn("Couldn't determine commit URL to open")
-          end
-        end,
-        [popups.mapping_for("BisectPopup")] = popups.open("bisect", function(p)
-          p { commits = { self.buffer.ui:get_commit_under_cursor() } }
-        end),
-        [popups.mapping_for("CherryPickPopup")] = popups.open("cherry_pick", function(p)
-          p { commits = { self.buffer.ui:get_commit_under_cursor() } }
-        end),
-        [popups.mapping_for("BranchPopup")] = popups.open("branch", function(p)
-          p { commits = { self.buffer.ui:get_commit_under_cursor() } }
-        end),
         [popups.mapping_for("CommitPopup")] = popups.open("commit", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [popups.mapping_for("FetchPopup")] = popups.open("fetch"),
-        [popups.mapping_for("MergePopup")] = popups.open("merge", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
         [popups.mapping_for("PushPopup")] = popups.open("push", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
@@ -171,15 +125,6 @@ function M:open()
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [popups.mapping_for("RemotePopup")] = popups.open("remote"),
-        [popups.mapping_for("RevertPopup")] = popups.open("revert", function(p)
-          p { commits = { self.buffer.ui:get_commit_under_cursor() } }
-        end),
-        [popups.mapping_for("ResetPopup")] = popups.open("reset", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
-        [popups.mapping_for("TagPopup")] = popups.open("tag", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
         [popups.mapping_for("DiffPopup")] = popups.open("diff", function(p)
           local item = self.buffer.ui:get_commit_under_cursor()
           p {
@@ -187,7 +132,16 @@ function M:open()
             item = { name = item },
           }
         end),
-        [popups.mapping_for("PullPopup")] = popups.open("pull"),
+        [popups.mapping_for("LogPopup")] = popups.open("log"),
+        [popups.mapping_for("BookmarkPopup")] = popups.open("bookmark", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
+        [popups.mapping_for("SquashPopup")] = popups.open("squash", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
+        [popups.mapping_for("ChangePopup")] = popups.open("change", function(p)
+          p { commit = self.buffer.ui:get_commit_under_cursor() }
+        end),
         [status_maps["YankSelected"]] = function()
           local yank = self.buffer.ui:get_commit_under_cursor()
           if yank then

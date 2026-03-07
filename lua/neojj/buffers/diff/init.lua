@@ -1,6 +1,6 @@
 local Buffer = require("neojj.lib.buffer")
 local ui = require("neojj.buffers.diff.ui")
-local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
 local config = require("neojj.config")
 
 local api = vim.api
@@ -20,13 +20,43 @@ M.__index = M
 ---@param header string
 ---@return DiffBuffer
 function M:new(header)
+  -- Get diff stat for the current working copy change
+  local stat_lines = jj.diff.stat()
+  local stats = {
+    summary = "",
+    files = {},
+  }
+  if #stat_lines > 0 then
+    stats.summary = stat_lines[#stat_lines] or ""
+    for i = 1, #stat_lines - 1 do
+      local file = {}
+      if stat_lines[i] ~= "" then
+        file.path, file.changes, file.insertions, file.deletions =
+          stat_lines[i]:match(" (.*)%s+|%s+(%d+) ?(%+*)(%-*)")
+        if not file.path then
+          file.path, file.changes = stat_lines[i]:match(" (.*)%s+|%s+(Bin .*)$")
+        end
+        if file.path then
+          table.insert(stats.files, file)
+        end
+      end
+    end
+  end
+
+  -- Get diffs for all changed files (no staging concept in jj)
+  local diffs = {}
+  local ok, repo = pcall(function() return jj.repo end)
+  if ok and repo and repo.state and repo.state.files then
+    diffs = vim.tbl_map(function(item)
+      return item.diff
+    end, repo.state.files.items)
+  end
+
   local instance = {
     buffer = nil,
     header = header,
-    stats = git.diff.staged_stats(),
-    diffs = vim.tbl_map(function(item)
-      return item.diff
-    end, git.repo.state.staged.items),
+    stats = stats,
+    diffs = diffs,
   }
 
   setmetatable(instance, self)

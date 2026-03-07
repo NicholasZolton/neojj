@@ -10,7 +10,7 @@ local row = Ui.row
 
 local M = {}
 
----@param commits CommitLogEntry[]
+---@param commits NeoJJChangeLogEntry[]
 ---@param remotes string[]
 ---@param args table
 ---@return table
@@ -18,10 +18,14 @@ function M.View(commits, remotes, args)
   args.details = true
 
   local graph = util.filter_map(commits, function(commit)
-    if commit.oid then
+    if commit.change_id then
       return Commit(commit, remotes, args)
     elseif args.graph then
-      return Graph(commit, #commits[1].abbreviated_commit + 1)
+      local first_commit = commits[1]
+      local padding = first_commit and first_commit.change_id
+        and #string.sub(first_commit.change_id, 1, 12) + 1
+        or 13
+      return Graph(commit, padding)
     end
   end)
 

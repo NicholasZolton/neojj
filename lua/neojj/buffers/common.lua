@@ -1,8 +1,7 @@
 local Ui = require("neojj.lib.ui")
 local Component = require("neojj.lib.ui.component")
 local util = require("neojj.lib.util")
-local config = require("neojj.config")
-local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
 
 local text = Ui.text
 local col = Ui.col
@@ -62,8 +61,14 @@ local HunkLine = Component.new(function(line)
   local first_char = string.sub(line, 1, 1)
   local first_chars = string.sub(line, 1, 2)
 
-  -- TODO: Should use file mode, not merge head
-  if git.repo.state.merge.head then
+  -- Check if there are active conflicts (jj stores conflicts in commits)
+  local has_conflicts = false
+  local ok, repo = pcall(function() return jj.repo end)
+  if ok and repo and repo.state and repo.state.conflicts then
+    has_conflicts = #repo.state.conflicts.items > 0
+  end
+
+  if has_conflicts then
     if
       line:match("..<<<<<<<")
       or line:match("..|||||||")
@@ -123,8 +128,8 @@ local function build_graph(graph, opts)
   if type(graph) == "table" then
     return util.map(graph, function(g)
       local char = g.text
-      if opts.remove_dots and vim.tbl_contains({ "", "", "", "", "•" }, char) then
-        char = ""
+      if opts.remove_dots and vim.tbl_contains({ "", "", "", "", "•" }, char) then
+        char = ""
       end
 
       return text(char, { highlight = string.format("NeoJJGraph%s", g.color) })
@@ -134,117 +139,83 @@ local function build_graph(graph, opts)
   end
 end
 
--- - '%G?': show "G" for a good (valid) signature,
---   "B" for a bad signature,
---   "U" for a good signature with unknown validity,
---   "X" for a good signature that has expired,
---   "Y" for a good signature made by an expired key,
---   "R" for a good signature made by a revoked key,
---   "E" if the signature cannot be checked (e.g. missing key)
---   and "N" for no signature
-local highlight_for_signature = {
-  G = "NeoJJSignatureGood",
-  B = "NeoJJSignatureBad",
-  U = "NeoJJSignatureGoodUnknown",
-  X = "NeoJJSignatureGoodExpired",
-  Y = "NeoJJSignatureGoodExpiredKey",
-  R = "NeoJJSignatureGoodRevokedKey",
-  E = "NeoJJSignatureMissing",
-  N = "NeoJJSignatureNone",
-}
+---Format a short ID (first 12 chars)
+---@param id string
+---@return string
+local function short_id(id)
+  if not id or id == "" then
+    return ""
+  end
+  return string.sub(id, 1, 12)
+end
 
----@param commit CommitLogEntry
----@param remotes string[]
+---@param commit NeoJJChangeLogEntry
 ---@param args table
-M.CommitEntry = Component.new(function(commit, remotes, args)
+M.CommitEntry = Component.new(function(commit, _remotes, args)
   local ref = {}
-  local ref_last = {}
-  local info = { head = nil, locals = {}, remotes = {}, tags = {} }
 
-  -- Parse out ref names
-  if args.decorate and commit.ref_name ~= "" then
-    info = git.log.branch_info(commit.ref_name, remotes)
-
-    -- Render local only branches first
-    for name, _ in pairs(info.locals) do
-      if name:match("^refs/") then
-        table.insert(ref_last, text(name, { highlight = "NeoJJGraphGray" }))
-        table.insert(ref_last, text(" "))
-      elseif info.remotes[name] == nil then
-        local branch_highlight = info.head == name and "NeoJJBranchHead" or "NeoJJBranch"
-        table.insert(ref, text(name, { highlight = branch_highlight }))
-        table.insert(ref, text(" "))
-      end
-    end
-
-    -- Render tracked (local+remote) branches next
-    for name, remotes in pairs(info.remotes) do
-      if #remotes == 1 then
-        table.insert(ref, text(remotes[1] .. "/", { highlight = "NeoJJRemote" }))
-      end
-      if #remotes > 1 then
-        table.insert(ref, text("{" .. table.concat(remotes, ",") .. "}/", { highlight = "NeoJJRemote" }))
-      end
-      local branch_highlight = info.head == name and "NeoJJBranchHead" or "NeoJJBranch"
-      local locally = info.locals[name] ~= nil
-      table.insert(ref, text(name, { highlight = locally and branch_highlight or "NeoJJRemote" }))
-      table.insert(ref, text(" "))
-    end
-
-    -- Render tags
-    for _, tag in pairs(info.tags) do
-      table.insert(ref, text(tag, { highlight = "NeoJJTagName" }))
+  -- Render bookmarks as decorations
+  if args.decorate and commit.bookmarks and #commit.bookmarks > 0 then
+    for _, bm in ipairs(commit.bookmarks) do
+      table.insert(ref, text(bm, { highlight = "NeoJJBranch" }))
       table.insert(ref, text(" "))
     end
   end
 
-  if commit.rel_date:match(" years?,") then
-    commit.rel_date, _ = commit.rel_date:gsub(" years?,", "y")
-    commit.rel_date = commit.rel_date .. " "
-  elseif commit.rel_date:match("^%d ") then
-    commit.rel_date = " " .. commit.rel_date
+  -- Status markers
+  local markers = {}
+  if commit.conflict then
+    table.insert(markers, text("conflict ", { highlight = "NeoJJDiffDeletions" }))
+  end
+  if commit.empty then
+    table.insert(markers, text("empty ", { highlight = "NeoJJSubtleText" }))
+  end
+  if commit.immutable then
+    table.insert(markers, text("immutable ", { highlight = "NeoJJSubtleText" }))
+  end
+
+  -- Build the abbreviated IDs
+  local change_short = short_id(commit.change_id)
+  local commit_short = short_id(commit.commit_id)
+
+  -- Description (first line)
+  local description = commit.description or ""
+  local subject = vim.split(description, "\n")[1] or ""
+
+  -- Date display
+  local date = commit.author_date or ""
+  if #date > 16 then
+    date = string.sub(date, 1, 16)
   end
 
   local details
   if args.details then
     local graph = args.graph and build_graph(commit.graph, { remove_dots = true }) or { text("") }
-    details = col.padding_left(#commit.abbreviated_commit + 1) {
+    local desc_lines = vim.split(description, "\n")
+
+    details = col.padding_left(#change_short + 1) {
+      row(util.merge(graph, {
+        text(" "),
+        text("Commit ID:  ", { highlight = "NeoJJSubtleText" }),
+        text(commit_short, { highlight = "NeoJJObjectId" }),
+      })),
       row(util.merge(graph, {
         text(" "),
         text("Author:     ", { highlight = "NeoJJSubtleText" }),
-        text(commit.author_name, { highlight = "NeoJJGraphAuthor" }),
+        text(commit.author_name or "", { highlight = "NeoJJGraphAuthor" }),
         text(" <"),
-        text(commit.author_email),
+        text(commit.author_email or ""),
         text(">"),
       })),
       row(util.merge(graph, {
         text(" "),
-        text("AuthorDate: ", { highlight = "NeoJJSubtleText" }),
-        text(commit.author_date),
-      })),
-      row(util.merge(graph, {
-        text(" "),
-        text("Commit:     ", { highlight = "NeoJJSubtleText" }),
-        text(commit.committer_name),
-        text(" <"),
-        text(commit.committer_email),
-        text(">"),
-      })),
-      row(util.merge(graph, {
-        text(" "),
-        text("CommitDate: ", { highlight = "NeoJJSubtleText" }),
-        text(commit.committer_date),
+        text("Date:       ", { highlight = "NeoJJSubtleText" }),
+        text(commit.author_date or ""),
       })),
       row(graph),
       col(
-        flat_map({ commit.subject, commit.body }, function(line)
+        flat_map(desc_lines, function(line)
           local lines = vim.split(line, "\\n")
-
-          -- TODO: More correctly handle newlines/wrapping in messages
-          -- lines = util.flat_map(lines, function(line)
-          --   return util.str_wrap(line, vim.o.columns * 0.6)
-          -- end)
-
           lines = map(lines, function(l)
             return row(util.merge(graph, { text(" "), text(l) }))
           end)
@@ -262,23 +233,25 @@ M.CommitEntry = Component.new(function(commit, remotes, args)
     }
   end
 
-  local date = (config.values.log_date_format == nil and commit.rel_date or commit.log_date)
   local graph = args.graph and build_graph(commit.graph) or { text("") }
+
+  -- Working copy marker
+  local id_highlight = "NeoJJObjectId"
+  if commit.current_working_copy then
+    id_highlight = "NeoJJBranchHead"
+  end
 
   return col.tag("commit")({
     row(
       util.merge({
-        text(commit.abbreviated_commit, {
-          highlight = commit.verification_flag and highlight_for_signature[commit.verification_flag]
-            or "NeoJJObjectId",
-        }),
+        text(change_short, { highlight = id_highlight }),
         text(" "),
-      }, graph, { text(" ") }, ref, ref_last, { text(commit.subject) }),
+      }, graph, { text(" ") }, markers, ref, { text(subject) }),
       {
         virtual_text = {
           { " ", "Constant" },
           {
-            util.str_clamp(commit.author_name, 30 - (#date > 10 and #date or 10)),
+            util.str_clamp(commit.author_name or "", 30 - (#date > 10 and #date or 10)),
             "NeoJJGraphAuthor",
           },
           { util.str_min_width(date, 10), "Special" },
@@ -288,10 +261,9 @@ M.CommitEntry = Component.new(function(commit, remotes, args)
     details,
   }, {
     item = commit,
-    oid = commit.oid,
+    oid = commit.change_id,
     foldable = args.details == true,
     folded = true,
-    remote = info.remotes[1],
   })
 end)
 
