@@ -104,6 +104,8 @@ end
 
 ---@class NeoJJCommitEditorConfigPopup Popup window options
 ---@field kind WindowKind The type of window that should be opened
+---@field show_staged_diff? boolean Display current changes diff when editing description
+---@field staged_diff_split_kind? string Split direction for diff view ("split" or "vsplit")
 ---@field spell_check? boolean Enable/Disable spell checking
 
 ---@alias NeoJJConfigSignsIcon { [1]: string, [2]: string }
@@ -214,7 +216,6 @@ end
 ---| "LogPopup"
 ---| "FetchPopup"
 ---| "RemotePopup"
----| "ChangePopup"
 ---| "SquashPopup"
 ---| "BookmarkPopup"
 ---| "SplitPopup"
@@ -385,6 +386,8 @@ function M.get_default_values()
     },
     commit_editor = {
       kind = "tab",
+      show_staged_diff = true,
+      staged_diff_split_kind = "split",
       spell_check = true,
     },
     commit_select_view = {
@@ -486,7 +489,6 @@ function M.get_default_values()
         ["P"] = "PushPopup",
         ["r"] = "RebasePopup",
         ["M"] = "RemotePopup",
-        ["C"] = "ChangePopup",
         ["S"] = "SquashPopup",
         ["b"] = "BookmarkPopup",
         ["s"] = "SplitPopup",

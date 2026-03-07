@@ -437,9 +437,6 @@ function M:open(kind)
         [popups.mapping_for("SquashPopup")] = popups.open("squash", function(p)
           p { commit = self.commit_info.oid }
         end),
-        [popups.mapping_for("ChangePopup")] = popups.open("change", function(p)
-          p { commit = self.commit_info.oid }
-        end),
         [status_maps["Close"]] = function()
           self:close()
         end,

@@ -1,6 +1,5 @@
 local Buffer = require("neojj.lib.buffer")
 local config = require("neojj.config")
-local input = require("neojj.lib.input")
 local util = require("neojj.lib.util")
 local jj = require("neojj.lib.jj")
 local logger = require("neojj.logger")
@@ -56,7 +55,7 @@ function M:open(kind)
 
   local mapping = config.get_reversed_commit_editor_maps()
   local mapping_I = config.get_reversed_commit_editor_maps_I()
-  local aborted = false
+  local submitted = false
 
   local message_index = 1
   local message_buffer = { { "" } }
@@ -91,9 +90,13 @@ function M:open(kind)
     readonly = false,
     autocmds = {
       ["QuitPre"] = function() -- For :wq compatibility
-        if not aborted and amend_header then
-          self.buffer:set_lines(0, 0, false, amend_header)
-          self.buffer:write()
+        -- If the buffer was written (modified=false), treat :wq as submit
+        if not self.buffer:get_option("modified") then
+          submitted = true
+          if amend_header then
+            self.buffer:set_lines(0, 0, false, amend_header)
+            self.buffer:write()
+          end
         end
 
         if self.diff_view then
@@ -106,7 +109,7 @@ function M:open(kind)
       logger.debug("[EDITOR] Cleaning Up")
       if self.on_unload then
         logger.debug("[EDITOR] Running on_unload callback")
-        self.on_unload(aborted and 1 or 0)
+        self.on_unload(submitted and 0 or 1)
       end
 
       process.defer_show_preview_buffers()
@@ -126,20 +129,20 @@ function M:open(kind)
         return pad(mapping[name] and mapping[name][1] or "<NOP>", padding)
       end
 
-      -- jj uses JJ: as comment prefix in commit messages
-      local comment_char = "JJ:"
-      logger.debug("[EDITOR] Using comment prefix '" .. comment_char .. "'")
+      -- jj uses "JJ:" as comment prefix in commit/describe messages
+      local comment_prefix = "JJ:"
+      logger.debug("[EDITOR] Using comment prefix '" .. comment_prefix .. "'")
 
       -- stylua: ignore
       local help_lines = {
-        ("%s"):format(comment_char),
-        ("%s Commands:"):format(comment_char),
-        ("%s   %s Close"):format(comment_char, pad_mapping("Close")),
-        ("%s   %s Submit"):format(comment_char, pad_mapping("Submit")),
-        ("%s   %s Abort"):format(comment_char, pad_mapping("Abort")),
-        ("%s   %s Previous Message"):format(comment_char, pad_mapping("PrevMessage")),
-        ("%s   %s Next Message"):format(comment_char, pad_mapping("NextMessage")),
-        ("%s   %s Reset Message"):format(comment_char, pad_mapping("ResetMessage")),
+        ("%s"):format(comment_prefix),
+        ("%s Commands:"):format(comment_prefix),
+        ("%s   %s Close"):format(comment_prefix, pad_mapping("Close")),
+        ("%s   %s Submit"):format(comment_prefix, pad_mapping("Submit")),
+        ("%s   %s Abort"):format(comment_prefix, pad_mapping("Abort")),
+        ("%s   %s Previous Message"):format(comment_prefix, pad_mapping("PrevMessage")),
+        ("%s   %s Next Message"):format(comment_prefix, pad_mapping("NextMessage")),
+        ("%s   %s Reset Message"):format(comment_prefix, pad_mapping("ResetMessage")),
       }
 
       help_lines = util.filter_map(help_lines, function(line)
@@ -148,9 +151,10 @@ function M:open(kind)
         end
       end)
 
-      local line = vim.fn.search(string.format("^%s$", vim.pesc(comment_char))) - 1
-      if line >= 0 then
-        buffer:set_lines(line, line, false, help_lines)
+      -- Find the first JJ: comment line and insert help lines before it
+      local first_comment_line = vim.fn.search("^JJ:", "cnW")
+      if first_comment_line > 0 then
+        buffer:set_lines(first_comment_line - 1, first_comment_line - 1, false, help_lines)
       end
       buffer:write()
       buffer:move_cursor(1)
@@ -163,7 +167,20 @@ function M:open(kind)
         amend_header = nil
       end
 
-      footer = buffer:get_lines(1, -1)
+      -- Footer is the JJ: comment section (everything from the first JJ: line)
+      local all_lines = buffer:get_lines(0, -1)
+      local footer_start = nil
+      for i, l in ipairs(all_lines) do
+        if l:match("^JJ:") then
+          footer_start = i
+          break
+        end
+      end
+      if footer_start then
+        footer = util.slice(all_lines, footer_start, #all_lines)
+      else
+        footer = {}
+      end
 
       -- Start insert mode if user has configured it
       local disable_insert = config.values.disable_insert_on_commit
@@ -184,7 +201,10 @@ function M:open(kind)
         end
       end
 
-      if self.show_diff and kind ~= "floating" then
+      local show_diff = self.show_diff
+        and config.values.commit_editor.show_staged_diff ~= false
+        and kind ~= "floating"
+      if show_diff then
         logger.debug("[EDITOR] Opening Diffview for current changes")
         self.diff_view = DiffViewBuffer:new("Current Changes"):open()
       end
@@ -194,6 +214,7 @@ function M:open(kind)
         [mapping_I["Submit"]] = function(buffer)
           logger.debug("[EDITOR] Action I: Submit")
           vim.cmd.stopinsert()
+          submitted = true
           if amend_header then
             buffer:set_lines(0, 0, false, amend_header)
             amend_header = nil
@@ -205,7 +226,6 @@ function M:open(kind)
         [mapping_I["Abort"]] = function(buffer)
           logger.debug("[EDITOR] Action I: Abort")
           vim.cmd.stopinsert()
-          aborted = true
           buffer:write()
           buffer:close(true)
         end,
@@ -213,20 +233,12 @@ function M:open(kind)
       n = {
         [mapping["Close"]] = function(buffer)
           logger.debug("[EDITOR] Action N: Close")
-          if amend_header then
-            buffer:set_lines(0, 0, false, amend_header)
-            amend_header = nil
-          end
-
-          if buffer:get_option("modified") and not input.get_confirmation("Save changes?") then
-            aborted = true
-          end
-
           buffer:write()
           buffer:close(true)
         end,
         [mapping["Submit"]] = function(buffer)
           logger.debug("[EDITOR] Action N: Submit")
+          submitted = true
           if amend_header then
             buffer:set_lines(0, 0, false, amend_header)
             amend_header = nil
@@ -237,12 +249,12 @@ function M:open(kind)
         end,
         [mapping["Abort"]] = function(buffer)
           logger.debug("[EDITOR] Action N: Abort")
-          aborted = true
           buffer:write()
           buffer:close(true)
         end,
         ["ZZ"] = function(buffer)
           logger.debug("[EDITOR] Action N: ZZ (submit)")
+          submitted = true
           if amend_header then
             buffer:set_lines(0, 0, false, amend_header)
             amend_header = nil
@@ -253,7 +265,6 @@ function M:open(kind)
         end,
         ["ZQ"] = function(buffer)
           logger.debug("[EDITOR] Action N: ZQ (abort)")
-          aborted = true
           buffer:write()
           buffer:close(true)
         end,

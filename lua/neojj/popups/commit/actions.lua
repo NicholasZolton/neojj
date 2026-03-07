@@ -1,56 +1,39 @@
 local M = {}
 
 local jj = require("neojj.lib.jj")
+local client = require("neojj.client")
 local input = require("neojj.lib.input")
 local notification = require("neojj.lib.notification")
 
-function M.commit(popup)
-  -- jj commit without -m opens editor
+function M.new_change(popup)
   local args = popup:get_arguments()
-  local builder = jj.cli.commit
-  if #args > 0 then
-    builder = builder.args(unpack(args))
-  end
-  local result = builder.call { pty = true }
-  if result and result.code == 0 then
-    notification.info("Committed", { dismiss = true })
-  else
-    notification.warn("Commit failed", { dismiss = true })
-  end
-end
-
-function M.commit_with_message(popup)
-  local msg = input.get_user_input("Commit message")
-  if not msg or msg == "" then
-    return
-  end
-
-  local args = popup:get_arguments()
-  local builder = jj.cli.commit.message(msg)
+  local builder = jj.cli.new
   if #args > 0 then
     builder = builder.args(unpack(args))
   end
   local result = builder.call()
   if result and result.code == 0 then
-    notification.info("Committed", { dismiss = true })
+    notification.info("Created new change", { dismiss = true })
   else
-    notification.warn("Commit failed", { dismiss = true })
+    notification.warn("Failed to create new change", { dismiss = true })
   end
 end
 
 function M.describe(popup)
-  -- jj describe without -m opens editor
   local args = popup:get_arguments()
   local builder = jj.cli.describe
   if #args > 0 then
     builder = builder.args(unpack(args))
   end
-  local result = builder.call { pty = true }
-  if result and result.code == 0 then
-    notification.info("Description updated", { dismiss = true })
-  else
-    notification.warn("Describe failed", { dismiss = true })
-  end
+  client.wrap(builder, {
+    autocmd = "NeoJJDescribeComplete",
+    msg = {
+      success = "Description updated",
+      fail = "Describe failed",
+    },
+    show_diff = true,
+    interactive = true,
+  })
 end
 
 function M.describe_with_message(popup)

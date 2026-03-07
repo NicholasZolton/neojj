@@ -43,19 +43,13 @@ function M.parse_list(lines)
   return items
 end
 
----List bookmarks (local only, limited)
----@param limit? number Max bookmarks to return (default 20)
+---List bookmarks
 ---@return NeoJJBookmarkItem[]
-function M.list(limit)
-  limit = limit or 20
+function M.list()
   local jj = require("neojj.lib.jj")
   local result = jj.cli.bookmark_list.call { hidden = true, trim = true }
   if result and result.code == 0 then
-    local items = M.parse_list(result.stdout)
-    if #items > limit then
-      return { unpack(items, 1, limit) }
-    end
-    return items
+    return M.parse_list(result.stdout)
   end
   return {}
 end
@@ -110,19 +104,13 @@ end
 ---@param state NeoJJRepoState
 function meta.update(state)
   local shell = require("neojj.lib.jj.shell")
-  local limit = 20
   local lines, code = shell.exec(
     { "jj", "--no-pager", "--color=never", "--ignore-working-copy", "bookmark", "list" },
     state.worktree_root
   )
 
   if code == 0 and lines then
-    local items = M.parse_list(lines)
-    if #items > limit then
-      state.bookmarks.items = { unpack(items, 1, limit) }
-    else
-      state.bookmarks.items = items
-    end
+    state.bookmarks.items = M.parse_list(lines)
   else
     state.bookmarks.items = {}
   end

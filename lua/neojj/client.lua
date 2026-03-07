@@ -91,7 +91,7 @@ function M.editor(target, client, show_diff)
   end
 
   local kind
-  if target:find("COMMIT_EDITMSG$") or target:find("EDIT_DESCRIPTION$") then
+  if target:find("COMMIT_EDITMSG$") or target:find("EDIT_DESCRIPTION$") or target:find("%.jjdescription$") then
     kind = config.values.commit_editor.kind
   else
     kind = "auto"

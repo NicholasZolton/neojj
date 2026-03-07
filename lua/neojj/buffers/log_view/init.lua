@@ -109,9 +109,6 @@ function M:open()
         [popups.mapping_for("SquashPopup")] = popups.open("squash", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
-        [popups.mapping_for("ChangePopup")] = popups.open("change", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
       },
       n = {
         [popups.mapping_for("CommitPopup")] = popups.open("commit", function(p)
@@ -137,9 +134,6 @@ function M:open()
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [popups.mapping_for("SquashPopup")] = popups.open("squash", function(p)
-          p { commit = self.buffer.ui:get_commit_under_cursor() }
-        end),
-        [popups.mapping_for("ChangePopup")] = popups.open("change", function(p)
           p { commit = self.buffer.ui:get_commit_under_cursor() }
         end),
         [status_maps["YankSelected"]] = function()

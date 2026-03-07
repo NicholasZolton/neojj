@@ -739,10 +739,61 @@ M.n_commit_popup = function(_self)
   return popups.open("commit")
 end
 
----@param _self StatusBuffer
+---@param self StatusBuffer
 ---@return fun(): nil
-M.n_change_popup = function(_self)
-  return popups.open("change")
+M.n_open_in_browser = function(self)
+  return function()
+    local change_id = self.buffer.ui:get_yankable_under_cursor()
+    if not change_id then
+      notification.warn("No change under cursor", { dismiss = true })
+      return
+    end
+
+    -- Get the git commit hash for this change
+    local result = jj.cli.log.no_graph.template('"" ++ commit_id ++ ""').revisions(change_id).limit(1).call { hidden = true, trim = true }
+    if not result or result.code ~= 0 or not result.stdout[1] then
+      notification.warn("Could not resolve commit", { dismiss = true })
+      return
+    end
+    local commit_hash = result.stdout[1]
+
+    -- Get remote URL
+    local shell = require("neojj.lib.jj.shell")
+    local remote_lines, code = shell.exec(
+      { "jj", "--no-pager", "--color=never", "git", "remote", "list" },
+      jj.repo.state.worktree_root
+    )
+    if code ~= 0 or not remote_lines or #remote_lines == 0 then
+      notification.warn("No remote found", { dismiss = true })
+      return
+    end
+
+    -- Parse first remote URL (format: "origin https://github.com/user/repo.git")
+    local remote_url
+    for _, line in ipairs(remote_lines) do
+      local url = line:match("^%S+%s+(%S+)")
+      if url then
+        remote_url = url
+        break
+      end
+    end
+
+    if not remote_url then
+      notification.warn("Could not parse remote URL", { dismiss = true })
+      return
+    end
+
+    -- Convert git URL to browser URL
+    local browser_url = remote_url
+      :gsub("%.git$", "")
+      :gsub("^git@([^:]+):", "https://%1/")
+      :gsub("^ssh://git@([^/]+)/", "https://%1/")
+
+    -- Construct commit URL (works for GitHub, GitLab, etc.)
+    browser_url = browser_url .. "/commit/" .. commit_hash
+
+    vim.ui.open(browser_url)
+  end
 end
 
 return M

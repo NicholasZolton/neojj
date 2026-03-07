@@ -188,10 +188,10 @@ function M:open(kind)
         ["d"]                                   = self:_action("n_describe"),
         ["N"]                                   = self:_action("n_new_change"),
         ["A"]                                   = self:_action("n_abandon"),
+        ["o"]                                   = self:_action("n_open_in_browser"),
         ["Q"]                                   = self:_action("n_squash_popup"),
         -- jj popup bindings
         [popups.mapping_for("CommitPopup")]     = self:_action("n_commit_popup"),
-        ["W"]                                   = self:_action("n_change_popup"),
         [popups.mapping_for("DiffPopup")]       = self:_action("n_diff_popup"),
         [popups.mapping_for("FetchPopup")]      = self:_action("n_fetch_popup"),
         [popups.mapping_for("HelpPopup")]       = self:_action("n_help_popup"),

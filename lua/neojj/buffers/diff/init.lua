@@ -20,8 +20,22 @@ M.__index = M
 ---@param header string
 ---@return DiffBuffer
 function M:new(header)
-  -- Get diff stat for the current working copy change
-  local stat_lines = jj.diff.stat()
+  -- Get diff stat using --ignore-working-copy since jj describe may hold the lock
+  local shell = require("neojj.lib.jj.shell")
+  local cwd
+  local ok, repo = pcall(function() return jj.repo end)
+  if ok and repo then
+    cwd = repo.worktree_root
+  end
+  cwd = cwd or vim.fn.getcwd()
+
+  local stat_lines_raw, stat_code = shell.exec({
+    "jj", "--no-pager", "--color=never", "--ignore-working-copy",
+    "-R", cwd,
+    "diff", "--stat",
+  }, cwd)
+
+  local stat_lines = (stat_code == 0 and stat_lines_raw) or {}
   local stats = {
     summary = "",
     files = {},
@@ -32,9 +46,9 @@ function M:new(header)
       local file = {}
       if stat_lines[i] ~= "" then
         file.path, file.changes, file.insertions, file.deletions =
-          stat_lines[i]:match(" (.*)%s+|%s+(%d+) ?(%+*)(%-*)")
+          stat_lines[i]:match("^%s*(.-)%s+|%s+(%d+) ?(%+*)(%-*)")
         if not file.path then
-          file.path, file.changes = stat_lines[i]:match(" (.*)%s+|%s+(Bin .*)$")
+          file.path, file.changes = stat_lines[i]:match("^%s*(.-)%s+|%s+(Bin .*)$")
         end
         if file.path then
           table.insert(stats.files, file)
@@ -43,13 +57,27 @@ function M:new(header)
     end
   end
 
-  -- Get diffs for all changed files (no staging concept in jj)
+  -- Get full diff for the working copy using --ignore-working-copy
   local diffs = {}
-  local ok, repo = pcall(function() return jj.repo end)
-  if ok and repo and repo.state and repo.state.files then
-    diffs = vim.tbl_map(function(item)
-      return item.diff
-    end, repo.state.files.items)
+  local diff_lines_raw, diff_code = shell.exec({
+    "jj", "--no-pager", "--color=never", "--ignore-working-copy",
+    "-R", cwd,
+    "diff", "--git",
+  }, cwd)
+
+  if diff_code == 0 and diff_lines_raw and #diff_lines_raw > 0 then
+    -- Split the combined diff output into per-file diffs
+    local current_file_lines = {}
+    for _, line in ipairs(diff_lines_raw) do
+      if line:match("^diff %-%-git ") and #current_file_lines > 0 then
+        table.insert(diffs, jj.diff.parse(current_file_lines))
+        current_file_lines = {}
+      end
+      table.insert(current_file_lines, line)
+    end
+    if #current_file_lines > 0 then
+      table.insert(diffs, jj.diff.parse(current_file_lines))
+    end
   end
 
   local instance = {

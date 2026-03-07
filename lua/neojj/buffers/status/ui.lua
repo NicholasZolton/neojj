@@ -61,6 +61,10 @@ local HINT = Component.new(function(props)
     text.highlight("NeoJJSubtleText")(" | "),
     entry("Discard", "discard"),
     text.highlight("NeoJJSubtleText")(" | "),
+    entry("CommitPopup", "commit"),
+    text.highlight("NeoJJSubtleText")(" | "),
+    entry("BookmarkPopup", "bookmark"),
+    text.highlight("NeoJJSubtleText")(" | "),
     entry("HelpPopup", "help"),
   }
 end)
@@ -95,12 +99,12 @@ local JJHead = Component.new(function(props)
       text.highlight("NeoJJSubtleText")(short_commit),
       text.highlight("NeoJJBranch")(bookmark_text),
       text.highlight("NeoJJSubtleText")(status_text),
-    }, { yankable = change_id }),
+    }),
     row {
       text("  "),
       text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
     },
-  })
+  }, { yankable = change_id })
 end)
 
 local SectionTitle = Component.new(function(props)
@@ -342,7 +346,7 @@ function M.Status(state, config)
           name = "conflicts",
         },
         show_files and Section {
-          title = SectionTitle { title = "Modified files", highlight = "NeoJJUnstagedchanges" },
+          title = SectionTitle { title = "Modified files", highlight = "NeoJJRecentcommits" },
           count = true,
           render = SectionItemFile("files", config),
           items = state.files.items,
