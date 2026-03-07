@@ -201,6 +201,7 @@ function M.build(item)
   setmetatable(item, {
     __index = function(self, method)
       if method == "diff" then
+        local t_start = vim.uv.hrtime()
         local cwd
         local ok, jj_mod = pcall(require, "neojj.lib.jj")
         if ok then
@@ -209,6 +210,7 @@ function M.build(item)
             cwd = repo.worktree_root
           end
         end
+        local t_cwd = vim.uv.hrtime()
 
         local cmd = { "jj", "--no-pager", "--color=never", "--ignore-working-copy", "diff", "--git", "--", item.name }
         local opts = { cwd = cwd or vim.fn.getcwd(), text = true }
@@ -216,14 +218,15 @@ function M.build(item)
         -- Use async wrapper if in a coroutine, else fall back to sync
         local result
         if coroutine.running() then
-          local a = require("plenary.async")
-          local jj_system = a.wrap(function(c, o, cb)
+          local async = require("plenary.async")
+          local jj_system = async.wrap(function(c, o, cb)
             vim.system(c, o, function(r) vim.schedule(function() cb(r) end) end)
           end, 3)
           result = jj_system(cmd, opts)
         else
           result = vim.system(cmd, opts):wait()
         end
+        local t_cmd = vim.uv.hrtime()
 
         if result.code == 0 and result.stdout and result.stdout ~= "" then
           local lines = vim.split(result.stdout, "\n", { trimempty = true })
@@ -231,6 +234,15 @@ function M.build(item)
         else
           self.diff = empty_diff
         end
+        local t_end = vim.uv.hrtime()
+
+        vim.notify(("[DIFF] %s: cwd=%.0fms cmd=%.0fms parse=%.0fms total=%.0fms"):format(
+          item.name,
+          (t_cwd - t_start) / 1e6,
+          (t_cmd - t_cwd) / 1e6,
+          (t_end - t_cmd) / 1e6,
+          (t_end - t_start) / 1e6
+        ), vim.log.levels.INFO)
 
         return self.diff
       end
