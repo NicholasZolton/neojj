@@ -2,9 +2,7 @@ local Ui = require("neojj.lib.ui")
 local Component = require("neojj.lib.ui.component")
 local util = require("neojj.lib.util")
 local common = require("neojj.buffers.common")
-local config = require("neojj.config")
 local a = require("plenary.async")
-local state = require("neojj.lib.state")
 local event = require("neojj.lib.event")
 
 local col = Ui.col
@@ -61,103 +59,52 @@ local HINT = Component.new(function(props)
     text.highlight("NeoJJSubtleText")("Hint: "),
     entry("Toggle", "toggle"),
     text.highlight("NeoJJSubtleText")(" | "),
-    entry("Stage", "stage"),
-    text.highlight("NeoJJSubtleText")(" | "),
-    entry("Unstage", "unstage"),
-    text.highlight("NeoJJSubtleText")(" | "),
     entry("Discard", "discard"),
-    text.highlight("NeoJJSubtleText")(" | "),
-    entry("CommitPopup", "commit"),
     text.highlight("NeoJJSubtleText")(" | "),
     entry("HelpPopup", "help"),
   }
 end)
 
-local HEAD = Component.new(function(props)
-  local show_oid = props.show_oid
-  local highlight, ref
-  if props.branch == "(detached)" then
-    highlight = "NeoJJBranch"
-    ref = props.branch
-    show_oid = true
-  elseif props.remote then
-    highlight = "NeoJJRemote"
-    ref = ("%s/%s"):format(props.remote, props.branch)
-  else
-    highlight = "NeoJJBranch"
-    ref = props.branch
+--- Head/Parent section showing current change and its parent
+local JJHead = Component.new(function(props)
+  local change_id = props.change_id or ""
+  local commit_id = props.commit_id or ""
+  local short_change = change_id:sub(1, 12)
+  local short_commit = commit_id:sub(1, 8)
+
+  local bookmark_text = ""
+  if props.bookmarks and #props.bookmarks > 0 then
+    bookmark_text = " " .. table.concat(props.bookmarks, " ")
   end
 
-  local oid = props.yankable
-  if not oid or oid == "(initial)" then
-    oid = "0000000"
-  else
-    oid = oid:sub(1, 7)
+  local status_parts = {}
+  if props.empty then
+    table.insert(status_parts, "empty")
   end
-
-  return row({
-    text.highlight("NeoJJStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding)),
-    text.highlight("NeoJJObjectId")(show_oid and oid or ""),
-    text(show_oid and " " or ""),
-    text.highlight(highlight)(ref),
-    text(" "),
-    text(props.msg or "(no commits)"),
-  }, { yankable = props.yankable })
-end)
-
-local Tag = Component.new(function(props)
-  if props.distance then
-    return row({
-      text.highlight("NeoJJStatusHEAD")(util.pad_right("Tag: ", props.HEAD_padding)),
-      text.highlight("NeoJJTagName")(props.name),
-      text(" ("),
-      text.highlight("NeoJJTagDistance")(props.distance),
-      text(")"),
-    }, { yankable = props.yankable })
-  else
-    return row({
-      text(util.pad_right("Tag: ", props.HEAD_padding)),
-      text.highlight("NeoJJTagName")(props.name),
-    }, { yankable = props.yankable })
+  if props.conflict then
+    table.insert(status_parts, "conflict")
   end
+  local status_text = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
+
+  return col({
+    row({
+      text.highlight("NeoJJStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding or 10)),
+      text.highlight("NeoJJBranch")(props.symbol .. " "),
+      text.highlight("NeoJJObjectId")(short_change),
+      text(" "),
+      text.highlight("NeoJJSubtleText")(short_commit),
+      text.highlight("NeoJJBranch")(bookmark_text),
+      text.highlight("NeoJJSubtleText")(status_text),
+    }, { yankable = change_id }),
+    row {
+      text("  "),
+      text(props.description ~= "" and props.description or "(no description)"),
+    },
+  })
 end)
 
 local SectionTitle = Component.new(function(props)
   return { text.highlight(props.highlight or "NeoJJSectionHeader")(props.title) }
-end)
-
-local SectionTitleRemote = Component.new(function(props)
-  return {
-    text.highlight(props.highlight or "NeoJJSectionHeader")(props.title),
-    text(" "),
-    text.highlight("NeoJJRemote")(props.ref),
-  }
-end)
-
-local SectionTitleRebase = Component.new(function(props)
-  if props.onto then
-    return {
-      text.highlight(props.highlight or "NeoJJSectionHeader")(props.title),
-      text(" "),
-      text.highlight("NeoJJBranch")(props.head),
-      text.highlight("NeoJJSectionHeader")(" onto "),
-      text.highlight(props.is_remote_ref and "NeoJJRemote" or "NeoJJBranch")(props.onto),
-    }
-  else
-    return {
-      text.highlight(props.highlight or "NeoJJSectionHeader")(props.title),
-      text(" "),
-      text.highlight("NeoJJBranch")(props.head),
-    }
-  end
-end)
-
-local SectionTitleMerge = Component.new(function(props)
-  return {
-    text.highlight(props.highlight or "NeoJJSectionHeader")(props.title),
-    text(" "),
-    text.highlight("NeoJJBranch")(props.branch),
-  }
 end)
 
 local Section = Component.new(function(props)
@@ -168,38 +115,6 @@ local Section = Component.new(function(props)
 
   return col.tag("Section")({
     row(util.merge(props.title, count or {})),
-    col(map(props.items, props.render)),
-    EmptyLine(),
-  }, {
-    foldable = true,
-    folded = props.folded,
-    section = props.name,
-    id = props.name,
-  })
-end)
-
-local SequencerSection = Component.new(function(props)
-  return col.tag("Section")({
-    row(util.merge(props.title)),
-    col(map(props.items, props.render)),
-    EmptyLine(),
-  }, {
-    foldable = true,
-    folded = props.folded,
-    section = props.name,
-    id = props.name,
-  })
-end)
-
-local RebaseSection = Component.new(function(props)
-  return col.tag("Section")({
-    row(util.merge(props.title, {
-      text(" ("),
-      text(props.current),
-      text("/"),
-      text(#props.items - 1),
-      text(")"),
-    })),
     col(map(props.items, props.render)),
     EmptyLine(),
   }, {
@@ -283,56 +198,22 @@ local SectionItemFile = function(section, config)
     local mode_text
     if mode == "" then
       mode_text = ""
-    elseif config.status.mode_padding > 0 then
+    elseif mode and config.status.mode_padding > 0 then
       mode_text = util.pad_right(
         mode,
         util.max_length(vim.tbl_values(config.status.mode_text)) + config.status.mode_padding
       )
+    else
+      mode_text = item.mode .. " "
     end
-
-    local unmerged_types = {
-      ["DD"] = " (both deleted)",
-      ["DU"] = " (deleted by us)",
-      ["UD"] = " (deleted by them)",
-      ["AA"] = " (both added)",
-      ["AU"] = " (added by us)",
-      ["UA"] = " (added by them)",
-    }
 
     local name = item.original_name and ("%s -> %s"):format(item.original_name, item.name) or item.name
     local highlight = ("NeoJJChange%s%s"):format(item.mode:gsub("%?", "Untracked"), section)
-
-    local file_mode_change = text("")
-    if
-      item.file_mode
-      and item.file_mode.worktree ~= item.file_mode.head
-      and tonumber(item.file_mode.head) > 0
-    then
-      file_mode_change =
-        text.highlight("NeoJJSubtleText")((" %s -> %s"):format(item.file_mode.head, item.file_mode.worktree))
-    end
-
-    local submodule = text("")
-    if item.submodule then
-      local submodule_text
-      if item.submodule.commit_changed then
-        submodule_text = " (new commits)"
-      elseif item.submodule.has_tracked_changes then
-        submodule_text = " (modified content)"
-      elseif item.submodule.has_untracked_changes then
-        submodule_text = " (untracked content)"
-      end
-
-      submodule = text.highlight("NeoJJTagName")(submodule_text)
-    end
 
     return col.tag("Item")({
       row {
         text.highlight(highlight)(mode_text),
         text(name),
-        text.highlight("NeoJJSubtleText")(unmerged_types[item.mode] or ""),
-        file_mode_change,
-        submodule,
       },
     }, {
       foldable = true,
@@ -347,255 +228,63 @@ local SectionItemFile = function(section, config)
   end)
 end
 
-local SectionItemStash = Component.new(function(item)
-  local name = ("stash@{%s}"):format(item.idx)
-  return row({
-    text.highlight("NeoJJSubtleText")(name),
-    text.highlight("NeoJJSubtleText")(": "),
-    text(item.message),
-  }, { yankable = item.oid, item = item })
-end)
+local SectionItemChange = Component.new(function(item)
+  local change_id = (item.change_id or ""):sub(1, 12)
+  local commit_id = (item.commit_id or ""):sub(1, 8)
 
-local SectionItemCommit = Component.new(function(item)
-  local ref = {}
-  local ref_last = {}
-
-  if item.commit.ref_name ~= "" and state.get({ "NeoJJMarginPopup", "decorate" }, true) then
-    -- Render local only branches first
-    for name, _ in pairs(item.decoration.locals) do
-      if name:match("^refs/") then
-        table.insert(ref_last, text(name, { highlight = "NeoJJGraphGray" }))
-        table.insert(ref_last, text(" "))
-      elseif item.decoration.remotes[name] == nil then
-        local branch_highlight = item.decoration.head == name and "NeoJJBranchHead" or "NeoJJBranch"
-        table.insert(ref, text(name, { highlight = branch_highlight }))
-        table.insert(ref, text(" "))
-      end
-    end
-
-    -- Render tracked (local+remote) branches next
-    for name, remotes in pairs(item.decoration.remotes) do
-      if #remotes == 1 then
-        table.insert(ref, text(remotes[1] .. "/", { highlight = "NeoJJRemote" }))
-      end
-
-      if #remotes > 1 then
-        table.insert(ref, text("{" .. table.concat(remotes, ",") .. "}/", { highlight = "NeoJJRemote" }))
-      end
-
-      local branch_highlight = item.decoration.head == name and "NeoJJBranchHead" or "NeoJJBranch"
-      local locally = item.decoration.locals[name] ~= nil
-      table.insert(ref, text(name, { highlight = locally and branch_highlight or "NeoJJRemote" }))
-      table.insert(ref, text(" "))
-    end
-
-    -- Render tags
-    for _, tag in pairs(item.decoration.tags) do
-      table.insert(ref, text(tag, { highlight = "NeoJJTagName" }))
-      table.insert(ref, text(" "))
-    end
+  local bookmark_text = ""
+  if item.bookmarks and #item.bookmarks > 0 then
+    bookmark_text = " " .. table.concat(item.bookmarks, " ")
   end
 
-  local virtual_text
-
-  -- Render margin, if visible
-  if state.get({ "margin", "visibility" }, false) then
-    local is_shortstat = state.get({ "margin", "shortstat" }, false)
-
-    if is_shortstat then
-      local cli_shortstat = item.shortstat
-      local files_changed
-      local insertions
-      local deletions
-
-      files_changed = cli_shortstat:match("^ (%d+) files?")
-      files_changed = util.str_min_width(files_changed, 3, nil, { mode = "insert" })
-      insertions = cli_shortstat:match("(%d+) insertions?")
-      insertions = util.str_min_width(insertions and insertions .. "+" or " ", 5, nil, { mode = "insert" })
-      deletions = cli_shortstat:match("(%d+) deletions?")
-      deletions = util.str_min_width(deletions and deletions .. "-" or " ", 5, nil, { mode = "insert" })
-
-      virtual_text = {
-        { " ", "Constant" },
-        { insertions, "NeoJJDiffAdditions" },
-        { " ", "Constant" },
-        { deletions, "NeoJJDiffDeletions" },
-        { " ", "Constant" },
-        { files_changed, "NeoJJSubtleText" },
-      }
-    else -- Author & date margin
-      local margin_date_style = state.get({ "margin", "date_style" }, 1)
-      local details = state.get({ "margin", "details" }, false)
-
-      local date
-      local rel_date
-      local date_width = 10
-      local clamp_width = 30 -- to avoid having too much space when relative date is short
-
-      -- Render date
-      if item.commit.rel_date:match(" years?,") then
-        rel_date, _ = item.commit.rel_date:gsub(" years?,", "y")
-        rel_date = rel_date .. " "
-      elseif item.commit.rel_date:match("^%d ") then
-        rel_date = " " .. item.commit.rel_date
-      else
-        rel_date = item.commit.rel_date
-      end
-
-      if margin_date_style == 1 then -- relative date (short)
-        local unpacked = vim.split(rel_date, " ")
-
-        -- above, we added a space if the rel_date started with a single number
-        -- we get the last two elements to deal with that
-        local date_number = unpacked[#unpacked - 1]
-        local date_quantifier = unpacked[#unpacked]
-        if date_quantifier:match("months?") then
-          date_quantifier = date_quantifier:gsub("m", "M") -- to distinguish from minutes
-        end
-
-        -- add back the space if we have a single number
-        local left_pad
-        if #unpacked > 2 then
-          left_pad = " "
-        else
-          left_pad = ""
-        end
-
-        date = left_pad .. date_number .. date_quantifier:sub(1, 1)
-        date_width = 3
-        clamp_width = 23
-      elseif margin_date_style == 2 then -- relative date (long)
-        date = rel_date
-        date_width = 10
-      else -- local iso date
-        if config.values.log_date_format == nil then
-          -- we get the unix date to be able to convert the date to the local timezone
-          date = os.date("%Y-%m-%d %H:%M", item.commit.unix_date)
-          date_width = 16 -- TODO: what should the width be here?
-        else
-          date = item.commit.log_date
-          date_width = 16
-        end
-      end
-
-      local author_table = { "" }
-      if details then
-        author_table = {
-          util.str_clamp(item.commit.author_name, clamp_width - (#date > date_width and #date or date_width)),
-          "NeoJJGraphAuthor",
-        }
-      end
-
-      virtual_text = {
-        { " ", "Constant" },
-        author_table,
-        { util.str_min_width(date, date_width), "Special" },
-      }
-    end
+  local status_parts = {}
+  if item.empty then
+    table.insert(status_parts, "empty")
   end
-
-  return row(
-    util.merge(
-      { text.highlight("NeoJJObjectId")(item.commit.abbreviated_commit) },
-      { text(" ") },
-      ref,
-      ref_last,
-      { text(item.commit.subject) }
-    ),
-    {
-      virtual_text = virtual_text,
-      oid = item.commit.oid,
-      yankable = item.commit.oid,
-      item = item,
-    }
-  )
-end)
-
-local SectionItemRebase = Component.new(function(item)
-  if item.oid then
-    local action_hl = (item.done and "NeoJJRebaseDone")
-      or (item.action == "onto" and "NeoJJGraphBlue")
-      or "NeoJJGraphOrange"
-
-    return row({
-      text(item.stopped and "> " or "  "),
-      text.highlight(action_hl)(util.pad_right(item.action, 6)),
-      text(" "),
-      text.highlight("NeoJJRebaseDone")(item.abbreviated_commit),
-      text(" "),
-      text.highlight(item.done and "NeoJJRebaseDone")(item.subject),
-    }, { yankable = item.oid, oid = item.oid })
-  else
-    return row {
-      text.highlight("NeoJJGraphOrange")(item.action),
-      text(" "),
-      text(item.subject),
-    }
+  if item.conflict then
+    table.insert(status_parts, "conflict")
   end
-end)
-
-local SectionItemSequencer = Component.new(function(item)
-  local action_hl = (item.action == "join" and "NeoJJGraphRed")
-    or (item.action == "onto" and "NeoJJGraphBlue")
-    or "NeoJJGraphOrange"
-
-  local show_action = #item.action > 0
-  local action = show_action and util.pad_right(item.action, 6) or ""
+  local status_suffix = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
   return row({
-    text.highlight(action_hl)(action),
-    text(show_action and " " or ""),
-    text.highlight("NeoJJObjectId")(item.abbreviated_commit),
+    text.highlight("NeoJJObjectId")(change_id),
     text(" "),
-    text(item.subject),
-  }, { yankable = item.oid, oid = item.oid })
-end)
-
-local SectionItemBisect = Component.new(function(item)
-  local highlight
-  if item.action == "good" then
-    highlight = "NeoJJGraphGreen"
-  elseif item.action == "bad" then
-    highlight = "NeoJJGraphRed"
-  elseif item.finished then
-    highlight = "NeoJJGraphBoldOrange"
-  end
-
-  return row({
-    text(item.finished and "> " or "  "),
-    text.highlight(highlight)(util.pad_right(item.action, 5)),
+    text.highlight("NeoJJSubtleText")(commit_id),
+    text.highlight("NeoJJBranch")(bookmark_text),
     text(" "),
-    text.highlight("NeoJJObjectId")(item.abbreviated_commit),
-    text(" "),
-    text(item.subject),
-  }, { yankable = item.oid, oid = item.oid })
-end)
-
-local BisectDetailsSection = Component.new(function(props)
-  return col.tag("Section")({
-    row(util.merge(props.title, { text(" "), text.highlight("NeoJJObjectId")(props.commit.oid) })),
-    row {
-      text.highlight("NeoJJSubtleText")("Author:     "),
-      text((props.commit.author_name or "") .. " <" .. (props.commit.author_email or "") .. ">"),
-    },
-    row { text.highlight("NeoJJSubtleText")("AuthorDate: "), text(props.commit.author_date) },
-    row {
-      text.highlight("NeoJJSubtleText")("Committer:  "),
-      text((props.commit.committer_name or "") .. " <" .. (props.commit.committer_email or "") .. ">"),
-    },
-    row { text.highlight("NeoJJSubtleText")("CommitDate: "), text(props.commit.committer_date) },
-    EmptyLine(),
-    col(
-      map(props.commit.description, text),
-      { highlight = "NeoJJCommitViewDescription", tag = "Description" }
-    ),
-    EmptyLine(),
+    text(item.description or "(no description)"),
+    text.highlight("NeoJJSubtleText")(status_suffix),
   }, {
-    foldable = true,
-    folded = props.folded,
-    section = props.name,
-    yankable = props.commit.oid,
-    id = props.name,
+    yankable = item.change_id,
+    item = item,
+  })
+end)
+
+local SectionItemBookmark = Component.new(function(item)
+  local remote_text = ""
+  if item.remote and item.remote ~= "" then
+    remote_text = item.remote .. "/"
+  end
+
+  return row({
+    text.highlight("NeoJJBranch")(remote_text .. item.name),
+    text(" "),
+    text.highlight("NeoJJObjectId")((item.change_id or ""):sub(1, 12)),
+    text(" "),
+    text(item.description or "(no description)"),
+  }, {
+    yankable = item.name,
+    item = item,
+  })
+end)
+
+local SectionItemConflict = Component.new(function(item)
+  return row({
+    text.highlight("NeoJJGraphRed")("C "),
+    text(item.name),
+  }, {
+    yankable = item.name,
+    item = item,
   })
 end)
 
@@ -603,60 +292,15 @@ function M.Status(state, config)
   -- stylua: ignore start
   local show_hint = not config.disable_hint
 
-  local show_upstream = state.upstream.ref
-    and not state.head.detached
+  local show_files = state.files and #state.files.items > 0
 
-  local show_pushRemote = state.pushRemote.ref
-    and not state.head.detached
+  local show_conflicts = state.conflicts and #state.conflicts.items > 0
 
-  local show_tag = state.head.tag.name
+  local show_recent = state.recent and #state.recent.items > 0
 
-  local show_tag_distance = state.head.tag.name
-    and not state.head.detached
+  local show_bookmarks = state.bookmarks and #state.bookmarks.items > 0
 
-  local show_merge = state.merge.head
-    and not config.sections.sequencer.hidden
-
-  local show_rebase = #state.rebase.items > 0
-    and not config.sections.rebase.hidden
-
-  local show_cherry_pick = state.sequencer.cherry_pick
-    and not config.sections.sequencer.hidden
-
-  local show_revert = state.sequencer.revert
-    and not config.sections.sequencer.hidden
-
-  local show_bisect = #state.bisect.items > 0
-    and not config.sections.bisect.hidden
-
-  local show_untracked = #state.untracked.items > 0
-    and not config.sections.untracked.hidden
-
-  local show_unstaged = #state.unstaged.items > 0
-    and not config.sections.unstaged.hidden
-
-  local show_staged = #state.staged.items > 0
-    and not config.sections.staged.hidden
-
-  local show_upstream_unpulled = #state.upstream.unpulled.items > 0
-    and not config.sections.unpulled_upstream.hidden
-
-  local show_pushRemote_unpulled = #state.pushRemote.unpulled.items > 0
-    and state.pushRemote.ref ~= state.upstream.ref
-    and not config.sections.unpulled_pushRemote.hidden
-
-  local show_upstream_unmerged = #state.upstream.unmerged.items > 0
-    and not config.sections.unmerged_upstream.hidden
-
-  local show_pushRemote_unmerged = #state.pushRemote.unmerged.items > 0
-    and state.pushRemote.ref ~= state.upstream.ref
-    and not config.sections.unmerged_pushRemote.hidden
-
-  local show_stashes = #state.stashes.items > 0
-    and not config.sections.stashes.hidden
-
-  local show_recent = #state.recent.items > 0
-    and not config.sections.recent.hidden
+  local HEAD_padding = config.status and config.status.HEAD_padding or 10
 
   return {
     List {
@@ -664,181 +308,62 @@ function M.Status(state, config)
         show_hint and HINT { config = config },
         show_hint and EmptyLine(),
         col.tag("Section")({
-          HEAD {
-            name = "Head",
-            branch = state.head.branch,
-            oid = state.head.abbrev,
-            msg = state.head.commit_message,
-            yankable = state.head.oid,
-            show_oid = config.status.show_head_commit_hash,
-            HEAD_padding = config.status.HEAD_padding,
+          JJHead {
+            name = "Change",
+            symbol = "@",
+            change_id = state.head.change_id,
+            commit_id = state.head.commit_id,
+            description = state.head.description,
+            bookmarks = state.head.bookmarks,
+            empty = state.head.empty,
+            conflict = state.head.conflict,
+            HEAD_padding = HEAD_padding,
           },
-          show_upstream and HEAD {
-            name = "Merge",
-            branch = state.upstream.branch,
-            remote = state.upstream.remote,
-            msg = state.upstream.commit_message,
-            yankable = state.upstream.oid,
-            show_oid = config.status.show_head_commit_hash,
-            HEAD_padding = config.status.HEAD_padding,
+          EmptyLine(),
+          JJHead {
+            name = "Parent",
+            symbol = "@-",
+            change_id = state.parent.change_id,
+            commit_id = state.parent.commit_id,
+            description = state.parent.description,
+            bookmarks = state.parent.bookmarks,
+            empty = false,
+            conflict = false,
+            HEAD_padding = HEAD_padding,
           },
-          show_pushRemote and HEAD {
-            name = "Push",
-            branch = state.pushRemote.branch,
-            remote = state.pushRemote.remote,
-            msg = state.pushRemote.commit_message,
-            yankable = state.pushRemote.oid,
-            show_oid = config.status.show_head_commit_hash,
-            HEAD_padding = config.status.HEAD_padding,
-          },
-          show_tag and Tag {
-            name = state.head.tag.name,
-            distance = show_tag_distance and state.head.tag.distance,
-            yankable = state.head.tag.oid,
-            HEAD_padding = config.status.HEAD_padding,
-          },
-        }, { foldable = true, folded = config.status.HEAD_folded }),
+        }, { foldable = true, folded = config.status and config.status.HEAD_folded }),
         EmptyLine(),
-        show_merge and SequencerSection {
-          title = SectionTitleMerge {
-            title = "Merging",
-            branch = state.merge.branch,
-            highlight = "NeoJJMerging",
-          },
-          render = SectionItemSequencer,
-          items = { { action = "", oid = state.merge.head, subject = state.merge.subject } },
-          folded = config.sections.sequencer.folded,
-          name = "merge",
-        },
-        show_rebase and RebaseSection {
-          title = SectionTitleRebase {
-            title = "Rebasing",
-            head = state.rebase.head,
-            onto = state.rebase.onto.ref,
-            oid = state.rebase.onto.oid,
-            is_remote_ref = state.rebase.onto.is_remote,
-            highlight = "NeoJJRebasing",
-          },
-          render = SectionItemRebase,
-          current = state.rebase.current,
-          items = state.rebase.items,
-          folded = config.sections.rebase.folded,
-          name = "rebase",
-        },
-        show_cherry_pick and SequencerSection {
-          title = SectionTitle { title = "Cherry Picking", highlight = "NeoJJPicking" },
-          render = SectionItemSequencer,
-          items = util.reverse(state.sequencer.items),
-          folded = config.sections.sequencer.folded,
-          name = "cherry_pick",
-        },
-        show_revert and SequencerSection {
-          title = SectionTitle { title = "Reverting", highlight = "NeoJJReverting" },
-          render = SectionItemSequencer,
-          items = util.reverse(state.sequencer.items),
-          folded = config.sections.sequencer.folded,
-          name = "revert",
-        },
-        show_bisect and BisectDetailsSection {
-          title = SectionTitle { title = "Bisecting at", highlight = "NeoJJBisecting" },
-          commit = state.bisect.current,
-          folded = config.sections.bisect.folded,
-          name = "bisect_details",
-        },
-        show_bisect and SequencerSection {
-          title = SectionTitle { title = "Bisecting Log", highlight = "NeoJJBisecting" },
-          render = SectionItemBisect,
-          items = state.bisect.items,
-          folded = config.sections.bisect.folded,
-          name = "bisect",
-        },
-        show_untracked and Section {
-          title = SectionTitle { title = "Untracked files", highlight = "NeoJJUntrackedfiles" },
+        show_conflicts and Section {
+          title = SectionTitle { title = "Conflicts", highlight = "NeoJJGraphRed" },
           count = true,
-          render = SectionItemFile("untracked", config),
-          items = state.untracked.items,
-          folded = config.sections.untracked.folded,
-          name = "untracked",
+          render = SectionItemConflict,
+          items = state.conflicts.items,
+          folded = false,
+          name = "conflicts",
         },
-        show_unstaged and Section {
-          title = SectionTitle { title = "Unstaged changes", highlight = "NeoJJUnstagedchanges" },
+        show_files and Section {
+          title = SectionTitle { title = "Modified files", highlight = "NeoJJUnstagedchanges" },
           count = true,
-          render = SectionItemFile("unstaged", config),
-          items = state.unstaged.items,
-          folded = config.sections.unstaged.folded,
-          name = "unstaged",
+          render = SectionItemFile("files", config),
+          items = state.files.items,
+          folded = false,
+          name = "files",
         },
-        show_staged and Section {
-          title = SectionTitle { title = "Staged changes", highlight = "NeoJJStagedchanges" },
-          count = true,
-          render = SectionItemFile("staged", config),
-          items = state.staged.items,
-          folded = config.sections.staged.folded,
-          name = "staged",
-        },
-        show_stashes and Section {
-          title = SectionTitle { title = "Stashes", highlight = "NeoJJStashes" },
-          count = true,
-          render = SectionItemStash,
-          items = state.stashes.items,
-          folded = config.sections.stashes.folded,
-          name = "stashes",
-        },
-        show_upstream_unmerged and Section {
-          title = SectionTitleRemote {
-            title = "Unmerged into",
-            ref = state.upstream.ref,
-            highlight = "NeoJJUnmergedchanges",
-          },
-          count = true,
-          render = SectionItemCommit,
-          items = state.upstream.unmerged.items,
-          folded = config.sections.unmerged_upstream.folded,
-          name = "upstream_unmerged",
-        },
-        show_pushRemote_unmerged and Section {
-          title = SectionTitleRemote {
-            title = "Unpushed to",
-            ref = state.pushRemote.ref,
-            highlight = "NeoJJUnpushedchanges",
-          },
-          count = true,
-          render = SectionItemCommit,
-          items = state.pushRemote.unmerged.items,
-          folded = config.sections.unmerged_pushRemote.folded,
-          name = "pushRemote_unmerged",
-        },
-        not show_upstream_unmerged and show_recent and Section {
-          title = SectionTitle { title = "Recent Commits", highlight = "NeoJJRecentcommits" },
+        show_recent and Section {
+          title = SectionTitle { title = "Recent Changes", highlight = "NeoJJRecentcommits" },
           count = false,
-          render = SectionItemCommit,
+          render = SectionItemChange,
           items = state.recent.items,
-          folded = config.sections.recent.folded,
+          folded = config.sections and config.sections.recent and config.sections.recent.folded,
           name = "recent",
         },
-        show_upstream_unpulled and Section {
-          title = SectionTitleRemote {
-            title = "Unpulled from",
-            ref = state.upstream.ref,
-            highlight = "NeoJJUnpulledchanges",
-          },
+        show_bookmarks and Section {
+          title = SectionTitle { title = "Bookmarks", highlight = "NeoJJBranch" },
           count = true,
-          render = SectionItemCommit,
-          items = state.upstream.unpulled.items,
-          folded = config.sections.unpulled_upstream.folded,
-          name = "upstream_unpulled",
-        },
-        show_pushRemote_unpulled and Section {
-          title = SectionTitleRemote {
-            title = "Unpulled from",
-            ref = state.pushRemote.ref,
-            highlight = "NeoJJUnpulledchanges",
-          },
-          count = true,
-          render = SectionItemCommit,
-          items = state.pushRemote.unpulled.items,
-          folded = config.sections.unpulled_pushRemote.folded,
-          name = "pushRemote_unpulled",
+          render = SectionItemBookmark,
+          items = state.bookmarks.items,
+          folded = config.sections and config.sections.recent and config.sections.recent.folded,
+          name = "bookmarks",
         },
       },
     },
