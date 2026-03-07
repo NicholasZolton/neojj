@@ -210,15 +210,17 @@ function M.build(item)
           end
         end
 
-        -- Always use sync :wait() — jj diff takes ~20ms which is imperceptible.
-        -- The async a.wrap + vim.schedule path adds ~1200ms of event loop overhead.
-        local result = vim.system(
-          { "jj", "--no-pager", "--color=never", "--ignore-working-copy", "diff", "--git", "--", item.name },
-          { cwd = cwd or vim.fn.getcwd(), text = true }
-        ):wait()
+        -- Use vim.fn.systemlist — fully synchronous, no event loop interaction,
+        -- safe inside plenary.async coroutines (unlike vim.system:wait()).
+        local target_cwd = cwd or vim.fn.getcwd()
+        local lines = vim.fn.systemlist({
+          "jj", "--no-pager", "--color=never", "--ignore-working-copy",
+          "-R", target_cwd,
+          "diff", "--git", "--", item.name,
+        })
+        local exit_code = vim.v.shell_error
 
-        if result.code == 0 and result.stdout and result.stdout ~= "" then
-          local lines = vim.split(result.stdout, "\n", { trimempty = true })
+        if exit_code == 0 and #lines > 0 then
           self.diff = M.parse(lines)
         else
           self.diff = empty_diff

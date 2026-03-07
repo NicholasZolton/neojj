@@ -152,10 +152,12 @@ end
 ---Update repository state with jj status data
 ---@param state NeoJJRepoState
 function meta.update(state)
+  local t0 = vim.uv.hrtime()
   local cwd = state.worktree_root
 
   -- Get file changes (needs working copy snapshot, no --ignore-working-copy)
   local diff_lines = jj_exec({ "jj", "--no-pager", "--color=never", "diff", "-s" }, cwd)
+  vim.notify(("[STATUS] diff -s: %.0fms"):format((vim.uv.hrtime() - t0) / 1e6))
   if diff_lines then
     state.files.items = M.parse_diff_summary(diff_lines, cwd)
 
@@ -167,7 +169,9 @@ function meta.update(state)
   end
 
   -- Get status (working copy + parent info, snapshot already done by diff above)
+  local t1 = vim.uv.hrtime()
   local status_lines = jj_exec({ "jj", "--no-pager", "--color=never", "status" }, cwd)
+  vim.notify(("[STATUS] status: %.0fms, total: %.0fms"):format((vim.uv.hrtime() - t1) / 1e6, (vim.uv.hrtime() - t0) / 1e6))
   if status_lines then
     local parsed = M.parse_status_lines(status_lines)
     state.head.change_id = parsed.head.change_id

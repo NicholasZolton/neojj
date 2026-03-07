@@ -172,6 +172,7 @@ function Repo:_make_task(name, mod)
     local start = vim.uv.hrtime()
     mod.update(self.state)
     local elapsed = (vim.uv.hrtime() - start) / 1e6
+    vim.notify(("[REPO] %s: %.0fms"):format(name, elapsed))
     logger.trace(("[REPO] %s updated in %.1fms"):format(name, elapsed))
   end
 end
