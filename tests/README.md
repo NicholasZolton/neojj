@@ -1,14 +1,14 @@
-# Neogit Tests
+# NeoJJ Tests
 
 ## Running Tests
 
 As a base requirement you must have `make` installed.
 
-Once `make` is installed you can run tests by entering `make test` in the top level directory of Neogit into your command line.
+Once `make` is installed you can run tests by entering `make test` in the top level directory of NeoJJ into your command line.
 
 ## Adding a test dependency
 
-If you're adding a lua plugin dependency to Neogit and wish to test it, open `tests/init.lua` in your editor.
+If you're adding a lua plugin dependency to NeoJJ and wish to test it, open `tests/init.lua` in your editor.
 
 Look for the following lines:
 
@@ -16,7 +16,7 @@ Look for the following lines:
 if os.getenv("CI") then
   vim.opt.runtimepath:prepend(vim.fn.getcwd())
   vim.cmd([[runtime! plugin/plenary.vim]])
-  vim.cmd([[runtime! plugin/neogit.lua]])
+  vim.cmd([[runtime! plugin/neojj.lua]])
 else
   ensure_installed("nvim-lua/plenary.nvim")
   ensure_installed("nvim-telescope/telescope.nvim")
@@ -29,7 +29,7 @@ As an example let's say we want to add [`vim-fugitive`](https://github.com/tpope
 if os.getenv("CI") then
   vim.opt.runtimepath:prepend(vim.fn.getcwd())
   vim.cmd([[runtime! plugin/plenary.vim]])
-  vim.cmd([[runtime! plugin/neogit.lua]])
+  vim.cmd([[runtime! plugin/neojj.lua]])
   vim.cmd([[runtime! plugin/fugitive.vim]])
 else
   ensure_installed("nvim-lua/plenary.nvim")
@@ -42,13 +42,13 @@ end
 
 ### Where do tests go?
 
-All tests are to be placed within the `tests/specs` directory, and placed mocking the path of the Neogit module the test is responsible for. For instance, say you wanted to test `lua/neogit/config.lua` then you would create the test file in `tests/specs/neogit/config_spec.lua` which mirrors the path in the main Neogit module.
+All tests are to be placed within the `tests/specs` directory, and placed mocking the path of the NeoJJ module the test is responsible for. For instance, say you wanted to test `lua/neojj/config.lua` then you would create the test file in `tests/specs/neojj/config_spec.lua` which mirrors the path in the main NeoJJ module.
 
 ### Where do utility functions go?
 
 If you have any utility code that has to do with git, it should be placed in `tests/util/git_harness.lua`.
 
-If you have a generic utility function _only_ relevant for tests then it should go in `tests/util/util.lua`. If it is generic enough that it could be useful in the general Neogit code then a consideration should be made to place this utility code in `lua/neogit/lib/util.lua`.
+If you have a generic utility function _only_ relevant for tests then it should go in `tests/util/util.lua`. If it is generic enough that it could be useful in the general NeoJJ code then a consideration should be made to place this utility code in `lua/neojj/lib/util.lua`.
 
 ### Where should raw content files go?
 
@@ -78,11 +78,11 @@ end)
 
 Nothing too crazy there.
 
-Now let's take a look at a test for Neogit, specifically our `tests/specs/neogit/lib/git/cli_spec.lua` test.
+Now let's take a look at a test for NeoJJ, specifically our `tests/specs/neojj/lib/git/cli_spec.lua` test.
 
 ```lua
 local eq = assert.are.same
-local git_cli = require("neogit.lib.git.cli")
+local git_cli = require("neojj.lib.git.cli")
 local git_harness = require("tests.util.git_harness")
 local in_prepared_repo = git_harness.in_prepared_repo
 
@@ -99,7 +99,7 @@ describe("git cli", function()
 end)
 ```
 
-This test gets the root directory of a git repository. You'll notice something interesting we do in our `it` statement different from the prior example. We're passing `in_prepared_repo` to `it`. This function sets up a simple test bed repository (specifically the repository found with `tests/.repo`) to test Neogit against. If you ever need to test Neogit in a way that requires a git repository, you probably want to use `in_prepared_repo`.
+This test gets the root directory of a git repository. You'll notice something interesting we do in our `it` statement different from the prior example. We're passing `in_prepared_repo` to `it`. This function sets up a simple test bed repository (specifically the repository found with `tests/.repo`) to test NeoJJ against. If you ever need to test NeoJJ in a way that requires a git repository, you probably want to use `in_prepared_repo`.
 
 For more test examples take a look at the tests written within the `tests` directory or our test runner's testing guide: [plenary test guide](https://github.com/nvim-lua/plenary.nvim/blob/master/TESTS_README.md).
 
