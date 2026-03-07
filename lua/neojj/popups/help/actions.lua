@@ -1,5 +1,4 @@
 local M = {}
-
 local util = require("neojj.lib.util")
 local NONE = function() end
 
@@ -9,11 +8,7 @@ local popup_mappings = require("neojj.config").get_reversed_popup_maps()
 local function present(commands)
   local presenter = util.map(commands, function(command)
     local cmd, name, fn = unpack(command)
-
-    --- Handle the longer table mapping form (mode, func, esc)
-    if type(fn) == "table" then
-      fn = fn[2]
-    end
+    if type(fn) == "table" then fn = fn[2] end
 
     local keymap = status_mappings[cmd]
     if not keymap or keymap == "<nop>" then
@@ -21,12 +16,10 @@ local function present(commands)
     end
 
     if type(keymap) == "table" and next(keymap) then
-      -- HACK: Remove "za" as listed keymap for toggle action.
       table.sort(keymap)
       if name == "Toggle" and keymap[2] == "za" then
         table.remove(keymap, 2)
       end
-
       return { { name = name, keys = keymap, cmp = table.concat(keymap):lower(), fn = fn } }
     else
       return { { name = name, keys = {}, cmp = "", fn = fn } }
@@ -34,7 +27,6 @@ local function present(commands)
   end)
 
   presenter = util.flatten(presenter)
-
   table.sort(presenter, function(a, b)
     return a.cmp < b.cmp
   end)
@@ -45,85 +37,19 @@ end
 M.popups = function(env)
   local popups = require("neojj.popups")
   local items = {
-    {
-      "CommandHistory",
-      "History",
-      function()
-        require("neojj.buffers.git_command_history"):new():show()
-      end,
-    },
-    { "InitRepo", "Init", require("neojj.lib.git").init.init_repo },
-    -- { "HelpPopup", "Help", M.open("help") },
-    { "DiffPopup", "Diff", popups.open("diff", function(p)
-      p(env.diff)
-    end) },
-    { "PullPopup", "Pull", popups.open("pull", function(p)
-      p(env.pull)
-    end) },
-    { "RebasePopup", "Rebase", popups.open("rebase", function(p)
-      p(env.rebase)
-    end) },
-    { "MergePopup", "Merge", popups.open("merge", function(p)
-      p(env.merge)
-    end) },
-    { "PushPopup", "Push", popups.open("push", function(p)
-      p(env.push)
-    end) },
-    { "CommitPopup", "Commit", popups.open("commit", function(p)
-      p(env.commit)
-    end) },
-    { "IgnorePopup", "Ignore", popups.open("ignore", function(p)
-      p(env.ignore)
-    end) },
-    { "TagPopup", "Tag", popups.open("tag", function(p)
-      p(env.tag)
-    end) },
-    { "LogPopup", "Log", popups.open("log", function(p)
-      p(env.log)
-    end) },
-    { "MarginPopup", "Margin", popups.open("margin", function(p)
-      p(env.margin)
-    end) },
-    {
-      "CherryPickPopup",
-      "Cherry Pick",
-      popups.open("cherry_pick", function(p)
-        p(env.cherry_pick)
-      end),
-    },
-    { "BranchPopup", "Branch", popups.open("branch", function(p)
-      p(env.branch)
-    end) },
-    { "BisectPopup", "Bisect", popups.open("bisect", function(p)
-      p(env.bisect)
-    end) },
-    { "FetchPopup", "Fetch", popups.open("fetch", function(p)
-      p(env.fetch)
-    end) },
-    { "BookmarkPopup", "Bookmark", popups.open("bookmark", function(p)
-      p(env.bookmark)
-    end) },
-    { "SquashPopup", "Squash", popups.open("squash", function(p)
-      p(env.squash)
-    end) },
-    { "ChangePopup", "Change", popups.open("change", function(p)
-      p(env.change)
-    end) },
-    { "ResetPopup", "Reset", popups.open("reset", function(p)
-      p(env.reset)
-    end) },
-    { "RevertPopup", "Revert", popups.open("revert", function(p)
-      p(env.revert)
-    end) },
-    { "RemotePopup", "Remote", popups.open("remote", function(p)
-      p(env.remote)
-    end) },
-    { "WorktreePopup", "Worktree", popups.open("worktree", function(p)
-      p(env.worktree)
-    end) },
-    { "StashPopup", "Stash", popups.open("stash", function(p)
-      p(env.stash)
-    end) },
+    { "CommandHistory", "History", function()
+      require("neojj.buffers.git_command_history"):new():show()
+    end },
+    { "DiffPopup", "Diff", popups.open("diff", function(p) p(env.diff or {}) end) },
+    { "RebasePopup", "Rebase", popups.open("rebase", function(p) p(env.rebase or {}) end) },
+    { "PushPopup", "Push", popups.open("push", function(p) p(env.push or {}) end) },
+    { "CommitPopup", "Commit", popups.open("commit", function(p) p(env.commit or {}) end) },
+    { "LogPopup", "Log", popups.open("log", function(p) p(env.log or {}) end) },
+    { "FetchPopup", "Fetch", popups.open("fetch", function(p) p(env.fetch or {}) end) },
+    { "BookmarkPopup", "Bookmark", popups.open("bookmark", function(p) p(env.bookmark or {}) end) },
+    { "SquashPopup", "Squash", popups.open("squash", function(p) p(env.squash or {}) end) },
+    { "ChangePopup", "Change", popups.open("change", function(p) p(env.change or {}) end) },
+    { "RemotePopup", "Remote", popups.open("remote", function(p) p(env.remote or {}) end) },
     { "Command", "Command", require("neojj.buffers.status.actions").n_command(nil) },
   }
 
@@ -132,28 +58,18 @@ end
 
 M.actions = function()
   return present {
-    { "Stage", "Stage", NONE },
-    { "StageUnstaged", "Stage unstaged", NONE },
-    { "StageAll", "Stage all", NONE },
-    { "Unstage", "Unstage", NONE },
-    { "UnstageStaged", "Unstage all", NONE },
     { "Discard", "Discard", NONE },
-    { "Untrack", "Untrack", NONE },
   }
 end
 
 M.essential = function()
   return present {
-    {
-      "RefreshBuffer",
-      "Refresh",
-      function()
-        local status = require("neojj.buffers.status")
-        if status.is_open() then
-          status.instance():dispatch_refresh(nil, "user_refresh")
-        end
-      end,
-    },
+    { "RefreshBuffer", "Refresh", function()
+      local status = require("neojj.buffers.status")
+      if status.is_open() then
+        status.instance():dispatch_refresh(nil, "user_refresh")
+      end
+    end },
     { "GoToFile", "Go to file", NONE },
     { "Toggle", "Toggle", NONE },
   }

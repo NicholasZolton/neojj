@@ -1,6 +1,7 @@
 local M = {}
 local config = require("neojj.config")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
+local jj = require("neojj.lib.jj")
 
 local function get_diff_integration()
   local viewer = config.get_diff_viewer()
@@ -10,116 +11,66 @@ local function get_diff_integration()
     return require("neojj.integrations.diffview")
   end
 end
-local util = require("neojj.lib.util")
-local git = require("neojj.lib.git")
-local input = require("neojj.lib.input")
 
--- aka "dwim" = do what I mean
 function M.this(popup)
   popup:close()
-
   local item = popup:get_env("item")
   local section = popup:get_env("section")
 
   if section and section.name and item and item.name then
     get_diff_integration().open(section.name, item.name, { only = true })
-  elseif section.name then
+  elseif section and section.name then
     get_diff_integration().open(section.name, nil, { only = true })
-  elseif item.name then
-    get_diff_integration().open("range", item.name .. "..HEAD")
-  end
-end
-
-function M.this_to_HEAD(popup)
-  popup:close()
-
-  local item = popup:get_env("item")
-  if item then
-    if item.name then
-      get_diff_integration().open("range", item.name .. "..HEAD")
-    end
+  elseif item and item.name then
+    get_diff_integration().open("range", item.name)
   end
 end
 
 function M.range(popup)
-  local commit
-  local item = popup:get_env("item")
-  local section = popup:get_env("section")
-  if section and (section.name == "log" or section.name == "recent") then
-    commit = item and item.name
+  local options = {}
+  for _, item in ipairs(jj.repo.state.recent.items) do
+    local short = string.sub(item.change_id, 1, 12)
+    local desc = item.description ~= "" and item.description or "(no description)"
+    table.insert(options, short .. " " .. desc)
   end
 
-  local options = util.deduplicate(
-    util.merge(
-      { commit, git.branch.current() or "HEAD" },
-      git.branch.get_all_branches(false),
-      git.tag.list(),
-      git.refs.heads()
-    )
-  )
-
-  local range_from = FuzzyFinderBuffer.new(options):open_async {
-    prompt_prefix = "Diff for range from",
+  local from_sel = FuzzyFinderBuffer.new(options):open_async {
+    prompt_prefix = "Diff from",
     refocus_status = false,
   }
+  if not from_sel then return end
+  local range_from = from_sel:match("^(%S+)")
 
-  if not range_from then
-    return
-  end
-
-  local range_to = FuzzyFinderBuffer.new(options)
-    :open_async { prompt_prefix = "Diff from " .. range_from .. " to", refocus_status = false }
-  if not range_to then
-    return
-  end
-
-  local choices = {
-    "&1. Range (a..b)",
-    "&2. Symmetric Difference (a...b)",
-    "&3. Cancel",
+  local to_sel = FuzzyFinderBuffer.new(options):open_async {
+    prompt_prefix = "Diff to",
+    refocus_status = false,
   }
-  local choice = input.get_choice("Select type", { values = choices, default = #choices })
+  if not to_sel then return end
+  local range_to = to_sel:match("^(%S+)")
 
   popup:close()
-  if choice == "1" then
-    get_diff_integration().open("range", range_from .. ".." .. range_to)
-  elseif choice == "2" then
-    get_diff_integration().open("range", range_from .. "..." .. range_to)
-  end
+  get_diff_integration().open("range", range_from .. ".." .. range_to)
 end
 
-function M.worktree(popup)
+function M.working_copy(popup)
   popup:close()
   get_diff_integration().open("worktree")
 end
 
-function M.staged(popup)
-  popup:close()
-  get_diff_integration().open("staged", nil, { only = true })
-end
-
-function M.unstaged(popup)
-  popup:close()
-  get_diff_integration().open("unstaged", nil, { only = true })
-end
-
-function M.stash(popup)
+function M.change(popup)
   popup:close()
 
-  local selected = FuzzyFinderBuffer.new(git.stash.list()):open_async { refocus_status = false }
-  if selected then
-    get_diff_integration().open("stashes", selected)
+  local options = {}
+  for _, item in ipairs(jj.repo.state.recent.items) do
+    local short = string.sub(item.change_id, 1, 12)
+    local desc = item.description ~= "" and item.description or "(no description)"
+    table.insert(options, short .. " " .. desc)
   end
-end
-
-function M.commit(popup)
-  popup:close()
-
-  local options = util.merge(git.refs.list_branches(), git.refs.list_tags(), git.refs.heads())
 
   local selected = FuzzyFinderBuffer.new(options):open_async { refocus_status = false }
   if selected then
-    get_diff_integration().open("commit", selected)
+    local change_id = selected:match("^(%S+)")
+    get_diff_integration().open("commit", change_id)
   end
 end
 

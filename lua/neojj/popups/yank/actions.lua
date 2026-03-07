@@ -1,8 +1,6 @@
 local notification = require("neojj.lib.notification")
 local M = {}
 
----@param key string
----@return fun(popup: PopupData)
 local function yank(key)
   return function(popup)
     local data = popup:get_env(key)
@@ -13,13 +11,11 @@ local function yank(key)
   end
 end
 
-M.hash = yank("hash")
+M.change_id = yank("change_id")
+M.commit_id = yank("commit_id")
 M.subject = yank("subject")
 M.message = yank("message")
-M.body = yank("body")
-M.url = yank("url")
 M.diff = yank("diff")
 M.author = yank("author")
-M.tags = yank("tags")
 
 return M

@@ -7,20 +7,17 @@ function M.create(env)
   local p = popup
     .builder()
     :name("NeoJJYankPopup")
-    :group_heading("Yank Commit info")
-    :action("Y", "Hash", actions.hash)
+    :group_heading("Yank Change info")
+    :action("c", "Change ID", actions.change_id)
+    :action("C", "Commit ID", actions.commit_id)
     :action("s", "Subject", actions.subject)
-    :action("m", "Message (subject and body)", actions.message)
-    :action("b", "Message body", actions.body)
-    :action_if(env.url, "u", "URL", actions.url)
+    :action("m", "Message", actions.message)
     :action("d", "Diff", actions.diff)
     :action("a", "Author", actions.author)
-    :action_if(env.tags ~= "", "t", "Tags", actions.tags)
     :env(env)
     :build()
 
   p:show()
-
   return p
 end
 

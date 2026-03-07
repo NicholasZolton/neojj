@@ -1,189 +1,88 @@
-local git = require("neojj.lib.git")
-local input = require("neojj.lib.input")
+local M = {}
+local jj = require("neojj.lib.jj")
 local notification = require("neojj.lib.notification")
-local util = require("neojj.lib.util")
-
-local CommitSelectViewBuffer = require("neojj.buffers.commit_select_view")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 
-local M = {}
-
-local function base_commit(popup, list, header)
-  return popup.state.env.commit or CommitSelectViewBuffer.new(list, git.remote.list(), header):open_async()[1]
+local function get_recent_change_ids()
+  local items = jj.repo.state.recent.items
+  local ids = {}
+  for _, item in ipairs(items) do
+    local short = string.sub(item.change_id, 1, 12)
+    local desc = item.description ~= "" and item.description or "(no description)"
+    table.insert(ids, short .. " " .. desc)
+  end
+  return ids
 end
 
-function M.onto_base(popup)
-  git.rebase.onto_branch(git.branch.base_branch(), popup:get_arguments())
+local function extract_change_id(selection)
+  if not selection then return nil end
+  return selection:match("^(%S+)")
 end
 
-function M.onto_pushRemote(popup)
-  local pushRemote = git.branch.pushRemote()
-  if not pushRemote then
-    pushRemote = git.branch.set_pushRemote()
-  end
+function M.source_onto(popup)
+  local options = get_recent_change_ids()
+  local source_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Rebase source" }
+  local source = extract_change_id(source_sel)
+  if not source then return end
 
-  if pushRemote then
-    git.rebase.onto_branch(
-      string.format("refs/remotes/%s/%s", pushRemote, git.branch.current()),
-      popup:get_arguments()
-    )
-  end
-end
-
-function M.onto_upstream(popup)
-  local upstream = git.branch.upstream(git.branch.current())
-  if not upstream then
-    upstream = FuzzyFinderBuffer.new(git.refs.list_branches()):open_async()
-  end
-
-  if upstream then
-    git.rebase.onto_branch(upstream, popup:get_arguments())
-  end
-end
-
-function M.onto_elsewhere(popup)
-  local target = FuzzyFinderBuffer.new(git.refs.list_branches()):open_async()
-  if target then
-    git.rebase.onto_branch(target, popup:get_arguments())
-  end
-end
-
-function M.interactively(popup)
-  local commit = base_commit(
-    popup,
-    git.log.list({}, {}, {}, true),
-    "Select a commit with <cr> to rebase it and all commits above it, or <esc> to abort"
-  )
-  if commit then
-    if not git.log.is_ancestor(commit, "HEAD") then
-      notification.warn("Commit isn't an ancestor of HEAD")
-      return
-    end
-
-    local args = popup:get_arguments()
-
-    local merges = git.cli["rev-list"].merges.args(commit .. "..HEAD").call({ hidden = true }).stdout
-    if merges[1] then
-      local choice = input.get_choice("Proceed despite merge in rebase range?", {
-        values = { "&continue", "&select other", "&abort" },
-        default = 1,
-      })
-
-      -- selene: allow(empty_if)
-      if choice == "c" then
-        -- no-op
-      elseif choice == "s" then
-        popup.state.env.commit = nil
-        M.interactively(popup)
-        return
-      else
-        return
-      end
-    end
-
-    local parent = git.log.parent(commit)
-    if parent then
-      commit = commit .. "^"
-    else
-      table.insert(args, "--root")
-    end
-
-    git.rebase.rebase_interactive(commit, args)
-  end
-end
-
-function M.reword(popup)
-  local commit = base_commit(
-    popup,
-    git.log.list(),
-    "Select a commit to with <cr> to reword its message, or <esc> to abort"
-  )
-  if not commit then
-    return
-  end
-
-  git.rebase.reword(commit)
-end
-
-function M.modify(popup)
-  local commit = base_commit(popup, git.log.list(), "Select a commit to edit with <cr>, or <esc> to abort")
-  if commit then
-    git.rebase.modify(commit)
-  end
-end
-
-function M.drop(popup)
-  local commit = base_commit(popup, git.log.list(), "Select a commit to remove with <cr>, or <esc> to abort")
-  if commit then
-    git.rebase.drop(commit)
-  end
-end
-
-function M.subset(popup)
-  local newbase = FuzzyFinderBuffer.new(git.refs.list_branches())
-    :open_async { prompt_prefix = "rebase subset onto" }
-  if not newbase then
-    return
-  end
-
-  local start
-  if popup.state.env.commit and git.log.is_ancestor(popup.state.env.commit, "HEAD") then
-    start = popup.state.env.commit
-  else
-    start = CommitSelectViewBuffer.new(
-      git.log.list { "HEAD" },
-      git.remote.list(),
-      "Select a commit with <cr> to rebase it and commits above it onto " .. newbase .. ", or <esc> to abort"
-    )
-      :open_async()[1]
-  end
-  if not start then
-    return
-  end
+  local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination" }
+  local dest = extract_change_id(dest_sel)
+  if not dest then return end
 
   local args = popup:get_arguments()
-  local parent = git.log.parent(start)
-  if parent then
-    start = start .. "^"
+  local builder = jj.cli.rebase.source(source).destination(dest)
+  if #args > 0 then builder = builder.args(unpack(args)) end
+  local result = builder.call()
+  if result and result.code == 0 then
+    notification.info("Rebased " .. source .. " onto " .. dest, { dismiss = true })
   else
-    table.insert(args, "--root")
+    notification.warn("Rebase failed", { dismiss = true })
   end
-  git.rebase.onto(start, newbase, args)
 end
 
-function M.continue()
-  git.rebase.continue()
-end
+function M.bookmark_onto(popup)
+  -- Select bookmark first
+  local bookmarks = {}
+  for _, item in ipairs(jj.repo.state.bookmarks.items) do
+    if not item.remote then table.insert(bookmarks, item.name) end
+  end
+  local bm = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rebase bookmark" }
+  if not bm then return end
 
-function M.skip()
-  git.rebase.skip()
-end
+  local options = get_recent_change_ids()
+  local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination" }
+  local dest = extract_change_id(dest_sel)
+  if not dest then return end
 
-function M.edit()
-  git.rebase.edit()
-end
-
-function M.autosquash(popup)
-  local base
-  if popup.state.env.commit and git.log.is_ancestor(popup.state.env.commit, "HEAD") then
-    base = popup.state.env.commit
+  local args = popup:get_arguments()
+  local builder = jj.cli.rebase.branch(bm).destination(dest)
+  if #args > 0 then builder = builder.args(unpack(args)) end
+  local result = builder.call()
+  if result and result.code == 0 then
+    notification.info("Rebased bookmark " .. bm .. " onto " .. dest, { dismiss = true })
   else
-    base = git.rebase.merge_base_HEAD()
-  end
-
-  if base then
-    git.rebase.onto(
-      "HEAD",
-      base,
-      util.deduplicate(util.merge(popup:get_arguments(), { "--autosquash", "--keep-empty" }))
-    )
+    notification.warn("Rebase failed", { dismiss = true })
   end
 end
 
--- TODO: Extract to rebase lib?
-function M.abort()
-  if input.get_permission("Abort rebase?") then
-    git.rebase.abort()
+function M.revision_onto(popup)
+  local options = get_recent_change_ids()
+  local rev_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Rebase revision" }
+  local rev = extract_change_id(rev_sel)
+  if not rev then return end
+
+  local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination" }
+  local dest = extract_change_id(dest_sel)
+  if not dest then return end
+
+  local args = popup:get_arguments()
+  local builder = jj.cli.rebase.revision(rev).destination(dest)
+  if #args > 0 then builder = builder.args(unpack(args)) end
+  local result = builder.call()
+  if result and result.code == 0 then
+    notification.info("Rebased " .. rev .. " onto " .. dest, { dismiss = true })
+  else
+    notification.warn("Rebase failed", { dismiss = true })
   end
 end
 
