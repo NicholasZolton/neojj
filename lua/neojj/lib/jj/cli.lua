@@ -174,6 +174,7 @@ function M._to_process(tbl, opts)
     env = state.env,
     input = state.input,
     pty = state.in_pty,
+    suppress_console = opts and opts.hidden or false,
     on_error = opts and opts.on_error or nil,
   }
 end
@@ -536,18 +537,33 @@ setmetatable(M, {
 -- Utility functions
 -- ============================================================
 
+---@type table<string, string|false>
+local workspace_root_cache = {}
+
 ---Get the workspace root directory
 ---@param dir? string Directory to check from
 ---@return string|nil root
 function M.workspace_root(dir)
+  dir = dir or vim.fn.getcwd()
+  local key = vim.fn.fnamemodify(dir, ":p")
+
+  if workspace_root_cache[key] ~= nil then
+    local cached = workspace_root_cache[key]
+    return cached ~= false and cached or nil
+  end
+
   local result = Process.new({
     cmd = { "jj", "--no-pager", "--color=never", "workspace", "root" },
-    cwd = dir or vim.fn.getcwd(),
+    cwd = dir,
   }):spawn_blocking()
 
   if result and result.code == 0 and result.stdout[1] then
-    return result.stdout[1]:gsub("%s+$", "")
+    local root = result.stdout[1]:gsub("%s+$", "")
+    workspace_root_cache[key] = root
+    return root
   end
+
+  workspace_root_cache[key] = false
   return nil
 end
 
@@ -556,6 +572,11 @@ end
 ---@return boolean
 function M.is_inside_workspace(dir)
   return M.workspace_root(dir) ~= nil
+end
+
+---Clear the workspace root cache (e.g., after init)
+function M.clear_cache()
+  workspace_root_cache = {}
 end
 
 return M

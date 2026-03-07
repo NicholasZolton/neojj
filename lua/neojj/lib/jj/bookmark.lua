@@ -43,13 +43,19 @@ function M.parse_list(lines)
   return items
 end
 
----List all bookmarks
+---List bookmarks (local only, limited)
+---@param limit? number Max bookmarks to return (default 20)
 ---@return NeoJJBookmarkItem[]
-function M.list()
+function M.list(limit)
+  limit = limit or 20
   local jj = require("neojj.lib.jj")
-  local result = jj.cli.bookmark_list.all_remotes.call { hidden = true, trim = true }
+  local result = jj.cli.bookmark_list.call { hidden = true, trim = true }
   if result and result.code == 0 then
-    return M.parse_list(result.stdout)
+    local items = M.parse_list(result.stdout)
+    if #items > limit then
+      return { unpack(items, 1, limit) }
+    end
+    return items
   end
   return {}
 end
