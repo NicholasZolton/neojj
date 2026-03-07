@@ -37,8 +37,7 @@ function M.get_envs_git_editor(show_diff)
   local nvim_cmd = M.get_nvim_remote_editor(show_diff)
 
   local env = {
-    GIT_SEQUENCE_EDITOR = nvim_cmd,
-    GIT_EDITOR = nvim_cmd,
+    JJ_EDITOR = nvim_cmd,
   }
 
   if os.getenv("NEOJJ_DEBUG") then
@@ -92,25 +91,13 @@ function M.editor(target, client, show_diff)
   end
 
   local kind
-  if target:find("COMMIT_EDITMSG$") then
+  if target:find("COMMIT_EDITMSG$") or target:find("EDIT_DESCRIPTION$") then
     kind = config.values.commit_editor.kind
-  elseif target:find("MERGE_MSG$") then
-    kind = config.values.merge_editor.kind
-  elseif target:find("TAG_EDITMSG$") or target:find("EDIT_DESCRIPTION$") then
-    kind = "popup"
-  elseif target:find("git%-rebase%-todo$") then
-    kind = config.values.rebase_editor.kind
   else
     kind = "auto"
   end
 
-  local editor
-  if target:find("git%-rebase%-todo$") then
-    editor = require("neojj.buffers.rebase_editor")
-  else
-    editor = require("neojj.buffers.editor")
-  end
-
+  local editor = require("neojj.buffers.editor")
   editor.new(target, send_client_quit, show_diff):open(kind)
 end
 

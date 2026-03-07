@@ -43,16 +43,6 @@ function M.get_reversed_popup_maps()
 end
 
 ---@return table<string, string[]>
-function M.get_reversed_rebase_editor_maps()
-  return get_reversed_maps("rebase_editor")
-end
-
----@return table<string, string[]>
-function M.get_reversed_rebase_editor_maps_I()
-  return get_reversed_maps("rebase_editor_I")
-end
-
----@return table<string, string[]>
 function M.get_reversed_commit_editor_maps()
   return get_reversed_maps("commit_editor")
 end
@@ -65,11 +55,6 @@ end
 ---@return table<string, string[]>
 function M.get_reversed_commit_view_maps()
   return get_reversed_maps("commit_view")
-end
-
----@return table<string, string[]>
-function M.get_reversed_refs_view_maps()
-  return get_reversed_maps("refs_view")
 end
 
 ---@param set string
@@ -117,16 +102,8 @@ end
 ---@field style? string
 ---@field border? string
 
----@alias StagedDiffSplitKind
----| "split" Open in a split
----| "vsplit" Open in a vertical split
----| "split_above" Like :top split
----| "auto" "vsplit" if window would have 80 cols, otherwise "split"
-
 ---@class NeoJJCommitEditorConfigPopup Popup window options
 ---@field kind WindowKind The type of window that should be opened
----@field show_staged_diff? boolean Display staged changes in a buffer when committing
----@field staged_diff_split_kind? StagedDiffSplitKind Whether to show staged changes in a vertical or horizontal split
 ---@field spell_check? boolean Enable/Disable spell checking
 
 ---@alias NeoJJConfigSignsIcon { [1]: string, [2]: string }
@@ -142,17 +119,8 @@ end
 
 ---@class NeoJJConfigSections
 ---@field untracked NeoJJConfigSection|nil
----@field unstaged NeoJJConfigSection|nil
----@field staged NeoJJConfigSection|nil
----@field stashes NeoJJConfigSection|nil
----@field unpulled_upstream NeoJJConfigSection|nil
----@field unmerged_upstream NeoJJConfigSection|nil
----@field unpulled_pushRemote NeoJJConfigSection|nil
----@field unmerged_pushRemote NeoJJConfigSection|nil
 ---@field recent NeoJJConfigSection|nil
----@field rebase NeoJJConfigSection|nil
 ---@field sequencer NeoJJConfigSection|nil
----@field bisect NeoJJConfigSection|nil
 
 ---@class HighlightOptions
 ---@field italic?     boolean
@@ -214,11 +182,6 @@ end
 ---| "Depth4"
 ---| "Toggle"
 ---| "Discard"
----| "Stage"
----| "StageUnstaged"
----| "StageAll"
----| "Unstage"
----| "UnstageStaged"
 ---| "Untrack"
 ---| "RefreshBuffer"
 ---| "GoToFile"
@@ -245,45 +208,20 @@ end
 ---@alias NeoJJConfigMappingsPopup
 ---| "HelpPopup"
 ---| "DiffPopup"
----| "PullPopup"
 ---| "RebasePopup"
----| "MergePopup"
 ---| "PushPopup"
 ---| "CommitPopup"
 ---| "LogPopup"
----| "MarginPopup"
----| "RevertPopup"
----| "StashPopup"
----| "IgnorePopup"
----| "CherryPickPopup"
----| "BisectPopup"
----| "BranchPopup"
 ---| "FetchPopup"
----| "ResetPopup"
 ---| "RemotePopup"
----| "TagPopup"
----| "WorktreePopup"
+---| "ChangePopup"
+---| "SquashPopup"
+---| "BookmarkPopup"
+---| "SplitPopup"
+---| "ResolvePopup"
+---| "YankPopup"
+---| "OperationsPopup"
 ---| false
-
----@alias NeoJJConfigMappingsRebaseEditor
----| "Pick"
----| "Reword"
----| "Edit"
----| "Squash"
----| "Fixup"
----| "Execute"
----| "Drop"
----| "Break"
----| "MoveUp"
----| "MoveDown"
----| "Close"
----| "OpenCommit"
----| "Submit"
----| "Abort"
----| "OpenOrScrollUp"
----| "OpenOrScrollDown"
----| false
----| fun()
 
 ---@alias NeoJJConfigMappingsCommitEditor
 ---| "Close"
@@ -301,12 +239,6 @@ end
 ---| false
 ---| fun()
 
----@alias NeoJJConfigMappingsRebaseEditor_I
----| "Submit"
----| "Abort"
----| false
----| fun()
----
 ---@alias NeoJJConfigMappingsRefsView
 ---| "DeleteBranch"
 ---| false
@@ -335,39 +267,24 @@ end
 ---@field finder? { [string]: NeoJJConfigMappingsFinder } A dictionary that uses finder commands to set multiple keybinds
 ---@field status? { [string]: NeoJJConfigMappingsStatus } A dictionary that uses status commands to set a single keybind
 ---@field popup? { [string]: NeoJJConfigMappingsPopup } A dictionary that uses popup commands to set a single keybind
----@field rebase_editor? { [string]: NeoJJConfigMappingsRebaseEditor } A dictionary that uses Rebase editor commands to set a single keybind
----@field rebase_editor_I? { [string]: NeoJJConfigMappingsRebaseEditor_I } A dictionary that uses Rebase editor commands to set a single keybind
 ---@field commit_editor? { [string]: NeoJJConfigMappingsCommitEditor } A dictionary that uses Commit editor commands to set a single keybind
 ---@field commit_editor_I? { [string]: NeoJJConfigMappingsCommitEditor_I } A dictionary that uses Commit editor commands to set a single keybind
 ---@field refs_view? { [string]: NeoJJConfigMappingsRefsView } A dictionary that uses Refs view editor commands to set a single keybind
 
----@class NeoJJConfigGitService
----@field pull_request? string
----@field commit? string
----@field tree? string
-
 ---@class NeoJJConfig NeoJJ configuration settings
 ---@field filewatcher? NeoJJFilewatcherConfig Values for filewatcher
 ---@field graph_style? NeoJJGraphStyle Style for graph
----@field git_executable? string Path to git executable (defaults to "git")
 ---@field commit_date_format? string Commit date format
 ---@field log_date_format? string Log date format
 ---@field disable_hint? boolean Remove the top hint in the Status buffer
 ---@field disable_context_highlighting? boolean Disable context highlights based on cursor position
 ---@field disable_signs? boolean Special signs to draw for sections etc. in NeoJJ
----@field prompt_force_push? boolean Offer to force push when branches diverge
 ---@field prompt_amend_commit? boolean Request confirmation when amending already published commits
----@field git_services? NeoJJConfigGitService[] Templates to use when opening a pull request for a branch, or commit
----@field fetch_after_checkout? boolean Perform a fetch if the newly checked out branch has an upstream or pushRemote set
 ---@field telescope_sorter? function The sorter telescope will use
 ---@field process_spinner? boolean Hide/Show the process spinner
 ---@field disable_insert_on_commit? boolean|"auto" Disable automatically entering insert mode in commit dialogues
 ---@field use_per_project_settings? boolean Scope persisted settings on a per-project basis
----@field remember_settings? boolean Whether neojj should persist flags from popups, e.g. git push flags
----@field sort_branches? string Value used for `--sort` for the `git branch` command
----@field commit_order? NeoJJCommitOrder Value used for `--<commit_order>-order` for the `git log` command
----@field initial_branch_name? string Default for new branch name prompts
----@field initial_branch_rename? string Default for rename branch prompt. If not set, the current branch name is used
+---@field remember_settings? boolean Whether neojj should persist flags from popups
 ---@field kind? WindowKind The default type of window neojj should open in
 ---@field floating? NeoJJConfigFloating The floating window style
 ---@field disable_line_numbers? boolean Whether to disable line numbers
@@ -379,13 +296,10 @@ end
 ---@field status? NeoJJConfigStatusOptions Status buffer options
 ---@field commit_editor? NeoJJCommitEditorConfigPopup Commit editor options
 ---@field commit_select_view? NeoJJConfigPopup Commit select view options
----@field stash? NeoJJConfigPopup Commit select view options
 ---@field commit_view? NeoJJCommitBufferConfig Commit buffer options
 ---@field log_view? NeoJJConfigPopup Log view options
----@field rebase_editor? NeoJJConfigPopup Rebase editor options
 ---@field reflog_view? NeoJJConfigPopup Reflog view options
 ---@field refs_view? NeoJJConfigPopup Refs view options
----@field merge_editor? NeoJJConfigPopup Merge editor options
 ---@field preview_buffer? NeoJJConfigPopup Preview options
 ---@field popup? NeoJJConfigPopup Set the default way of opening popups
 ---@field signs? NeoJJConfigSigns Signs used for toggled regions
@@ -407,7 +321,6 @@ function M.get_default_values()
     disable_hint = false,
     disable_context_highlighting = false,
     disable_signs = false,
-    prompt_force_push = true,
     prompt_amend_commit = true,
     graph_style = "ascii",
     commit_date_format = nil,
@@ -419,40 +332,10 @@ function M.get_default_values()
     telescope_sorter = function()
       return nil
     end,
-    git_services = {
-      ["github.com"] = {
-        pull_request = "https://github.com/${owner}/${repository}/compare/${branch_name}?expand=1",
-        commit = "https://github.com/${owner}/${repository}/commit/${oid}",
-        tree = "https://${host}/${owner}/${repository}/tree/${branch_name}",
-      },
-      ["bitbucket.org"] = {
-        pull_request = "https://bitbucket.org/${owner}/${repository}/pull-requests/new?source=${branch_name}&t=1",
-        commit = "https://bitbucket.org/${owner}/${repository}/commits/${oid}",
-        tree = "https://bitbucket.org/${owner}/${repository}/branch/${branch_name}",
-      },
-      ["gitlab.com"] = {
-        pull_request = "https://gitlab.com/${owner}/${repository}/merge_requests/new?merge_request[source_branch]=${branch_name}",
-        commit = "https://gitlab.com/${owner}/${repository}/-/commit/${oid}",
-        tree = "https://gitlab.com/${owner}/${repository}/-/tree/${branch_name}?ref_type=heads",
-      },
-      ["azure.com"] = {
-        pull_request = "https://dev.azure.com/${owner}/_git/${repository}/pullrequestcreate?sourceRef=${branch_name}&targetRef=${target}",
-        commit = "",
-        tree = "",
-      },
-      ["codeberg.org"] = {
-        pull_request = "https://${host}/${owner}/${repository}/compare/${branch_name}",
-        commit = "https://${host}/${owner}/${repository}/commit/${oid}",
-        tree = "https://${host}/${owner}/${repository}/src/branch/${branch_name}",
-      },
-    },
     highlight = {},
-    git_executable = "git",
     disable_insert_on_commit = "auto",
     use_per_project_settings = true,
     remember_settings = true,
-    fetch_after_checkout = false,
-    sort_branches = "-committerdate",
     commit_order = "topo",
     kind = "tab",
     floating = {
@@ -462,7 +345,6 @@ function M.get_default_values()
       style = "minimal",
       border = "rounded",
     },
-    initial_branch_name = "",
     disable_line_numbers = true,
     disable_relative_line_numbers = true,
     -- The time after which an output console is shown for slow running commands
@@ -501,8 +383,6 @@ function M.get_default_values()
     },
     commit_editor = {
       kind = "tab",
-      show_staged_diff = true,
-      staged_diff_split_kind = "split",
       spell_check = true,
     },
     commit_select_view = {
@@ -515,23 +395,14 @@ function M.get_default_values()
     log_view = {
       kind = "tab",
     },
-    rebase_editor = {
-      kind = "auto",
-    },
     reflog_view = {
       kind = "tab",
-    },
-    merge_editor = {
-      kind = "auto",
     },
     preview_buffer = {
       kind = "floating_console",
     },
     popup = {
       kind = "split",
-    },
-    stash = {
-      kind = "tab",
     },
     refs_view = {
       kind = "tab",
@@ -555,47 +426,11 @@ function M.get_default_values()
         folded = false,
         hidden = false,
       },
-      bisect = {
-        folded = false,
-        hidden = false,
-      },
       untracked = {
         folded = false,
         hidden = false,
       },
-      unstaged = {
-        folded = false,
-        hidden = false,
-      },
-      staged = {
-        folded = false,
-        hidden = false,
-      },
-      stashes = {
-        folded = true,
-        hidden = false,
-      },
-      unpulled_upstream = {
-        folded = true,
-        hidden = false,
-      },
-      unmerged_upstream = {
-        folded = false,
-        hidden = false,
-      },
-      unpulled_pushRemote = {
-        folded = true,
-        hidden = false,
-      },
-      unmerged_pushRemote = {
-        folded = false,
-        hidden = false,
-      },
       recent = {
-        folded = true,
-        hidden = false,
-      },
-      rebase = {
         folded = true,
         hidden = false,
       },
@@ -614,28 +449,6 @@ function M.get_default_values()
         ["<m-r>"] = "ResetMessage",
       },
       commit_editor_I = {
-        ["<c-c><c-c>"] = "Submit",
-        ["<c-c><c-k>"] = "Abort",
-      },
-      rebase_editor = {
-        ["p"] = "Pick",
-        ["r"] = "Reword",
-        ["e"] = "Edit",
-        ["s"] = "Squash",
-        ["f"] = "Fixup",
-        ["x"] = "Execute",
-        ["d"] = "Drop",
-        ["b"] = "Break",
-        ["q"] = "Close",
-        ["<cr>"] = "OpenCommit",
-        ["gk"] = "MoveUp",
-        ["gj"] = "MoveDown",
-        ["<c-c><c-c>"] = "Submit",
-        ["<c-c><c-k>"] = "Abort",
-        ["[c"] = "OpenOrScrollUp",
-        ["]c"] = "OpenOrScrollDown",
-      },
-      rebase_editor_I = {
         ["<c-c><c-c>"] = "Submit",
         ["<c-c><c-k>"] = "Abort",
       },
@@ -664,25 +477,20 @@ function M.get_default_values()
       },
       popup = {
         ["?"] = "HelpPopup",
-        ["A"] = "CherryPickPopup",
-        ["d"] = "DiffPopup",
-        ["M"] = "RemotePopup",
-        ["P"] = "PushPopup",
-        ["X"] = "ResetPopup",
-        ["Z"] = "StashPopup",
-        ["i"] = "IgnorePopup",
-        ["t"] = "TagPopup",
-        ["b"] = "BranchPopup",
-        ["B"] = "BisectPopup",
-        ["w"] = "WorktreePopup",
         ["c"] = "CommitPopup",
+        ["d"] = "DiffPopup",
         ["f"] = "FetchPopup",
         ["l"] = "LogPopup",
-        ["L"] = "MarginPopup",
-        ["m"] = "MergePopup",
-        ["p"] = "PullPopup",
+        ["P"] = "PushPopup",
         ["r"] = "RebasePopup",
-        ["v"] = "RevertPopup",
+        ["M"] = "RemotePopup",
+        ["C"] = "ChangePopup",
+        ["S"] = "SquashPopup",
+        ["b"] = "BookmarkPopup",
+        ["s"] = "SplitPopup",
+        ["R"] = "ResolvePopup",
+        ["y"] = "YankPopup",
+        ["O"] = "OperationsPopup",
       },
       status = {
         ["j"] = "MoveDown",
@@ -702,13 +510,8 @@ function M.get_default_values()
         ["zC"] = "Depth1",
         ["zO"] = "Depth4",
         ["x"] = "Discard",
-        ["s"] = "Stage",
-        ["S"] = "StageUnstaged",
-        ["<c-s>"] = "StageAll",
-        ["u"] = "Unstage",
         ["K"] = "Untrack",
         ["R"] = "Rename",
-        ["U"] = "UnstageStaged",
         ["y"] = "ShowRefs",
         ["$"] = "CommandHistory",
         ["Y"] = "YankSelected",
@@ -1069,78 +872,6 @@ function M.validate_config()
       end
     end
 
-    local valid_rebase_editor_commands = {
-      false,
-    }
-
-    for _, cmd in pairs(M.get_default_values().mappings.rebase_editor) do
-      table.insert(valid_rebase_editor_commands, cmd)
-    end
-
-    if validate_type(config.mappings.rebase_editor, "mappings.rebase_editor", "table") then
-      for key, command in pairs(config.mappings.rebase_editor) do
-        if
-          validate_type(key, "mappings.rebase_editor -> " .. vim.inspect(key), "string")
-          and validate_type(
-            command,
-            string.format("mappings.rebase_editor['%s']", key),
-            { "string", "boolean", "function" }
-          )
-        then
-          if type(command) == "string" and not vim.tbl_contains(valid_rebase_editor_commands, command) then
-            local valid_rebase_editor_commands = util.map(valid_rebase_editor_commands, function(command)
-              return vim.inspect(command)
-            end)
-
-            err(
-              string.format("mappings.rebase_editor['%s']", key),
-              string.format(
-                "Expected a valid rebase_editor command, got '%s'. Valid rebase_editor commands: { %s }",
-                command,
-                table.concat(valid_rebase_editor_commands, ", ")
-              )
-            )
-          end
-        end
-      end
-    end
-
-    local valid_rebase_editor_I_commands = {
-      false,
-    }
-
-    for _, cmd in pairs(M.get_default_values().mappings.rebase_editor_I) do
-      table.insert(valid_rebase_editor_I_commands, cmd)
-    end
-
-    if validate_type(config.mappings.rebase_editor_I, "mappings.rebase_editor_I", "table") then
-      for key, command in pairs(config.mappings.rebase_editor_I) do
-        if
-          validate_type(key, "mappings.rebase_editor_I -> " .. vim.inspect(key), "string")
-          and validate_type(
-            command,
-            string.format("mappings.rebase_editor_I['%s']", key),
-            { "string", "boolean", "function" }
-          )
-        then
-          if type(command) == "string" and not vim.tbl_contains(valid_rebase_editor_I_commands, command) then
-            local valid_rebase_editor_I_commands = util.map(valid_rebase_editor_I_commands, function(command)
-              return vim.inspect(command)
-            end)
-
-            err(
-              string.format("mappings.rebase_editor_I['%s']", key),
-              string.format(
-                "Expected a valid rebase_editor_I command, got '%s'. Valid rebase_editor_I commands: { %s }",
-                command,
-                table.concat(valid_rebase_editor_I_commands, ", ")
-              )
-            )
-          end
-        end
-      end
-    end
-
     local valid_commit_editor_I_commands = {
       false,
     }
@@ -1218,13 +949,9 @@ function M.validate_config()
     validate_type(config.disable_hint, "disable_hint", "boolean")
     validate_type(config.disable_context_highlighting, "disable_context_highlighting", "boolean")
     validate_type(config.disable_signs, "disable_signs", "boolean")
-    validate_type(config.git_executable, "git_executable", "string")
     validate_type(config.telescope_sorter, "telescope_sorter", "function")
     validate_type(config.use_per_project_settings, "use_per_project_settings", "boolean")
     validate_type(config.remember_settings, "remember_settings", "boolean")
-    validate_type(config.sort_branches, "sort_branches", "string")
-    validate_type(config.initial_branch_name, "initial_branch_name", "string")
-    validate_type(config.initial_branch_rename, "initial_branch_name", { "string", "nil" })
     validate_type(config.notification_icon, "notification_icon", "string")
     validate_type(config.console_timeout, "console_timeout", "number")
     validate_kind(config.kind, "kind")
@@ -1251,7 +978,6 @@ function M.validate_config()
     validate_trinary_auto(config.disable_insert_on_commit, "disable_insert_on_commit")
     -- Commit Editor
     if validate_type(config.commit_editor, "commit_editor", "table") then
-      validate_type(config.commit_editor.show_staged_diff, "show_staged_diff", "boolean")
       validate_type(config.commit_editor.spell_check, "spell_check", "boolean")
       validate_kind(config.commit_editor.kind, "commit_editor")
     end
@@ -1267,10 +993,6 @@ function M.validate_config()
     if validate_type(config.log_view, "log_view", "table") then
       validate_kind(config.log_view.kind, "log_view.kind")
     end
-    -- Rebase Editor
-    if validate_type(config.rebase_editor, "rebase_editor", "table") then
-      validate_kind(config.rebase_editor.kind, "rebase_editor.kind")
-    end
     -- Reflog View
     if validate_type(config.reflog_view, "reflog_view", "table") then
       validate_kind(config.reflog_view.kind, "reflog_view.kind")
@@ -1279,10 +1001,6 @@ function M.validate_config()
     if validate_type(config.refs_view, "refs_view", "table") then
       validate_kind(config.refs_view.kind, "refs_view.kind")
     end
-    -- Merge Editor
-    if validate_type(config.merge_editor, "merge_editor", "table") then
-      validate_kind(config.merge_editor.kind, "merge_editor.kind")
-    end
     -- Preview Buffer
     if validate_type(config.preview_buffer, "preview_buffer", "table") then
       validate_kind(config.preview_buffer.kind, "preview_buffer.kind")
@@ -1290,15 +1008,6 @@ function M.validate_config()
     -- Popup
     if validate_type(config.popup, "popup", "table") then
       validate_kind(config.popup.kind, "popup.kind")
-    end
-
-    if validate_type(config.git_services, "git_services", "table") then
-      for k, v in pairs(config.git_services) do
-        validate_type(v, "git_services." .. k, "table")
-        validate_type(v.pull_request, "git_services." .. k .. ".pull_request", "string")
-        validate_type(v.commit, "git_services." .. k .. ".commit", "string")
-        validate_type(v.tree, "git_services." .. k .. ".tree", "string")
-      end
     end
 
     validate_integrations()
@@ -1310,12 +1019,6 @@ function M.validate_config()
   end
 
   return errors
-end
-
----Get the configured git executable path
----@return string The git executable path
-function M.get_git_executable()
-  return M.values.git_executable
 end
 
 ---@param name string
@@ -1371,7 +1074,6 @@ function M.setup(opts)
       popup = {},
       finder = {},
       commit_editor = {},
-      rebase_editor = {},
       refs_view = {},
     }
   else

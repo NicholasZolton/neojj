@@ -8,7 +8,7 @@ local a = require("plenary.async")
 
 ---@class Watcher
 ---@field jj_dir string
----@field buffers table<StatusBuffer|RefsViewBuffer>
+---@field buffers table<StatusBuffer>
 ---@field running boolean
 ---@field fs_event_handler uv_fs_event_t
 local Watcher = {}
@@ -46,7 +46,7 @@ function Watcher.instance(root)
   return instances[dir]
 end
 
----@param buffer StatusBuffer|RefsViewBuffer
+---@param buffer StatusBuffer
 ---@return Watcher
 function Watcher:register(buffer)
   logger.debug("[WATCHER] Registered buffer " .. buffer:id())

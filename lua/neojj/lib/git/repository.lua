@@ -8,22 +8,14 @@ local util = require("neojj.lib.util")
 local modules = {
   "status",
   "branch",
-  "stash",
-  "pull",
   "push",
   "log",
   "rebase",
   "sequencer",
-  "merge",
-  "bisect",
-  "tag",
   "hooks",
 }
 
 ---@class NeoJJRepoState
----@field git_path          fun(self, ...): Path
----@field worktree_git_path fun(self, ...): Path
----@field refresh           fun(self, table)
 ---@field worktree_root     string Absolute path to the root of the current worktree
 ---@field worktree_git_dir  string Absolute path to the .git/ dir of the current worktree
 ---@field git_dir           string Absolute path of the .git/ dir for the repository
@@ -33,12 +25,8 @@ local modules = {
 ---@field untracked         NeoJJRepoIndex
 ---@field unstaged          NeoJJRepoIndex
 ---@field staged            NeoJJRepoIndex
----@field stashes           NeoJJRepoStash
 ---@field recent            NeoJJRepoRecent
 ---@field sequencer         NeoJJRepoSequencer
----@field rebase            NeoJJRepoRebase
----@field merge             NeoJJRepoMerge
----@field bisect            NeoJJRepoBisect
 ---@field hooks             string[]
 ---
 ---@class NeoJJRepoHead
@@ -67,9 +55,6 @@ local modules = {
 ---@class NeoJJRepoIndex
 ---@field items          StatusItem[]
 ---
----@class NeoJJRepoStash
----@field items          StashItem[]
----
 ---@class NeoJJRepoRecent
 ---@field items          CommitItem[]
 ---
@@ -80,24 +65,6 @@ local modules = {
 ---@field revert         boolean
 ---@field cherry_pick    boolean
 ---
----@class NeoJJRepoRebase
----@field items          RebaseItem[]
----@field onto           RebaseOnto
----@field head           string|nil
----@field head_oid       string|nil
----@field current        string|nil
----
----@class NeoJJRepoMerge
----@field items          MergeItem[]
----@field head           string|nil
----@field msg            string
----@field branch         string|nil
----
----@class NeoJJRepoBisect
----@field items          BisectItem[]
----@field finished       boolean
----@field current        CommitLogEntry
-
 ---@return NeoJJRepoState
 local function empty_state()
   return {
@@ -139,31 +106,13 @@ local function empty_state()
     untracked = { items = {} },
     unstaged = { items = {} },
     staged = { items = {} },
-    stashes = { items = {} },
     recent = { items = {} },
-    rebase = {
-      items = {},
-      onto = {},
-      head = nil,
-      current = nil,
-    },
     sequencer = {
       items = {},
       head = nil,
       head_oid = nil,
       revert = false,
       cherry_pick = false,
-    },
-    merge = {
-      items = {},
-      head = nil,
-      msg = "",
-      branch = nil,
-    },
-    bisect = {
-      items = {},
-      finished = false,
-      current = {},
     },
     refs = {},
   }
