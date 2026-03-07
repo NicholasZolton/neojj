@@ -1,12 +1,11 @@
 <div align="center">
     <div>
-        <div><img src="https://github.com/NeoJJOrg/neojj/assets/7228095/7684545f-47b5-40e2-aedd-ccf56e0553f4" width="400px"/></div>
         <div><h1>NeoJJ</h1></div>
     </div>
     <table>
         <tr>
             <td>
-                <strong>A git interface for <a href="https://neovim.io">Neovim</a>, inspired by <a href="https://magit.vc">Magit</a>.</strong>
+                <strong>A <a href="https://github.com/jj-vcs/jj">jj (Jujutsu)</a> interface for <a href="https://neovim.io">Neovim</a>, inspired by <a href="https://magit.vc">Magit</a>.</strong>
             </td>
         </tr>
     </table>
@@ -14,22 +13,19 @@
   [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
   [![Neovim](https://img.shields.io/badge/Neovim%200.10+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
   [![MIT](https://img.shields.io/badge/MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-  <a href="https://dotfyle.com/plugins/NeoJJOrg/neojj">
-    <img src="https://dotfyle.com/plugins/NeoJJOrg/neojj/shield?style=for-the-badge" />
-  </a>
 </div>
 
-
-![preview](https://github.com/NeoJJOrg/neojj/assets/7228095/d964cbb4-a557-4e97-ac5b-ea571a001f5c)
-
+NeoJJ is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit), adapted to work with [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) instead of git.
 
 ## Installation
+
+Requires [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) to be installed and available on your `PATH`.
 
 Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you're free to use whichever plugin manager suits you.
 
 ```lua
 {
-  "NeoJJOrg/neojj",
+  "NeoJJ/neojj",
   lazy = true,
   dependencies = {
     "nvim-lua/plenary.nvim",         -- required
@@ -61,6 +57,8 @@ You can either open NeoJJ by using the `NeoJJ` command:
 :NeoJJ cwd=%:p:h   " Uses the repository of the current file
 :NeoJJ kind=<kind> " Open specified popup directly
 :NeoJJ commit      " Open commit popup
+:NeoJJ bookmark    " Open bookmark popup
+:NeoJJ change      " Open change popup
 
 " Map it to a key
 nnoremap <leader>gg <cmd>NeoJJ<cr>
@@ -112,9 +110,19 @@ The `kind` option can be one of the following values:
 - `floating`
 - `auto` (`vsplit` if window would have 80 cols, otherwise `split`)
 
+## jj Concepts
+
+If you are coming from git, here are some key differences in jj:
+
+- **Change IDs vs Commit IDs**: Every change has a unique change ID (short, stable identifier) and a commit ID (hash). Change IDs persist across rewrites; commit IDs do not.
+- **No staging area**: There is no index/staging concept. All modifications in your working copy are automatically part of the current change.
+- **Bookmarks instead of branches**: jj uses "bookmarks" where git uses "branches". Bookmarks are pointers to commits, similar to git branches.
+- **Operations log and undo**: Every jj operation is recorded. You can undo any operation with `jj undo`.
+- **First-class conflicts**: Conflicts are recorded in commits rather than blocking operations. You can continue working and resolve them later.
+
 ## Configuration
 
-You can configure neojj by running the `require('neojj').setup {}` function, passing a table as the argument.
+You can configure NeoJJ by running the `require('neojj').setup {}` function, passing a table as the argument.
 
 <details>
 <summary>Default Config</summary>
@@ -129,59 +137,24 @@ neojj.setup {
   disable_context_highlighting = false,
   -- Disables signs for sections/items/hunks
   disable_signs = false,
-  -- Path to git executable. Defaults to "git". Can be used to specify a custom git binary or wrapper script.
-  git_executable = "git",
-  -- Offer to force push when branches diverge
-  prompt_force_push = true,
-  -- Request confirmation when amending already published commits
-  prompt_amend_commit = true,
   -- Changes what mode the Commit Editor starts in. `true` will leave nvim in normal mode, `false` will change nvim to
   -- insert mode, and `"auto"` will change nvim to insert mode IF the commit message is empty, otherwise leaving it in
   -- normal mode.
   disable_insert_on_commit = "auto",
-  -- When enabled, will watch the `.git/` directory for changes and refresh the status buffer in response to filesystem
+  -- When enabled, will watch the `.jj/` directory for changes and refresh the status buffer in response to filesystem
   -- events.
   filewatcher = {
     interval = 1000,
     enabled = true,
   },
-  -- "ascii"   is the graph the git CLI generates
-  -- "unicode" is the graph like https://github.com/rbong/vim-flog
-  -- "kitty"   is the graph like https://github.com/isakbm/gitgraph.nvim - use https://github.com/rbong/flog-symbols if you don't use Kitty
+  -- "ascii"   is the graph the jj CLI generates
+  -- "unicode" is a unicode graph style
   graph_style = "ascii",
   -- Show relative date by default. When set, use `strftime` to display dates
   commit_date_format = nil,
   log_date_format = nil,
-  -- Show message with spinning animation when a git command is running.
+  -- Show message with spinning animation when a jj command is running.
   process_spinner = false,
-  -- Used to generate URL's for branch popup action "pull request", "open commit" and "open tree"
-  git_services = {
-    ["github.com"] = {
-      pull_request = "https://github.com/${owner}/${repository}/compare/${branch_name}?expand=1",
-      commit = "https://github.com/${owner}/${repository}/commit/${oid}",
-      tree = "https://${host}/${owner}/${repository}/tree/${branch_name}",
-    },
-    ["bitbucket.org"] = {
-      pull_request = "https://bitbucket.org/${owner}/${repository}/pull-requests/new?source=${branch_name}&t=1",
-      commit = "https://bitbucket.org/${owner}/${repository}/commits/${oid}",
-      tree = "https://bitbucket.org/${owner}/${repository}/branch/${branch_name}",
-    },
-    ["gitlab.com"] = {
-      pull_request = "https://gitlab.com/${owner}/${repository}/merge_requests/new?merge_request[source_branch]=${branch_name}",
-      commit = "https://gitlab.com/${owner}/${repository}/-/commit/${oid}",
-      tree = "https://gitlab.com/${owner}/${repository}/-/tree/${branch_name}?ref_type=heads",
-    },
-    ["azure.com"] = {
-      pull_request = "https://dev.azure.com/${owner}/_git/${repository}/pullrequestcreate?sourceRef=${branch_name}&targetRef=${target}",
-      commit = "",
-      tree = "",
-    },
-    ["codeberg.org"] = {
-      pull_request = "https://${host}/${owner}/${repository}/compare/${branch_name}",
-      commit = "https://${host}/${owner}/${repository}/commit/${oid}",
-      tree = "https://${host}/${owner}/${repository}/src/branch/${branch_name}",
-    },
-  },
   -- Allows a different telescope sorter. Defaults to 'fuzzy_with_index_bias'. The example below will use the native fzf
   -- sorter instead. By default, this function returns `nil`.
   telescope_sorter = function()
@@ -204,25 +177,9 @@ neojj.setup {
   -- NeoJJ refreshes its internal state after specific events, which can be expensive depending on the repository size.
   -- Disabling `auto_refresh` will make it so you have to manually refresh the status after you open it.
   auto_refresh = true,
-  -- Value used for `--sort` option for `git branch` command
-  -- By default, branches will be sorted by commit date descending
-  -- Flag description: https://git-scm.com/docs/git-branch#Documentation/git-branch.txt---sortltkeygt
-  -- Sorting keys: https://git-scm.com/docs/git-for-each-ref#_options
-  sort_branches = "-committerdate",
-  -- Value passed to the `--<commit_order>-order` flag of the `git log` command
-  -- Determines how commits are traversed and displayed in the log / graph:
-  --   "topo"         topological order (parents always before children, good for graphs, slower on large repos)
-  --   "date"         chronological order by commit date
-  --   "author-date"  chronological order by author date
-  --   ""             disable explicit ordering (fastest, recommended for very large repos)
-  commit_order = "topo",
-  -- Default for new branch name prompts
-  initial_branch_name = "",
-  -- Default for rename branch prompt. If not set, the current branch name is used
-  initial_branch_rename = nil,
-  -- Change the default way of opening neojj
+  -- Change the default way of opening NeoJJ
   kind = "tab",
-  -- Floating window style 
+  -- Floating window style
   floating = {
     relative = "editor",
     width = 0.8,
@@ -242,10 +199,7 @@ neojj.setup {
   auto_close_console = true,
   notification_icon = "󰊢",
   status = {
-    show_head_commit_hash = true,
     recent_commit_count = 10,
-    HEAD_padding = 10,
-    HEAD_folded = false,
     mode_padding = 3,
     mode_text = {
       M = "modified",
@@ -253,29 +207,12 @@ neojj.setup {
       A = "added",
       D = "deleted",
       C = "copied",
-      U = "updated",
       R = "renamed",
-      T = "changed",
-      DD = "unmerged",
-      AU = "unmerged",
-      UD = "unmerged",
-      UA = "unmerged",
-      DU = "unmerged",
-      AA = "unmerged",
-      UU = "unmerged",
       ["?"] = "",
     },
   },
   commit_editor = {
     kind = "tab",
-    show_staged_diff = true,
-    -- Accepted values:
-    -- "split" to show the staged diff below the commit editor
-    -- "vsplit" to show it to the right
-    -- "split_above" Like :top split
-    -- "vsplit_left" like :vsplit, but open to the left
-    -- "auto" "vsplit" if window would have 80 cols, otherwise "split"
-    staged_diff_split_kind = "split",
     spell_check = true,
   },
   commit_select_view = {
@@ -283,31 +220,16 @@ neojj.setup {
   },
   commit_view = {
     kind = "vsplit",
-    verify_commit = vim.fn.executable("gpg") == 1, -- Can be set to true or false, otherwise we try to find the binary
+    verify_commit = vim.fn.executable("gpg") == 1,
   },
   log_view = {
     kind = "tab",
-  },
-  rebase_editor = {
-    kind = "auto",
-  },
-  reflog_view = {
-    kind = "tab",
-  },
-  merge_editor = {
-    kind = "auto",
   },
   preview_buffer = {
     kind = "floating_console",
   },
   popup = {
     kind = "split",
-  },
-  stash = {
-    kind = "tab",
-  },
-  refs_view = {
-    kind = "tab",
   },
   signs = {
     -- { CLOSED, OPENED }
@@ -349,8 +271,11 @@ neojj.setup {
   -- Can be "diffview" or "codediff".
   diff_viewer = nil,
   sections = {
-    -- Reverting/Cherry Picking
-    sequencer = {
+    files = {
+      folded = false,
+      hidden = false,
+    },
+    conflicts = {
       folded = false,
       hidden = false,
     },
@@ -358,39 +283,11 @@ neojj.setup {
       folded = false,
       hidden = false,
     },
-    unstaged = {
-      folded = false,
-      hidden = false,
-    },
-    staged = {
-      folded = false,
-      hidden = false,
-    },
-    stashes = {
+    bookmarks = {
       folded = true,
-      hidden = false,
-    },
-    unpulled_upstream = {
-      folded = true,
-      hidden = false,
-    },
-    unmerged_upstream = {
-      folded = false,
-      hidden = false,
-    },
-    unpulled_pushRemote = {
-      folded = true,
-      hidden = false,
-    },
-    unmerged_pushRemote = {
-      folded = false,
       hidden = false,
     },
     recent = {
-      folded = true,
-      hidden = false,
-    },
-    rebase = {
       folded = true,
       hidden = false,
     },
@@ -405,28 +302,6 @@ neojj.setup {
       ["<m-r>"] = "ResetMessage",
     },
     commit_editor_I = {
-      ["<c-c><c-c>"] = "Submit",
-      ["<c-c><c-k>"] = "Abort",
-    },
-    rebase_editor = {
-      ["p"] = "Pick",
-      ["r"] = "Reword",
-      ["e"] = "Edit",
-      ["s"] = "Squash",
-      ["f"] = "Fixup",
-      ["x"] = "Execute",
-      ["d"] = "Drop",
-      ["b"] = "Break",
-      ["q"] = "Close",
-      ["<cr>"] = "OpenCommit",
-      ["gk"] = "MoveUp",
-      ["gj"] = "MoveDown",
-      ["<c-c><c-c>"] = "Submit",
-      ["<c-c><c-k>"] = "Abort",
-      ["[c"] = "OpenOrScrollUp",
-      ["]c"] = "OpenOrScrollDown",
-    },
-    rebase_editor_I = {
       ["<c-c><c-c>"] = "Submit",
       ["<c-c><c-k>"] = "Abort",
     },
@@ -453,31 +328,26 @@ neojj.setup {
     -- Setting any of these to `false` will disable the mapping.
     popup = {
       ["?"] = "HelpPopup",
-      ["A"] = "CherryPickPopup",
-      ["d"] = "DiffPopup",
-      ["M"] = "RemotePopup",
-      ["P"] = "PushPopup",
-      ["X"] = "ResetPopup",
-      ["Z"] = "StashPopup",
-      ["i"] = "IgnorePopup",
-      ["t"] = "TagPopup",
-      ["b"] = "BranchPopup",
-      ["B"] = "BisectPopup",
-      ["w"] = "WorktreePopup",
+      ["b"] = "BookmarkPopup",
       ["c"] = "CommitPopup",
+      ["C"] = "ChangePopup",
+      ["d"] = "DiffPopup",
       ["f"] = "FetchPopup",
       ["l"] = "LogPopup",
-      ["m"] = "MergePopup",
-      ["p"] = "PullPopup",
+      ["m"] = "MarginPopup",
+      ["M"] = "RemotePopup",
+      ["P"] = "PushPopup",
       ["r"] = "RebasePopup",
-      ["v"] = "RevertPopup",
+      ["R"] = "ResolvePopup",
+      ["s"] = "SquashPopup",
+      ["S"] = "SplitPopup",
+      ["y"] = "YankPopup",
     },
     status = {
       ["j"] = "MoveDown",
       ["k"] = "MoveUp",
       ["o"] = "OpenTree",
       ["q"] = "Close",
-      ["I"] = "InitRepo",
       ["1"] = "Depth1",
       ["2"] = "Depth2",
       ["3"] = "Depth3",
@@ -487,16 +357,9 @@ neojj.setup {
       ["za"] = "Toggle",
       ["zo"] = "OpenFold",
       ["x"] = "Discard",
-      ["s"] = "Stage",
-      ["S"] = "StageUnstaged",
-      ["<c-s>"] = "StageAll",
-      ["u"] = "Unstage",
       ["K"] = "Untrack",
-      ["U"] = "UnstageStaged",
-      ["y"] = "ShowRefs",
       ["$"] = "CommandHistory",
       ["Y"] = "YankSelected",
-      ["gp"] = "GoToParentRepo",
       ["<c-r>"] = "RefreshBuffer",
       ["<cr>"] = "GoToFile",
       ["<s-cr>"] = "PeekFile",
@@ -521,28 +384,24 @@ neojj.setup {
 ## Popups
 
 The following popup menus are available from all buffers:
-- Bisect
-- Branch + Branch Config
-- Cherry Pick
-- Commit
-- Diff
-- Fetch
-- Ignore
-- Log
-- Merge
-- Pull
-- Push
-- Rebase
-- Remote + Remote Config
-- Reset
-- Revert
-- Stash
-- Tag
-- Worktree
 
-Many popups will use whatever is currently under the cursor or selected as input for an action. For example, to cherry-pick a range of commits from the log view, a linewise visual selection can be made, and using either `apply` or `pick` from the cherry-pick menu will use the selection.
+- **Bookmark** - create, move, delete, forget, track bookmarks
+- **Change** - create new change, merge
+- **Commit** - commit, describe
+- **Diff** - view diffs
+- **Fetch** - fetch from remotes
+- **Help** - show available keybindings
+- **Log** - view log with revset support
+- **Margin** - toggle margin display
+- **Push** - push to remotes
+- **Rebase** - rebase changes
+- **Remote** - manage remotes
+- **Resolve** - conflict resolution
+- **Split** - split the current change
+- **Squash** - squash changes into parent
+- **Yank** - copy change/commit IDs
 
-This works for just about everything that has an object-ID in git, and if you find one that you think _should_ work but doesn't, open an issue :)
+Many popups will use whatever is currently under the cursor or selected as input for an action. For example, to rebase a range of changes from the log view, a linewise visual selection can be made, and the rebase action will apply to that selection.
 
 ## Highlight Groups
 
@@ -553,25 +412,19 @@ See the built-in documentation for a comprehensive list of highlight groups. If 
 
 NeoJJ emits the following events:
 
-| Event                   | Description                              | Event Data                                      |
-|-------------------------|------------------------------------------|-------------------------------------------------|
-| `NeoJJStatusRefreshed` | Status has been reloaded                 | `{}`                                            |
-| `NeoJJCommitComplete`  | Commit has been created                  | `{}`                                            |
-| `NeoJJPushComplete`    | Push has completed                       | `{}`                                            |
-| `NeoJJPullComplete`    | Pull has completed                       | `{}`                                            |
-| `NeoJJFetchComplete`   | Fetch has completed                      | `{}`                                            |
-| `NeoJJBranchCreate`    | Branch was created, starting from `base` | `{ branch_name: string, base: string? }`        |
-| `NeoJJBranchDelete`    | Branch was deleted                       | `{ branch_name: string }`                       |
-| `NeoJJBranchCheckout`  | Branch was checked out                   | `{ branch_name: string }`                       |
-| `NeoJJBranchReset`     | Branch was reset to a commit/branch      | `{ branch_name: string, resetting_to: string }` |
-| `NeoJJBranchRename`    | Branch was renamed                       | `{ branch_name: string, new_name: string }`     |
-| `NeoJJRebase`        | A rebase finished                        | `{ commit: string, status: "ok"\|"conflict" }`    |
-| `NeoJJReset`         | A branch was reset to a certain commit   | `{ commit: string, mode: "soft"\|"mixed"\|"hard"\|"keep"\|"index" }` |
-| `NeoJJTagCreate`     | A tag was placed on a certain commit     | `{ name: string, ref: string }`                   |
-| `NeoJJTagDelete`     | A tag was removed                        | `{ name: string }`                                |
-| `NeoJJCherryPick`    | One or more commits were cherry-picked    | `{ commits: string[] }`                          |
-| `NeoJJMerge`         | A merge finished                          | `{ branch: string, args = string[], status: "ok"\|"conflict" }` |
-| `NeoJJStash`         | A stash finished                          | `{ success: boolean }` |
+| Event                       | Description                        | Event Data                                         |
+|-----------------------------|------------------------------------|----------------------------------------------------|
+| `NeoJJStatusRefreshed`     | Status has been reloaded           | `{}`                                               |
+| `NeoJJCommitComplete`     | Commit has been created            | `{}`                                               |
+| `NeoJJDescribeComplete`   | Description has been updated       | `{}`                                               |
+| `NeoJJNewChangeComplete`  | New change has been created        | `{}`                                               |
+| `NeoJJSquashComplete`     | Squash has completed               | `{}`                                               |
+| `NeoJJPushComplete`       | Push has completed                 | `{}`                                               |
+| `NeoJJFetchComplete`      | Fetch has completed                | `{}`                                               |
+| `NeoJJBookmarkCreate`     | Bookmark was created               | `{ bookmark_name: string }`                        |
+| `NeoJJBookmarkDelete`     | Bookmark was deleted               | `{ bookmark_name: string }`                        |
+| `NeoJJRebaseComplete`     | A rebase finished                  | `{ commit: string, status: "ok"\|"conflict" }`     |
+| `NeoJJAbandonComplete`    | A change was abandoned             | `{ change_id: string }`                            |
 
 ## Versioning
 
@@ -583,17 +436,8 @@ The `master` branch will always be compatible with the latest **stable** release
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/NeoJJOrg/neojj/blob/master/CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
-## Contributors
+## Acknowledgements
 
-<a href="https://github.com/NeoJJOrg/NeoJJ/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=NeoJJOrg/NeoJJ" />
-</a>
-
-## Special Thanks
-
-- [kolja](https://github.com/kolja) for the NeoJJ Logo
-- [gitgraph.nvim](https://github.com/isakbm/gitgraph.nvim) for the "kitty" git graph renderer
-- [vim-flog](https://github.com/rbong/vim-flog) for the "unicode" git graph renderer
-
+NeoJJ is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit). Thanks to the Neogit contributors for building the foundation this project is based on.
