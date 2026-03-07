@@ -5,9 +5,15 @@ local M = {}
 ---@class NeoJJLogMeta
 local meta = {}
 
----Async-compatible vim.system wrapper that yields in plenary.async coroutines
+---Async-compatible vim.system wrapper that yields in plenary.async coroutines.
+---vim.system's callback runs in a fast event context, so we vim.schedule
+---back to the main thread before resuming the coroutine.
 local jj_system = a.wrap(function(cmd, opts, callback)
-  vim.system(cmd, opts, callback)
+  vim.system(cmd, opts, function(result)
+    vim.schedule(function()
+      callback(result)
+    end)
+  end)
 end, 3)
 
 ---Parse concatenated JSON objects from jj log -T 'json(self)'

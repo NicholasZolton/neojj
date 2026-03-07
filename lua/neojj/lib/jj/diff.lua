@@ -1,5 +1,4 @@
 local insert = table.insert
-local sha256 = vim.fn.sha256
 
 local M = {}
 
@@ -81,10 +80,18 @@ local function build_lines(output, start_idx)
   return lines
 end
 
+---Simple DJB2 hash — pure Lua, safe in fast event context
 ---@param content string[]
 ---@return string
 local function hunk_hash(content)
-  return sha256(table.concat(content, "\n"))
+  local h = 5381
+  for _, line in ipairs(content) do
+    for i = 1, #line do
+      h = ((h * 33) + line:byte(i)) % 0x100000000
+    end
+    h = ((h * 33) + 10) % 0x100000000 -- newline separator
+  end
+  return string.format("%08x", h)
 end
 
 ---@param lines string[]
@@ -210,7 +217,9 @@ function M.build(item)
         local result
         if coroutine.running() then
           local a = require("plenary.async")
-          local jj_system = a.wrap(function(c, o, cb) vim.system(c, o, cb) end, 3)
+          local jj_system = a.wrap(function(c, o, cb)
+            vim.system(c, o, function(r) vim.schedule(function() cb(r) end) end)
+          end, 3)
           result = jj_system(cmd, opts)
         else
           result = vim.system(cmd, opts):wait()

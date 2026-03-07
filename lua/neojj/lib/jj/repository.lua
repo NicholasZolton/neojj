@@ -201,14 +201,10 @@ function Repo:refresh(opts)
 
   if #parallel_tasks > 0 then
     a.util.run_all(parallel_tasks, function()
-      vim.schedule(function()
-        self:run_callbacks()
-      end)
-    end)
-  else
-    vim.schedule(function()
       self:run_callbacks()
     end)
+  else
+    self:run_callbacks()
   end
 end
 
