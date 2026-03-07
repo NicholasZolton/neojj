@@ -92,38 +92,38 @@ Replace git internals with jj equivalents.
 ## Phase 4: Core Popups
 
 ### Commit Popup
-- [ ] `jj commit` (finish change & start new)
-- [ ] `jj describe` (edit message)
-- [ ] Options: message, reset-author, etc.
+- [x] `jj commit` (finish change & start new)
+- [x] `jj describe` (edit message)
+- [x] Options: message, reset-author, etc.
 
 ### Change Popup (new, jj-specific)
-- [ ] `jj new` (new change on top of current)
-- [ ] `jj new <rev>` (new change on specified parent)
-- [ ] `jj new @ A` (merge — multiple parents)
-- [ ] `--insert-before`, `--insert-after` options
+- [x] `jj new` (new change on top of current)
+- [x] `jj new <rev>` (new change on specified parent)
+- [x] `jj new @ A` (merge — multiple parents)
+- [x] `--insert-before`, `--insert-after` options
 
 ### Squash Popup
-- [ ] `jj squash` (into parent)
-- [ ] `jj squash --into <rev>` (into arbitrary ancestor)
-- [ ] `jj squash -i` (interactive)
+- [x] `jj squash` (into parent)
+- [x] `jj squash --into <rev>` (into arbitrary ancestor)
+- [x] `jj squash -i` (interactive)
 
 ### Bookmark Popup
-- [ ] `jj bookmark create <name> [-r <rev>]`
-- [ ] `jj bookmark move <name> --to <rev>`
-- [ ] `jj bookmark delete <name>`
-- [ ] `jj bookmark track <name>@<remote>`
-- [ ] `jj bookmark forget <name>`
-- [ ] `jj bookmark list`
+- [x] `jj bookmark create <name> [-r <rev>]`
+- [x] `jj bookmark move <name> --to <rev>`
+- [x] `jj bookmark delete <name>`
+- [x] `jj bookmark track <name>@<remote>`
+- [x] `jj bookmark forget <name>`
+- [x] `jj bookmark list`
 
 ### Push Popup
-- [ ] `jj git push --bookmark <name>`
-- [ ] `jj git push --change <rev>`
-- [ ] `jj git push --all`
-- [ ] `--remote` option
+- [x] `jj git push --bookmark <name>`
+- [x] `jj git push --change <rev>`
+- [x] `jj git push --all`
+- [x] `--remote` option
 
 ### Fetch Popup
-- [ ] `jj git fetch`
-- [ ] `--remote`, `--all-remotes` options
+- [x] `jj git fetch`
+- [x] `--remote`, `--all-remotes` options
 
 ---
 
