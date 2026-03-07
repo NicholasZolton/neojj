@@ -177,9 +177,9 @@ Replace git internals with jj equivalents.
 
 - [x] Clean up config.lua (remove git-specific options, add jj-specific ones)
 - [x] Update all highlights and signs
-- [ ] Write documentation (doc/ help files)
+- [x] Write documentation (doc/ help files)
 - [x] Remove dead code (git-only modules: stash, bisect, cherry_pick, index, worktree, etc.)
-- [ ] Update README
+- [x] Update README
 
 ---
 
