@@ -2,7 +2,7 @@ local config = require("neojj.config")
 local Buffer = require("neojj.lib.buffer")
 local ui = require("neojj.buffers.status.ui")
 local popups = require("neojj.popups")
-local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
 local Watcher = require("neojj.watcher")
 local a = require("plenary.async")
 local logger = require("neojj.logger") -- TODO: Add logging
@@ -65,8 +65,8 @@ function M.register(instance, dir)
 
   instances[dir] = instance
   submodule_info_per_root[instance.root] = {
-    submodules = git.submodule.list(),
-    parent_repo = git.rev_parse.parent_repo(),
+    submodules = {}, -- TODO: jj doesn't have submodules in the same way
+    parent_repo = nil,
   }
 end
 
@@ -154,37 +154,14 @@ function M:open(kind)
     mappings = {
       v = {
         [mappings["Discard"]]                   = self:_action("v_discard"),
-        [mappings["Stage"]]                     = self:_action("v_stage"),
-        [mappings["Unstage"]]                   = self:_action("v_unstage"),
-        [mappings["Untrack"]]                   = self:_action("v_untrack"),
-        [popups.mapping_for("BisectPopup")]     = self:_action("v_bisect_popup"),
-        [popups.mapping_for("BranchPopup")]     = self:_action("v_branch_popup"),
-        [popups.mapping_for("CherryPickPopup")] = self:_action("v_cherry_pick_popup"),
-        [popups.mapping_for("CommitPopup")]     = self:_action("v_commit_popup"),
         [popups.mapping_for("DiffPopup")]       = self:_action("v_diff_popup"),
-        [popups.mapping_for("FetchPopup")]      = self:_action("v_fetch_popup"),
         [popups.mapping_for("HelpPopup")]       = self:_action("v_help_popup"),
-        [popups.mapping_for("IgnorePopup")]     = self:_action("v_ignore_popup"),
         [popups.mapping_for("LogPopup")]        = self:_action("v_log_popup"),
-        [popups.mapping_for("MarginPopup")]     = self:_action("v_margin_popup"),
-        [popups.mapping_for("MergePopup")]      = self:_action("v_merge_popup"),
-        [popups.mapping_for("PullPopup")]       = self:_action("v_pull_popup"),
-        [popups.mapping_for("PushPopup")]       = self:_action("v_push_popup"),
-        [popups.mapping_for("RebasePopup")]     = self:_action("v_rebase_popup"),
-        [popups.mapping_for("RemotePopup")]     = self:_action("v_remote_popup"),
-        [popups.mapping_for("ResetPopup")]      = self:_action("v_reset_popup"),
-        [popups.mapping_for("RevertPopup")]     = self:_action("v_revert_popup"),
-        [popups.mapping_for("StashPopup")]      = self:_action("v_stash_popup"),
-        [popups.mapping_for("TagPopup")]        = self:_action("v_tag_popup"),
-        [popups.mapping_for("WorktreePopup")]   = self:_action("v_worktree_popup"),
       },
       n = {
         [mappings["Command"]]                   = self:_action("n_command"),
-        [mappings["OpenTree"]]                  = self:_action("n_open_tree"),
         [mappings["MoveDown"]]                  = self:_action("n_down"),
         [mappings["MoveUp"]]                    = self:_action("n_up"),
-        [mappings["Untrack"]]                   = self:_action("n_untrack"),
-        [mappings["Rename"]]                    = self:_action("n_rename"),
         [mappings["Toggle"]]                    = self:_action("n_toggle"),
         [mappings["OpenFold"]]                  = self:_action("n_open_fold"),
         [mappings["CloseFold"]]                 = self:_action("n_close_fold"),
@@ -197,44 +174,30 @@ function M:open(kind)
         [mappings["Depth3"]]                    = self:_action("n_depth3"),
         [mappings["Depth4"]]                    = self:_action("n_depth4"),
         [mappings["CommandHistory"]]            = self:_action("n_command_history"),
-        [mappings["ShowRefs"]]                  = self:_action("n_show_refs"),
         [mappings["YankSelected"]]              = self:_action("n_yank_selected"),
         [mappings["Discard"]]                   = self:_action("n_discard"),
         [mappings["GoToNextHunkHeader"]]        = self:_action("n_go_to_next_hunk_header"),
         [mappings["GoToPreviousHunkHeader"]]    = self:_action("n_go_to_previous_hunk_header"),
-        [mappings["InitRepo"]]                  = self:_action("n_init_repo"),
-        [mappings["Stage"]]                     = self:_action("n_stage"),
-        [mappings["StageAll"]]                  = self:_action("n_stage_all"),
-        [mappings["StageUnstaged"]]             = self:_action("n_stage_unstaged"),
-        [mappings["Unstage"]]                   = self:_action("n_unstage"),
-        [mappings["UnstageStaged"]]             = self:_action("n_unstage_staged"),
         [mappings["GoToFile"]]                  = self:_action("n_goto_file"),
-        [mappings["GoToParentRepo"]]            = self:_action("n_goto_parent_repo"),
         [mappings["TabOpen"]]                   = self:_action("n_tab_open"),
         [mappings["SplitOpen"]]                 = self:_action("n_split_open"),
         [mappings["VSplitOpen"]]                = self:_action("n_vertical_split_open"),
         [mappings["NextSection"]]               = self:_action("n_next_section"),
         [mappings["PreviousSection"]]           = self:_action("n_prev_section"),
-        [popups.mapping_for("BisectPopup")]     = self:_action("n_bisect_popup"),
-        [popups.mapping_for("BranchPopup")]     = self:_action("n_branch_popup"),
-        [popups.mapping_for("CherryPickPopup")] = self:_action("n_cherry_pick_popup"),
-        [popups.mapping_for("CommitPopup")]     = self:_action("n_commit_popup"),
+        -- jj-specific actions
+        ["d"]                                   = self:_action("n_describe"),
+        ["N"]                                   = self:_action("n_new_change"),
+        ["A"]                                   = self:_action("n_abandon"),
+        ["Q"]                                   = self:_action("n_squash_popup"),
+        -- jj popup bindings
         [popups.mapping_for("DiffPopup")]       = self:_action("n_diff_popup"),
         [popups.mapping_for("FetchPopup")]      = self:_action("n_fetch_popup"),
         [popups.mapping_for("HelpPopup")]       = self:_action("n_help_popup"),
-        [popups.mapping_for("IgnorePopup")]     = self:_action("n_ignore_popup"),
         [popups.mapping_for("LogPopup")]        = self:_action("n_log_popup"),
-        [popups.mapping_for("MarginPopup")]     = self:_action("n_margin_popup"),
-        [popups.mapping_for("MergePopup")]      = self:_action("n_merge_popup"),
-        [popups.mapping_for("PullPopup")]       = self:_action("n_pull_popup"),
         [popups.mapping_for("PushPopup")]       = self:_action("n_push_popup"),
         [popups.mapping_for("RebasePopup")]     = self:_action("n_rebase_popup"),
         [popups.mapping_for("RemotePopup")]     = self:_action("n_remote_popup"),
-        [popups.mapping_for("ResetPopup")]      = self:_action("n_reset_popup"),
-        [popups.mapping_for("RevertPopup")]     = self:_action("n_revert_popup"),
-        [popups.mapping_for("StashPopup")]      = self:_action("n_stash_popup"),
-        [popups.mapping_for("TagPopup")]        = self:_action("n_tag_popup"),
-        [popups.mapping_for("WorktreePopup")]   = self:_action("n_worktree_popup"),
+        ["b"]                                   = self:_action("n_bookmark_popup"),
         ["V"]                                   = function()
           vim.cmd("norm! V")
         end,
@@ -247,14 +210,13 @@ function M:open(kind)
       vim.o.autochdir = false
     end,
     render = function()
-      return ui.Status(git.repo.state, self.config)
+      return ui.Status(jj.repo.state, self.config)
     end,
     ---@param buffer Buffer
     ---@param _win any
     after = function(buffer, _win)
       Watcher.instance(self.root):register(self)
       buffer:move_cursor(buffer.ui:first_section().first)
-      vim.b.neojj_git_dir = git.repo.git_dir
     end,
     user_autocmds = {
       -- Resetting doesn't yield the correct repo state instantly, so we need to re-refresh after a few seconds
@@ -293,8 +255,8 @@ function M:chdir(dir)
   vim.schedule(function()
     logger.debug("[STATUS] Changing Dir: " .. dir)
     vim.api.nvim_set_current_dir(dir)
-    require("neojj.lib.git.repository").instance(dir)
-    self.new(config.values, git.repo.worktree_root, dir):open("replace"):dispatch_refresh()
+    require("neojj.lib.jj.repository").instance(dir)
+    self.new(config.values, jj.repo.worktree_root, dir):open("replace"):dispatch_refresh()
   end)
 end
 
@@ -315,7 +277,7 @@ function M:refresh(partial, reason)
     view = self.buffer:save_view()
   end
 
-  git.repo:dispatch_refresh {
+  jj.repo:dispatch_refresh {
     source = "status",
     partial = partial,
     callback = function()
@@ -335,7 +297,7 @@ function M:redraw(cursor, view)
   end
 
   logger.debug("[STATUS] Rendering UI")
-  self.buffer.ui:render(unpack(ui.Status(git.repo.state, self.config)))
+  self.buffer.ui:render(unpack(ui.Status(jj.repo.state, self.config)))
 
   if self.fold_state and self.buffer then
     logger.debug("[STATUS] Restoring fold state")
@@ -370,7 +332,7 @@ end
 
 function M:reset()
   logger.debug("[STATUS] Resetting repo and refreshing - CWD: " .. vim.uv.cwd())
-  git.repo:reset()
+  jj.repo:reset()
   self:refresh(nil, "reset")
 end
 
