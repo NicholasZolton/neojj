@@ -168,29 +168,56 @@ end
 ---overhead per command due to Neovim plugin event processing.
 ---@param opts? { callback?: fun(), source?: string }
 function Repo:refresh(opts)
-  -- Diagnostic: measure fork and env impact
+  local cwd = self.state.worktree_root
+  local jj_path = vim.fn.exepath("jj")
+
+  -- Test 1: raw fork overhead
   local t_true = vim.uv.hrtime()
   local h = io.popen("/usr/bin/true")
   if h then h:close() end
   vim.notify(("[FORK] /usr/bin/true: %.0fms"):format((vim.uv.hrtime() - t_true) / 1e6))
 
-  -- Test jj with stripped env (only PATH and HOME)
-  local jj_path = vim.fn.exepath("jj")
-  local cwd = self.state.worktree_root
-  local t_env = vim.uv.hrtime()
-  local h2 = io.popen(("env -i PATH=/usr/bin:/bin HOME=%s %s --no-pager --color=never --ignore-working-copy -R %s status 2>/dev/null"):format(
-    vim.fn.shellescape(vim.env.HOME),
-    vim.fn.shellescape(jj_path),
-    vim.fn.shellescape(cwd)
-  ))
-  if h2 then h2:read("*a"); h2:close() end
-  vim.notify(("[FORK] jj status (env -i): %.0fms"):format((vim.uv.hrtime() - t_env) / 1e6))
+  -- Test 2: jj via vim.uv.spawn with EMPTY env (no shell at all)
+  local t_uv = vim.uv.hrtime()
+  local done = false
+  local proc
+  proc = vim.uv.spawn(jj_path, {
+    args = { "--no-pager", "--color=never", "--ignore-working-copy", "status" },
+    cwd = cwd,
+    env = { "HOME=" .. vim.env.HOME, "PATH=/usr/bin:/bin" },
+  }, function()
+    proc:close()
+    done = true
+  end)
+  vim.wait(10000, function() return done end, 1) -- 1ms poll interval
+  vim.notify(("[FORK] jj uv.spawn empty env: %.0fms"):format((vim.uv.hrtime() - t_uv) / 1e6))
 
-  -- Test git for comparison
+  -- Test 3: jj via vim.uv.spawn with INHERITED env
+  local t_uv2 = vim.uv.hrtime()
+  local done2 = false
+  local proc2
+  proc2 = vim.uv.spawn(jj_path, {
+    args = { "--no-pager", "--color=never", "--ignore-working-copy", "status" },
+    cwd = cwd,
+  }, function()
+    proc2:close()
+    done2 = true
+  end)
+  vim.wait(10000, function() return done2 end, 1)
+  vim.notify(("[FORK] jj uv.spawn inherited env: %.0fms"):format((vim.uv.hrtime() - t_uv2) / 1e6))
+
+  -- Test 4: git for comparison
   local t_git = vim.uv.hrtime()
   local h3 = io.popen("git --no-pager -C " .. vim.fn.shellescape(cwd) .. " status --porcelain 2>/dev/null")
   if h3 then h3:read("*a"); h3:close() end
   vim.notify(("[FORK] git status: %.0fms"):format((vim.uv.hrtime() - t_git) / 1e6))
+
+  -- Test 5: jj on a TINY repo (to check if repo size matters)
+  local t_tmp = vim.uv.hrtime()
+  os.execute("mkdir -p /tmp/jj-test-repo && cd /tmp/jj-test-repo && " .. vim.fn.shellescape(jj_path) .. " git init --colocate 2>/dev/null || true")
+  local h4 = io.popen(vim.fn.shellescape(jj_path) .. " --no-pager --color=never -R /tmp/jj-test-repo status 2>/dev/null")
+  if h4 then h4:read("*a"); h4:close() end
+  vim.notify(("[FORK] jj tiny repo: %.0fms"):format((vim.uv.hrtime() - t_tmp) / 1e6))
 
   local t_refresh = vim.uv.hrtime()
   opts = opts or {}
