@@ -152,24 +152,24 @@ Replace git internals with jj equivalents.
 ## Phase 6: Remaining Popups
 
 ### Rebase Popup
-- [ ] `jj rebase -s <source> -d <dest>`
-- [ ] `jj rebase -b <bookmark> -d <dest>`
-- [ ] `jj rebase -r <rev> --before/--after <target>`
+- [x] `jj rebase -s <source> -d <dest>`
+- [x] `jj rebase -b <bookmark> -d <dest>`
+- [x] `jj rebase -r <rev> --before/--after <target>`
 
 ### Split Popup
-- [ ] `jj split` (interactive, split working copy)
-- [ ] `jj split -r <rev>` (split arbitrary change)
+- [x] `jj split` (interactive, split working copy)
+- [x] `jj split -r <rev>` (split arbitrary change)
 
 ### Resolve Popup
-- [ ] `jj resolve` (launch merge tool for conflicted files)
-- [ ] File selection for multi-file conflicts
+- [x] `jj resolve` (launch merge tool for conflicted files)
+- [x] File selection for multi-file conflicts
 
 ### Other Popups
-- [ ] Remote: `jj git remote` (add, remove, rename, list)
-- [ ] Yank: copy change ID / commit ID to clipboard
-- [ ] Diff: `jj diff` format options (--summary, --stat, --git, --color-words)
-- [ ] Log: `jj log` filtering (-r revset, -p patch, --no-graph)
-- [ ] Help: adapted for jj keybindings
+- [x] Remote: `jj git remote` (add, remove, rename, list)
+- [x] Yank: copy change ID / commit ID to clipboard
+- [x] Diff: `jj diff` format options (--summary, --stat, --git, --color-words)
+- [x] Log: `jj log` filtering (-r revset, -p patch, --no-graph)
+- [x] Help: adapted for jj keybindings
 
 ---
 
