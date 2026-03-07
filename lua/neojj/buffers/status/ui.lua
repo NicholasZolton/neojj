@@ -98,7 +98,7 @@ local JJHead = Component.new(function(props)
     }, { yankable = change_id }),
     row {
       text("  "),
-      text(props.description ~= "" and props.description or "(no description)"),
+      text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
     },
   })
 end)
@@ -252,7 +252,7 @@ local SectionItemChange = Component.new(function(item)
     text.highlight("NeoJJSubtleText")(commit_id),
     text.highlight("NeoJJBranch")(bookmark_text),
     text(" "),
-    text(item.description or "(no description)"),
+    text(item.description and vim.split(item.description, "\n")[1] or "(no description)"),
     text.highlight("NeoJJSubtleText")(status_suffix),
   }, {
     yankable = item.change_id,
@@ -271,7 +271,7 @@ local SectionItemBookmark = Component.new(function(item)
     text(" "),
     text.highlight("NeoJJObjectId")((item.change_id or ""):sub(1, 12)),
     text(" "),
-    text(item.description or "(no description)"),
+    text(item.description and vim.split(item.description, "\n")[1] or "(no description)"),
   }, {
     yankable = item.name,
     item = item,

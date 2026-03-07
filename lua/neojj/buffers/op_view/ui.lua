@@ -20,7 +20,7 @@ function M.OpEntry(op)
     text(" "),
     text(op.time or "", { highlight = "Special" }),
     text(" "),
-    text(op.description or "", { highlight = "NeoJJGraphAuthor" }),
+    text(op.description and vim.split(op.description, "\n")[1] or "", { highlight = "NeoJJGraphAuthor" }),
   }, {
     item = op,
     oid = op.id,
