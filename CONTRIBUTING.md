@@ -3,37 +3,37 @@
 Contributions of all kinds are very welcome. If you are planning to implement a larger feature please open an issue
 prior to minimize the risk of duplicate work, or to discuss some specifics of the feature; such as keybindings.
 
-Neogit draws heavy inspiration from [Magit](https://magit.vc/), but aims to be its own thing. Many of our features
+NeoJJ draws heavy inspiration from [Magit](https://magit.vc/), but aims to be its own thing. Many of our features
 are inspired by Magit, such as the branch keybindings.
 
 
 ## Architecture
 
-- [`./lua/neogit/`]
-  - [`./lua/neogit/lib/`] Contains various git and filesystem abstractions
-  - [`./lua/neogit/lib/git/`] High level git wrappers for common commands such as branches, fetch. These are also used
+- [`./lua/neojj/`]
+  - [`./lua/neojj/lib/`] Contains various git and filesystem abstractions
+  - [`./lua/neojj/lib/git/`] High level git wrappers for common commands such as branches, fetch. These are also used
   to supply the status buffer
-  - [`./lua/neogit/lib/git/cli.lua`] Builder like pattern for constructing git cli invocations
-  - [`./lua/neogit/lib/git/repository.lua`] Modules from `git/` for updating the status buffer
-  - [`./lua/neogit/popups/`] Contains all the popups and keybindings
-  - [`./lua/neogit/buffers/`] Contains all the buffer views, such as `commit_editor` or `log_view`
+  - [`./lua/neojj/lib/git/cli.lua`] Builder like pattern for constructing git cli invocations
+  - [`./lua/neojj/lib/git/repository.lua`] Modules from `git/` for updating the status buffer
+  - [`./lua/neojj/popups/`] Contains all the popups and keybindings
+  - [`./lua/neojj/buffers/`] Contains all the buffer views, such as `commit_editor` or `log_view`
 
-`Neogit` uses its own UI drawing library for drawing columns and rows of text.
+`NeoJJ` uses its own UI drawing library for drawing columns and rows of text.
 
 ### Making a new view
 
-Neogit's views, such as the `commit` buffer, `log` graph buffer, etc are located in [`./lua/neogit/buffers/`]. They
+NeoJJ's views, such as the `commit` buffer, `log` graph buffer, etc are located in [`./lua/neojj/buffers/`]. They
 are split in a `init.lua` for creating the buffer and setting up keymaps and actions, and `ui.lua` for rendering the
 buffer. The split is such that it is easier to get an overview of how the buffer will *look* without the clutter of git
 commands and actions.
 
 Opening a view is typically done through a *popup* which allows you to configure options before invoking the view.
 
-These reside inside [`./lua/neogit/popups/`], and are split into `init.lua` and `actions.lua` for the setup and
+These reside inside [`./lua/neojj/popups/`], and are split into `init.lua` and `actions.lua` for the setup and
 keybindings, and the git commands to execute, likewise intended to get an overview of the options and keybindings for
 the popup in `init.lua` without concerning yourself with the git commands and parsing in `actions.lua`.
 
-To access your new popup through a keybinding, add it to the table in [`./lua/neogit/popups/init.lua`] inside
+To access your new popup through a keybinding, add it to the table in [`./lua/neojj/popups/init.lua`] inside
 `mappings_table`. This will enable you to access the popup through both the status buffer and help popup.
 
 ## Getting Started
@@ -41,35 +41,35 @@ To access your new popup through a keybinding, add it to the table in [`./lua/ne
 If you are using [`Lazy.nvim`](https://github.com/folke/lazy.nvim) you can configure it to prefer sourcing plugins from
 a local directory instead of from git. 
 
-Simply clone *Neogit* to your project directory of choice to be able to use your local changes. See
+Simply clone *NeoJJ* to your project directory of choice to be able to use your local changes. See
 [`lazy-spec`](https://github.com/folke/lazy.nvim#-plugin-spec) and
 [`lazy-configuration`](https://github.com/folke/lazy.nvim#%EF%B8%8F-configuration) for details.
 
 ### Logging
 
-Logging is a useful tool for inspecting what happens in the code and in what order. Neogit uses
+Logging is a useful tool for inspecting what happens in the code and in what order. NeoJJ uses
 [`Plenary`](https://github.com/nvim-lua/plenary.nvim) for logging.
 
 #### Enabling logging via environment variables
 
-- To enable logging to console, export `NEOGIT_LOG_CONSOLE="sync"`
-- To enable logging to a file, export `NEOGIT_LOG_FILE="true"`
-- For more verbose logging, set the log level to `debug` via `NEOGIT_LOG_LEVEL="debug"` 
+- To enable logging to console, export `NEOJJ_LOG_CONSOLE="sync"`
+- To enable logging to a file, export `NEOJJ_LOG_FILE="true"`
+- For more verbose logging, set the log level to `debug` via `NEOJJ_LOG_LEVEL="debug"` 
 
 #### Enabling logging via lua api
 
 To turn on logging while neovim is already running, you can use:
 
 ```lua
-:lua require("neogit.logger").config.use_file = true -- for logs to ~/.cache/nvim/neogit.log.
-:lua require("neogit.logger").config.use_console = true -- for logs to console.
-:lua require("neogit.logger").config.level = 'debug' -- to set the log level
+:lua require("neojj.logger").config.use_file = true -- for logs to ~/.cache/nvim/neojj.log.
+:lua require("neojj.logger").config.use_console = true -- for logs to console.
+:lua require("neojj.logger").config.level = 'debug' -- to set the log level
 ```
 
-#### Using the logger from the neogit codebase
+#### Using the logger from the neojj codebase
 
 ```lua
-local logger = require("neogit.logger")
+local logger = require("neojj.logger")
 
 logger.info("This is a log message")
 logger.debug(("This is a verbose log message: %q"):format(str_to_quote))
@@ -88,7 +88,7 @@ rather than:
 
 ### Testing
 
-Neogit is tested using [`Plenary`](https://github.com/nvim-lua/plenary.nvim#plenarytest_harness) for unit tests, and `rspec` (yes, ruby) for e2e tests.
+NeoJJ is tested using [`Plenary`](https://github.com/nvim-lua/plenary.nvim#plenarytest_harness) for unit tests, and `rspec` (yes, ruby) for e2e tests.
 
 It uses a *Busted* style testing, where each lua file inside [`./tests/specs/{test_name}_spec.lua`] is run.
 

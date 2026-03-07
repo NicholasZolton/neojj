@@ -1,7 +1,7 @@
 <div align="center">
     <div>
-        <div><img src="https://github.com/NeogitOrg/neogit/assets/7228095/7684545f-47b5-40e2-aedd-ccf56e0553f4" width="400px"/></div>
-        <div><h1>Neogit</h1></div>
+        <div><img src="https://github.com/NeoJJOrg/neojj/assets/7228095/7684545f-47b5-40e2-aedd-ccf56e0553f4" width="400px"/></div>
+        <div><h1>NeoJJ</h1></div>
     </div>
     <table>
         <tr>
@@ -14,13 +14,13 @@
   [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
   [![Neovim](https://img.shields.io/badge/Neovim%200.10+-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
   [![MIT](https://img.shields.io/badge/MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-  <a href="https://dotfyle.com/plugins/NeogitOrg/neogit">
-    <img src="https://dotfyle.com/plugins/NeogitOrg/neogit/shield?style=for-the-badge" />
+  <a href="https://dotfyle.com/plugins/NeoJJOrg/neojj">
+    <img src="https://dotfyle.com/plugins/NeoJJOrg/neojj/shield?style=for-the-badge" />
   </a>
 </div>
 
 
-![preview](https://github.com/NeogitOrg/neogit/assets/7228095/d964cbb4-a557-4e97-ac5b-ea571a001f5c)
+![preview](https://github.com/NeoJJOrg/neojj/assets/7228095/d964cbb4-a557-4e97-ac5b-ea571a001f5c)
 
 
 ## Installation
@@ -29,7 +29,7 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
 
 ```lua
 {
-  "NeogitOrg/neogit",
+  "NeoJJOrg/neojj",
   lazy = true,
   dependencies = {
     "nvim-lua/plenary.nvim",         -- required
@@ -44,59 +44,59 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
     "nvim-mini/mini.pick",           -- optional
     "folke/snacks.nvim",             -- optional
   },
-  cmd = "Neogit",
+  cmd = "NeoJJ",
   keys = {
-    { "<leader>gg", "<cmd>Neogit<cr>", desc = "Show Neogit UI" }
+    { "<leader>gg", "<cmd>NeoJJ<cr>", desc = "Show NeoJJ UI" }
   }
 }
 ```
 
 ## Usage
 
-You can either open Neogit by using the `Neogit` command:
+You can either open NeoJJ by using the `NeoJJ` command:
 
 ```vim
-:Neogit             " Open the status buffer in a new tab
-:Neogit cwd=<cwd>   " Use a different repository path
-:Neogit cwd=%:p:h   " Uses the repository of the current file
-:Neogit kind=<kind> " Open specified popup directly
-:Neogit commit      " Open commit popup
+:NeoJJ             " Open the status buffer in a new tab
+:NeoJJ cwd=<cwd>   " Use a different repository path
+:NeoJJ cwd=%:p:h   " Uses the repository of the current file
+:NeoJJ kind=<kind> " Open specified popup directly
+:NeoJJ commit      " Open commit popup
 
 " Map it to a key
-nnoremap <leader>gg <cmd>Neogit<cr>
+nnoremap <leader>gg <cmd>NeoJJ<cr>
 ```
 
 ```lua
 -- Or via lua api
-vim.keymap.set("n", "<leader>gg", "<cmd>Neogit<cr>", { desc = "Open Neogit UI" })
+vim.keymap.set("n", "<leader>gg", "<cmd>NeoJJ<cr>", { desc = "Open NeoJJ UI" })
 ```
 
 Or using the lua api:
 
 ```lua
-local neogit = require('neogit')
+local neojj = require('neojj')
 
 -- open using defaults
-neogit.open()
+neojj.open()
 
 -- open a specific popup
-neogit.open({ "commit" })
+neojj.open({ "commit" })
 
 -- open as a split
-neogit.open({ kind = "split" })
+neojj.open({ kind = "split" })
 
 -- open with different project
-neogit.open({ cwd = "~" })
+neojj.open({ cwd = "~" })
 
 -- You can map this to a key
-vim.keymap.set("n", "<leader>gg", neogit.open, { desc = "Open Neogit UI" })
+vim.keymap.set("n", "<leader>gg", neojj.open, { desc = "Open NeoJJ UI" })
 
 -- Wrap in a function to pass additional arguments
 vim.keymap.set(
     "n",
     "<leader>gg",
-    function() neogit.open({ kind = "split" }) end,
-    { desc = "Open Neogit UI" }
+    function() neojj.open({ kind = "split" }) end,
+    { desc = "Open NeoJJ UI" }
 )
 ```
 
@@ -114,15 +114,15 @@ The `kind` option can be one of the following values:
 
 ## Configuration
 
-You can configure neogit by running the `require('neogit').setup {}` function, passing a table as the argument.
+You can configure neojj by running the `require('neojj').setup {}` function, passing a table as the argument.
 
 <details>
 <summary>Default Config</summary>
 
 ```lua
-local neogit = require("neogit")
+local neojj = require("neojj")
 
-neogit.setup {
+neojj.setup {
   -- Hides the hints at the top of the status buffer
   disable_hint = false,
   -- Disables changing the buffer highlights based on where the cursor is.
@@ -201,7 +201,7 @@ neogit.setup {
   },
   -- Set to false if you want to be responsible for creating _ALL_ keymappings
   use_default_keymaps = true,
-  -- Neogit refreshes its internal state after specific events, which can be expensive depending on the repository size.
+  -- NeoJJ refreshes its internal state after specific events, which can be expensive depending on the repository size.
   -- Disabling `auto_refresh` will make it so you have to manually refresh the status after you open it.
   auto_refresh = true,
   -- Value used for `--sort` option for `git branch` command
@@ -220,7 +220,7 @@ neogit.setup {
   initial_branch_name = "",
   -- Default for rename branch prompt. If not set, the current branch name is used
   initial_branch_rename = nil,
-  -- Change the default way of opening neogit
+  -- Change the default way of opening neojj
   kind = "tab",
   -- Floating window style 
   floating = {
@@ -320,7 +320,7 @@ neogit.setup {
     -- If enabled, use telescope for menu selection rather than vim.ui.select.
     -- Allows multi-select and some things that vim.ui.select doesn't.
     telescope = nil,
-    -- Neogit only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
+    -- NeoJJ only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
     -- The diffview integration enables the diff popup.
     --
     -- Requires you to have `sindrets/diffview.nvim` installed.
@@ -551,31 +551,31 @@ See the built-in documentation for a comprehensive list of highlight groups. If 
 
 ## Events
 
-Neogit emits the following events:
+NeoJJ emits the following events:
 
 | Event                   | Description                              | Event Data                                      |
 |-------------------------|------------------------------------------|-------------------------------------------------|
-| `NeogitStatusRefreshed` | Status has been reloaded                 | `{}`                                            |
-| `NeogitCommitComplete`  | Commit has been created                  | `{}`                                            |
-| `NeogitPushComplete`    | Push has completed                       | `{}`                                            |
-| `NeogitPullComplete`    | Pull has completed                       | `{}`                                            |
-| `NeogitFetchComplete`   | Fetch has completed                      | `{}`                                            |
-| `NeogitBranchCreate`    | Branch was created, starting from `base` | `{ branch_name: string, base: string? }`        |
-| `NeogitBranchDelete`    | Branch was deleted                       | `{ branch_name: string }`                       |
-| `NeogitBranchCheckout`  | Branch was checked out                   | `{ branch_name: string }`                       |
-| `NeogitBranchReset`     | Branch was reset to a commit/branch      | `{ branch_name: string, resetting_to: string }` |
-| `NeogitBranchRename`    | Branch was renamed                       | `{ branch_name: string, new_name: string }`     |
-| `NeogitRebase`        | A rebase finished                        | `{ commit: string, status: "ok"\|"conflict" }`    |
-| `NeogitReset`         | A branch was reset to a certain commit   | `{ commit: string, mode: "soft"\|"mixed"\|"hard"\|"keep"\|"index" }` |
-| `NeogitTagCreate`     | A tag was placed on a certain commit     | `{ name: string, ref: string }`                   |
-| `NeogitTagDelete`     | A tag was removed                        | `{ name: string }`                                |
-| `NeogitCherryPick`    | One or more commits were cherry-picked    | `{ commits: string[] }`                          |
-| `NeogitMerge`         | A merge finished                          | `{ branch: string, args = string[], status: "ok"\|"conflict" }` |
-| `NeogitStash`         | A stash finished                          | `{ success: boolean }` |
+| `NeoJJStatusRefreshed` | Status has been reloaded                 | `{}`                                            |
+| `NeoJJCommitComplete`  | Commit has been created                  | `{}`                                            |
+| `NeoJJPushComplete`    | Push has completed                       | `{}`                                            |
+| `NeoJJPullComplete`    | Pull has completed                       | `{}`                                            |
+| `NeoJJFetchComplete`   | Fetch has completed                      | `{}`                                            |
+| `NeoJJBranchCreate`    | Branch was created, starting from `base` | `{ branch_name: string, base: string? }`        |
+| `NeoJJBranchDelete`    | Branch was deleted                       | `{ branch_name: string }`                       |
+| `NeoJJBranchCheckout`  | Branch was checked out                   | `{ branch_name: string }`                       |
+| `NeoJJBranchReset`     | Branch was reset to a commit/branch      | `{ branch_name: string, resetting_to: string }` |
+| `NeoJJBranchRename`    | Branch was renamed                       | `{ branch_name: string, new_name: string }`     |
+| `NeoJJRebase`        | A rebase finished                        | `{ commit: string, status: "ok"\|"conflict" }`    |
+| `NeoJJReset`         | A branch was reset to a certain commit   | `{ commit: string, mode: "soft"\|"mixed"\|"hard"\|"keep"\|"index" }` |
+| `NeoJJTagCreate`     | A tag was placed on a certain commit     | `{ name: string, ref: string }`                   |
+| `NeoJJTagDelete`     | A tag was removed                        | `{ name: string }`                                |
+| `NeoJJCherryPick`    | One or more commits were cherry-picked    | `{ commits: string[] }`                          |
+| `NeoJJMerge`         | A merge finished                          | `{ branch: string, args = string[], status: "ok"\|"conflict" }` |
+| `NeoJJStash`         | A stash finished                          | `{ success: boolean }` |
 
 ## Versioning
 
-Neogit follows semantic versioning.
+NeoJJ follows semantic versioning.
 
 ## Compatibility
 
@@ -583,17 +583,17 @@ The `master` branch will always be compatible with the latest **stable** release
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/NeogitOrg/neogit/blob/master/CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](https://github.com/NeoJJOrg/neojj/blob/master/CONTRIBUTING.md) for more details.
 
 ## Contributors
 
-<a href="https://github.com/NeogitOrg/Neogit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=NeogitOrg/Neogit" />
+<a href="https://github.com/NeoJJOrg/NeoJJ/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=NeoJJOrg/NeoJJ" />
 </a>
 
 ## Special Thanks
 
-- [kolja](https://github.com/kolja) for the Neogit Logo
+- [kolja](https://github.com/kolja) for the NeoJJ Logo
 - [gitgraph.nvim](https://github.com/isakbm/gitgraph.nvim) for the "kitty" git graph renderer
 - [vim-flog](https://github.com/rbong/vim-flog) for the "unicode" git graph renderer
 

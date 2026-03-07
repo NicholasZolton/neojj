@@ -1,60 +1,60 @@
-*neogit.txt* A Magit inspired Git porcelain for Neovim
-*neogit*
+*neojj.txt* A Magit inspired Git porcelain for Neovim
+*neojj*
 
 Original Author: TimUntersberger
 Current Author: Cameron Kolkey <cameron.kolkey@gmail.com>
-Homepage: <https://github.com/NeoJJOrg/neogit>
+Homepage: <https://github.com/NeoJJOrg/neojj>
 License: MIT license
 
 ==============================================================================
-CONTENTS                                                       *neogit_contents*
+CONTENTS                                                       *neojj_contents*
 
-    1. Intro                                                      |neogit_intro|
-    2. Setup                                                      *neogit_setup*
-       • Plugin Setup                                      |neogit_setup_plugin|
-       • Mappings                                        |neogit_setup_mappings|
-       • GPG Integration                                      |neogit_setup_gpg|
-    3. Commands                                                |neogit_commands|
-    4. Events                                                    |neogit_events|
-    5. Highlights                                            |neogit_highlights|
-    6. API                                                          |neogit_api|
-       • Popup Builder                                    |neogit_popup_builder|
-       • Customizing Popups                               |neogit_custom_popups|
-    7. Usage                                                      |neogit_usage|
-    8. Popups                                                    *neogit_popups*
-       • Bisect                                            |neogit_bisect_popup|
-       • Branch                                            |neogit_branch_popup|
-       • Branch Config                              |neogit_branch_config_popup|
-       • Cherry Pick                                  |neogit_cherry_pick_popup|
-       • Commit                                            |neogit_commit_popup|
-       • Diff                                                |neogit_diff_popup|
-       • Fetch                                              |neogit_fetch_popup|
-       • Ignore                                            |neogit_ignore_popup|
-       • Log                                                  |neogit_log_popup|
-       • Merge                                              |neogit_merge_popup|
-       • Pull                                                |neogit_pull_popup|
-       • Push                                                |neogit_push_popup|
-       • Rebase                                            |neogit_rebase_popup|
-       • Remote                                            |neogit_remote_popup|
-       • Remote Config                              |neogit_remote_config_popup|
-       • Reset                                              |neogit_reset_popup|
-       • Revert                                            |neogit_revert_popup|
-       • Stash                                              |neogit_stash_popup|
-       • Tag                                                  |neogit_tag_popup|
-       • Worktree                                        |neogit_worktree_popup|
-    9. Buffers                                                  *neogit_buffers*
-       • Status                                           |neogit_status_buffer|
-       • Editor                                           |neogit_editor_buffer|
-       • Log                                                 |neogit_log_buffer|
-       • Reflog                                           |neogit_reflog_buffer|
-       • Refs                                               |neogit_refs_buffer|
-       • Commit                                           |neogit_commit_buffer|
-       • Rebase Todo                                 |neogit_rebase_todo_buffer|
+    1. Intro                                                      |neojj_intro|
+    2. Setup                                                      *neojj_setup*
+       • Plugin Setup                                      |neojj_setup_plugin|
+       • Mappings                                        |neojj_setup_mappings|
+       • GPG Integration                                      |neojj_setup_gpg|
+    3. Commands                                                |neojj_commands|
+    4. Events                                                    |neojj_events|
+    5. Highlights                                            |neojj_highlights|
+    6. API                                                          |neojj_api|
+       • Popup Builder                                    |neojj_popup_builder|
+       • Customizing Popups                               |neojj_custom_popups|
+    7. Usage                                                      |neojj_usage|
+    8. Popups                                                    *neojj_popups*
+       • Bisect                                            |neojj_bisect_popup|
+       • Branch                                            |neojj_branch_popup|
+       • Branch Config                              |neojj_branch_config_popup|
+       • Cherry Pick                                  |neojj_cherry_pick_popup|
+       • Commit                                            |neojj_commit_popup|
+       • Diff                                                |neojj_diff_popup|
+       • Fetch                                              |neojj_fetch_popup|
+       • Ignore                                            |neojj_ignore_popup|
+       • Log                                                  |neojj_log_popup|
+       • Merge                                              |neojj_merge_popup|
+       • Pull                                                |neojj_pull_popup|
+       • Push                                                |neojj_push_popup|
+       • Rebase                                            |neojj_rebase_popup|
+       • Remote                                            |neojj_remote_popup|
+       • Remote Config                              |neojj_remote_config_popup|
+       • Reset                                              |neojj_reset_popup|
+       • Revert                                            |neojj_revert_popup|
+       • Stash                                              |neojj_stash_popup|
+       • Tag                                                  |neojj_tag_popup|
+       • Worktree                                        |neojj_worktree_popup|
+    9. Buffers                                                  *neojj_buffers*
+       • Status                                           |neojj_status_buffer|
+       • Editor                                           |neojj_editor_buffer|
+       • Log                                                 |neojj_log_buffer|
+       • Reflog                                           |neojj_reflog_buffer|
+       • Refs                                               |neojj_refs_buffer|
+       • Commit                                           |neojj_commit_buffer|
+       • Rebase Todo                                 |neojj_rebase_todo_buffer|
 
 ==============================================================================
-1. Intro                                                          *neogit_intro*
+1. Intro                                                          *neojj_intro*
 
-Neogit is a git client for Neovim built as a clone of the popular emacs git
+NeoJJ is a git client for Neovim built as a clone of the popular emacs git
 client 'Magit'.
 
 "Magit is a complete text-based user interface to Git. It fills the glaring
@@ -82,12 +82,12 @@ Though not yet feature complete, our goal is to bring the Magit git experience
 to Neovim users.
 
 ==============================================================================
-2. Plugin Setup                                            *neogit_setup_plugin*
+2. Plugin Setup                                            *neojj_setup_plugin*
 
     >lua
-    local neogit = require("neogit")
+    local neojj = require("neojj")
 
-    neogit.setup {
+    neojj.setup {
     -- Hides the hints at the top of the status buffer
     disable_hint = false,
     -- Disables changing the buffer highlights based on where the cursor is.
@@ -164,7 +164,7 @@ to Neovim users.
     },
     -- Set to false if you want to be responsible for creating _ALL_ keymappings
     use_default_keymaps = true,
-    -- Neogit refreshes its internal state after specific events, which can be expensive depending on the repository size.
+    -- NeoJJ refreshes its internal state after specific events, which can be expensive depending on the repository size.
     -- Disabling `auto_refresh` will make it so you have to manually refresh the status after you open it.
     auto_refresh = true,
     -- Value used for `--sort` option for `git branch` command
@@ -183,7 +183,7 @@ to Neovim users.
     initial_branch_name = "",
     -- Default for rename branch prompt. If not set, the current branch name is used
     initial_branch_rename = nil,
-    -- Change the default way of opening neogit
+    -- Change the default way of opening neojj
     kind = "tab",
     -- Floating window style
     floating = {
@@ -283,7 +283,7 @@ to Neovim users.
         -- If enabled, use telescope for menu selection rather than vim.ui.select.
         -- Allows multi-select and some things that vim.ui.select doesn't.
         telescope = nil,
-        -- Neogit only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
+        -- NeoJJ only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
         -- The diffview integration enables the diff popup.
         --
         -- Requires you to have `sindrets/diffview.nvim` installed.
@@ -362,10 +362,10 @@ to Neovim users.
     >
 
 ==============================================================================
-Commit Signing / GPG Integration                              *neogit_setup_gpg*
+Commit Signing / GPG Integration                              *neojj_setup_gpg*
 
 If you sign commits using gnugpg, there are a few steps that need to be taken
-to properly integrate the password authentication with Neogit:
+to properly integrate the password authentication with NeoJJ:
   >gpg
   # ~/.gnupg/gpg-agent.conf
   pinentry-program /opt/homebrew/bin/pinentry-tty
@@ -386,7 +386,7 @@ to properly integrate the password authentication with Neogit:
         "$XDG_DATA_HOME/gnupg/"
 
 ==============================================================================
-Mappings                                                 *neogit_setup_mappings*
+Mappings                                                 *neojj_setup_mappings*
 
 The following mappings can all be customized via the setup function.
 >lua
@@ -511,10 +511,10 @@ The following mappings can all be customized via the setup function.
       }
 <
 ==============================================================================
-3. Commands                                                    *neogit_commands*
+3. Commands                                                    *neojj_commands*
 
-                                                                       *:Neogit*
-:Neogit                 In a Git repository, opens a new NeoJJStatus tab.
+                                                                       *:NeoJJ*
+:NeoJJ                 In a Git repository, opens a new NeoJJStatus tab.
 
                                                              *:NeoJJResetState*
 :NeoJJResetState       Performs a full reset of saved flags for all popups.
@@ -529,9 +529,9 @@ The following mappings can all be customized via the setup function.
                         if left blank.
 
 ==============================================================================
-4. Events                                                        *neogit_events*
+4. Events                                                        *neojj_events*
 
-The following events are emitted by Neogit:
+The following events are emitted by NeoJJ:
 
 • `NeoJJStatusRefreshed`
   When: Status has been reloaded
@@ -689,7 +689,7 @@ The following events are emitted by Neogit:
         header: string (diff header)
 <
 ==============================================================================
-5. Highlights                                                *neogit_highlights*
+5. Highlights                                                *neojj_highlights*
 
 To provide a custom color palette directly to the plugin, you can use the
 `config.highlight` table with the following signature: >lua
@@ -901,27 +901,27 @@ COMMIT SELECT BUFFER
 NeoJJFloatHeader          Foreground/Background for header text at top of win
 NeoJJFloatHeaderHighlight Emphasized text in header
 ==============================================================================
-6. Lua API                                               *neogit_api* *neogit-lua*
+6. Lua API                                               *neojj_api* *neojj-lua*
 
-neogit.open({*opts})                                             *neogit.open()*
-    Open Neogit. Alternative to `:Neogit` >lua
-        local neogit = require('neogit')
+neojj.open({*opts})                                             *neojj.open()*
+    Open NeoJJ. Alternative to `:NeoJJ` >lua
+        local neojj = require('neojj')
 
         -- open using defaults
-        neogit.open()
+        neojj.open()
 
         -- open commit popup
-        neogit.open({ "commit" })
+        neojj.open({ "commit" })
 
         -- open with split kind
-        neogit.open({ kind = "split" })
+        neojj.open({ kind = "split" })
 
         -- open home directory
-        neogit.open({ cwd = "~" })
+        neojj.open({ cwd = "~" })
 <
     Parameters:
       • {opts}  (table|nil)
-                • kind (string) optional: How to open Neogit.
+                • kind (string) optional: How to open NeoJJ.
                     - "tab" (default) like :tab split
                     - "replace"       like :enew
                     - "split"         like :below split
@@ -935,71 +935,71 @@ neogit.open({*opts})                                             *neogit.open()*
                 • no_expand (boolean) optional: Set to true to
                   prevent the calling of `expand()` on the path.
 
-                • [1] (string) optional: Name of the Neogit
-                  popup to open. See |neogit-popups|.
+                • [1] (string) optional: Name of the NeoJJ
+                  popup to open. See |neojj-popups|.
 
-neogit.action({popup}, {action}, {args})                       *neogit.action()*
+neojj.action({popup}, {action}, {args})                       *neojj.action()*
     Call an action without going through the popup interface.
 
     Note: Some actions might not play nicely when being invoked this way.
           You've been warned. >lua
 
-        local neogit = require('neogit')
+        local neojj = require('neojj')
 
         -- Calls the "commit" action from the "commit" popup, with arguments
         vim.keymap.set(
           'n',
           '<leader>gcc',
-          neogit.action('commit', 'commit', { '--verbose', '--all' })
+          neojj.action('commit', 'commit', { '--verbose', '--all' })
         )
 <
     Parameters:
       • {popup}  (string)
-        Name of popup, as found in `lua/neogit/popups/*`
+        Name of popup, as found in `lua/neojj/popups/*`
 
       • {action} (string)
-        Name of action for popup, found in `lua/neogit/popups/*/actions.lua`
+        Name of action for popup, found in `lua/neojj/popups/*/actions.lua`
 
       • {args}   (table|nil)
         CLI arguments to pass to git command
 
 
 ==============================================================================
-7. Usage                                                          *neogit_usage*
+7. Usage                                                          *neojj_usage*
 (TODO)
 
 ==============================================================================
-Bisect Popup                                               *neogit_bisect_popup*
+Bisect Popup                                               *neojj_bisect_popup*
 (TODO)
 
 ==============================================================================
-Cherry-Pick Popup                                     *neogit_cherry_pick_popup*
+Cherry-Pick Popup                                     *neojj_cherry_pick_popup*
 
-Arguments:                                       *neogit_cherry_pick_popup_args*
+Arguments:                                       *neojj_cherry_pick_popup_args*
   • --ff
     If the current HEAD is the same as the parent of the cherry-pick’ed
     commit, then a fast forward to this commit will be performed.
 
-Actions:                                      *neogit_cherry_pick_popup_actions*
+Actions:                                      *neojj_cherry_pick_popup_actions*
   Actions for the branch popup are split into two categories: "Apply here",
   and "Apply elsewhere". The former will update the current HEAD, whereas the
   latter will prompt for a target.
 
   When a Cherry-Pick isn't in progress, the following actions are available:
 
-  • Pick                                               *neogit_cherry_pick_pick*
+  • Pick                                               *neojj_cherry_pick_pick*
     This command copies COMMITS from another branch onto the current branch.
     If a commit is under the cursor, or multiple commits are selected, then
     those are used instead of prompting. Otherwise the user is prompted to
     select one or more commits.
 
-  • Apply                                             *neogit_cherry_pick_apply*
+  • Apply                                             *neojj_cherry_pick_apply*
     This command applies the changes in COMMITS from another branch onto the
     current branch, without committing. If a commit is under the cursor, or
     multiple commits are selected, then those are used instead of prompting.
     Otherwise the user is prompted to select one or more commits.
 
-  • Harvest                                         *neogit_cherry_pick_harvest*
+  • Harvest                                         *neojj_cherry_pick_harvest*
     This command moves the selected COMMITS that must be located on another
     BRANCH onto the current branch instead, removing them from the former.
     When this command succeeds, then the same branch is current as before.
@@ -1008,10 +1008,10 @@ Actions:                                      *neogit_cherry_pick_popup_actions*
     branch can lead to conflicts. When that happens, then this command stops
     and you have to resolve the conflicts and then finish the process manually.
 
-  • Squash                                           *neogit_cherry_pick_squash*
-    See: |neogit_merge_squash|
+  • Squash                                           *neojj_cherry_pick_squash*
+    See: |neojj_merge_squash|
 
-  • Donate                                           *neogit_cherry_pick_donate*
+  • Donate                                           *neojj_cherry_pick_donate*
     This command moves the selected COMMITS from the current branch onto
     another existing BRANCH, removing them from the former. When this command
     succeeds, then the same branch is current as before.
@@ -1022,28 +1022,28 @@ Actions:                                      *neogit_cherry_pick_popup_actions*
     branch can lead to conflicts. When that happens, then this command stops
     and you have to resolve the conflicts and then finish the process manually.
 
-  • Spinout                                         *neogit_cherry_pick_spinout*
+  • Spinout                                         *neojj_cherry_pick_spinout*
     (Not yet implemented)
 
-  • Spinoff                                         *neogit_cherry_pick_spinoff*
+  • Spinoff                                         *neojj_cherry_pick_spinoff*
     (Not yet implemented)
 
 
   When a Cherry-Pick is in progress, the following actions are available:
 
-  • Continue                                       *neogit_cherry_pick_continue*
+  • Continue                                       *neojj_cherry_pick_continue*
     Resume current cherry-pick sequence.
 
-  • Skip                                               *neogit_cherry_pick_skip*
+  • Skip                                               *neojj_cherry_pick_skip*
     Skip the current commit during a cherry-pick sequence.
 
-  • Abort                                             *neogit_cherry_pick_abort*
+  • Abort                                             *neojj_cherry_pick_abort*
     Abort the current cherry-pick sequence. This discards all changes made.
 
 ==============================================================================
-Branch Popup                                               *neogit_branch_popup*
+Branch Popup                                               *neojj_branch_popup*
 
-Variables:                                       *neogit_branch_popup_variables*
+Variables:                                       *neojj_branch_popup_variables*
   • branch.<name>.description
     Longform description of a branch.
 
@@ -1074,7 +1074,7 @@ Variables:                                       *neogit_branch_popup_variables*
     Cycles pushRemote between the remotes currently configured for the
     repository. `remote.pushDefault` will be offered, if set.
 
-Arguments:                                            *neogit_branch_popup_args*
+Arguments:                                            *neojj_branch_popup_args*
   • --recurse-submodules
     (EXPERIMENTAL) Causes the current command to recurse into submodules if
     submodule.propagateBranches is enabled.
@@ -1088,7 +1088,7 @@ Arguments:                                            *neogit_branch_popup_args*
     submodule branch "topic" that points to the submodule commit in the
     superproject’s "origin/main", but tracks the submodule’s "origin/main".
 
-Actions:                                           *neogit_branch_popup_actions*
+Actions:                                           *neojj_branch_popup_actions*
   Actions for the branch popup are split into three categories: "Checkout",
   "Create", and "Do". They behave as described: "Checkout" actions will change
   your HEAD when checking out the selected/created branch. "Create" actions,
@@ -1096,23 +1096,23 @@ Actions:                                           *neogit_branch_popup_actions*
 
   Finally, "Do" actions provide some common housekeeping actions.
 
-  • Checkout branch/revision                        *neogit_branch_checkout_rev*
+  • Checkout branch/revision                        *neojj_branch_checkout_rev*
     Changes HEAD to point to the selected branch/revision. If a local branch
     is selected, that will be checked out. Otherwise HEAD will become
     detached. Any ref under the cursor or selected will be available to
     checkout.
 
-  • Checkout local branch                         *neogit_branch_checkout_local*
+  • Checkout local branch                         *neojj_branch_checkout_local*
     Changes HEAD to point to the selected branch. Also lists branches on
     remotes that do not have a matching branch locally. If a remote branch is
     selected, then a local branch is created tracking the selected remote
     branch.
 
-  • Checkout recent branch                       *neogit_branch_checkout_recent*
+  • Checkout recent branch                       *neojj_branch_checkout_recent*
     Changes HEAD to point to the selected branch. Branches are listed by how
     recently they have been checked out. Only local branches are considered.
 
-  • Checkout new branch                             *neogit_branch_checkout_new*
+  • Checkout new branch                             *neojj_branch_checkout_new*
     Creates and switches HEAD to a new branch. Any whitespace in the branch
     name will be automatically changed to '-'.
 
@@ -1123,7 +1123,7 @@ Actions:                                           *neogit_branch_popup_actions*
     the branch being created. The current branch will be at the top of the
     list, but any branch can be chosen.
 
-  • Checkout new spin-off                               *neogit_branch_spin_off*
+  • Checkout new spin-off                               *neojj_branch_spin_off*
     This command creates and checks out a new branch starting at and tracking
     the current branch. That branch in turn is reset to the last commit it
     shares with its upstream. If the current branch has no upstream or no
@@ -1133,54 +1133,54 @@ Actions:                                           *neogit_branch_popup_actions*
     This is useful to create a feature branch after work has already began on
     the old branch.
 
-  • Checkout new worktree                      *neogit_branch_checkout_worktree*
-    see: |neogit_worktree_checkout|
+  • Checkout new worktree                      *neojj_branch_checkout_worktree*
+    see: |neojj_worktree_checkout|
 
-  • Create new branch                              *neogit_branch_create_branch*
-    Functionally the same as |neogit_branch_checkout_new|, but does not update
+  • Create new branch                              *neojj_branch_create_branch*
+    Functionally the same as |neojj_branch_checkout_new|, but does not update
     HEAD.
 
-  • Create new spin-out                                 *neogit_branch_spin_out*
-    Like |neogit_branch_spin_off|, but doesn't change HEAD. However, if the
+  • Create new spin-out                                 *neojj_branch_spin_out*
+    Like |neojj_branch_spin_off|, but doesn't change HEAD. However, if the
     index has uncommitted changes, will behave exactly the same as spin_off.
 
-  • Create new worktree                          *neogit_branch_create_worktree*
-    see: |neogit_worktree_create_branch|
+  • Create new worktree                          *neojj_branch_create_worktree*
+    see: |neojj_worktree_create_branch|
 
-  • Configure                                          *neogit_branch_configure*
+  • Configure                                          *neojj_branch_configure*
     Opens selector to choose a branch, then offering some configuration
-    options. See |neogit_branch_config_popup|.
+    options. See |neojj_branch_config_popup|.
 
-  • Rename                                                *neogit_branch_rename*
+  • Rename                                                *neojj_branch_rename*
     Opens selector to choose a branch to rename. Like with a new branch, any
     whitespace will be replaced with '-'.
 
-  • Reset                                                  *neogit_branch_reset*
+  • Reset                                                  *neojj_branch_reset*
     Resets the current branch to the the selected branch via a hard reset.
     Uncommitted changes will be lost in the process.
 
-  • Delete                                                *neogit_branch_delete*
+  • Delete                                                *neojj_branch_delete*
     Opens selector, allowing the user to delete either a local or remote
     branch.
 
-  • Pull Request                                    *neogit_branch_pull_request*
+  • Pull Request                                    *neojj_branch_pull_request*
     When a branch has an upstream configured, can be used to open a
     pull-request on the git services' website. By default, supports github,
     gitlab, and bitbucket, but more can be added via config.git_services.
 
 
 ==============================================================================
-Branch Config Popup                                 *neogit_branch_config_popup*
+Branch Config Popup                                 *neojj_branch_config_popup*
 
 Allows configuring some common config settings for the selected branch, as
 well as some repository defaults.
 
 Branch:
-  • branch.<name>.description                 *neogit_branch_config_description*
+  • branch.<name>.description                 *neojj_branch_config_description*
     Branch description is automatically added in the format-patch cover letter
     or request-pull summary.
 
-  • branch.<name>.merge                             *neogit_branch_config_merge*
+  • branch.<name>.merge                             *neojj_branch_config_merge*
     Defines, together with branch.<name>.remote, the upstream branch for the
     given branch. It tells git fetch/git pull/git rebase which branch to merge
     and can also affect git push (see push.default). When in branch <name>,
@@ -1198,7 +1198,7 @@ Branch:
     repository, you can point branch.<name>.merge to the desired branch, and
     use the relative path setting . (a period) for branch.<name>.remote.
 
-  • branch.<name>.remote                           *neogit_branch_config_remote*
+  • branch.<name>.remote                           *neojj_branch_config_remote*
     When on branch <name>, it tells git fetch and git push which remote to
     fetch from/push to. The remote to push to may be overridden with
     remote.pushDefault (for all branches). The remote to push to, for the
@@ -1209,7 +1209,7 @@ Branch:
     the current local repository (a dot-repository), see branch.<name>.merge's
     final note below.
 
-  • branch.<name>.rebase                           *neogit_branch_config_rebase*
+  • branch.<name>.rebase                           *neojj_branch_config_rebase*
     When true, rebase the branch <name> on top of the fetched branch, instead
     of merging the default branch from the default remote when "git pull" is
     run. See "pull.rebase" for doing this in a non branch-specific manner.
@@ -1217,7 +1217,7 @@ Branch:
     NOTE: this is a possibly dangerous operation; do not use it unless you
     understand the implications (see git-rebase(1) for details).
 
-  • branch.<name>.pushRemote                   *neogit_branch_config_pushRemote*
+  • branch.<name>.pushRemote                   *neojj_branch_config_pushRemote*
     When on branch <name>, it overrides branch.<name>.remote for pushing. It
     also overrides remote.pushDefault for pushing from branch <name>. When you
     pull from one place (e.g. your upstream) and push to another place (e.g.
@@ -1226,7 +1226,7 @@ Branch:
     override it for a specific branch.
 
 Repository defaults:
-  • pull.rebase                               *neogit_branch_config_pull_rebase*
+  • pull.rebase                               *neojj_branch_config_pull_rebase*
     When true, rebase branches on top of the fetched branch, instead of
     merging the default branch from the default remote when "git pull" is run.
     Use "branch.<name>.rebase" for setting this on a per-branch basis.
@@ -1234,16 +1234,16 @@ Repository defaults:
     NOTE: this is a possibly dangerous operation; do not use it unless you
     understand the implications (see git-rebase[1] for details).
 
-  • remote.pushDefault                 *neogit_branch_config_remote_pushDefault*
+  • remote.pushDefault                 *neojj_branch_config_remote_pushDefault*
     The remote to push to by default. Overrides branch.<name>.remote for all
     branches, and is overridden by branch.<name>.pushRemote for specific
     branches.
 
-  • neogit.baseBranch                          *neogit_branch_config_baseBranch*
+  • neojj.baseBranch                          *neojj_branch_config_baseBranch*
     If set, will be used by "rebase onto base" action. Otherwise defaults to
     either "main" or "master", depending on which is found.
 
-  • neogit.askSetPushDefault            *neogit_branch_config_askSetPushDefault*
+  • neojj.askSetPushDefault            *neojj_branch_config_askSetPushDefault*
     This option controls whether the user is asked whether they want to set
     remote.pushDefault after adding a remote.
 
@@ -1255,7 +1255,7 @@ Repository defaults:
     When 'never', the user isn’t asked and the variable isn’t set.
 
 Branch creation:
-  • branch.autoSetupMerge                  *neogit_branch_config_autoSetupMerge*
+  • branch.autoSetupMerge                  *neojj_branch_config_autoSetupMerge*
     Tells git branch, git switch and git checkout to set up new branches so
     that git-pull(1) will appropriately merge from the starting point branch.
 
@@ -1276,7 +1276,7 @@ Branch creation:
 
     This option defaults to true.
 
-  • branch.autoSetupRebase                *neogit_branch_config_autoSetupRebase*
+  • branch.autoSetupRebase                *neojj_branch_config_autoSetupRebase*
     When a new branch is created with git branch, git switch or git checkout
     that tracks another branch, this variable tells Git to set up pull to
     rebase instead of merge (see "branch.<name>.rebase").
@@ -1297,9 +1297,9 @@ Branch creation:
     This option defaults to never.
 
 ==============================================================================
-Commit Popup                                               *neogit_commit_popup*
+Commit Popup                                               *neojj_commit_popup*
 
-Arguments:                                            *neogit_commit_popup_args*
+Arguments:                                            *neojj_commit_popup_args*
   • --all
     Tell the command to automatically stage files that have been modified and
     deleted, but new files you have not told Git about are not affected.
@@ -1358,18 +1358,18 @@ Arguments:                                            *neogit_commit_popup_args*
     Take an existing commit object, and reuse the log message and the
     authorship information (including the timestamp) when creating the commit.
 
-Actions:                                           *neogit_commit_popup_actions*
+Actions:                                           *neojj_commit_popup_actions*
   Actions in the commit popup are in three groups: "Create", "Edit HEAD", and
   "Edit". The first should be somewhat self explanatory - you can create a new
   commit from your staged changes. "Edit HEAD" actions will modify the current
   commit HEAD is pointing at, and "Edit" will modify commits that your HEAD
   isn't pointing to.
 
-  • Create Commit                                         *neogit_commit_create*
+  • Create Commit                                         *neojj_commit_create*
     Creates a new commit on the current branch from the currently staged
     changes.
 
-  • Absorb                                                *neogit_commit_absorb*
+  • Absorb                                                *neojj_commit_absorb*
     (Requires `https://github.com/tummychow/git-absorb`)
 
     `git absorb` will automatically identify which commits are safe to modify,
@@ -1379,35 +1379,35 @@ Actions:                                           *neogit_commit_popup_actions*
     The `--with-rebase` flag is passed, meaning these fixup commits will be
     automatically integrated into the corresponding ones via rebase.
 
-  • Extend                                                *neogit_commit_extend*
+  • Extend                                                *neojj_commit_extend*
     Amends the last commit without editing the commit message.
 
-  • Reword                                                *neogit_commit_reword*
+  • Reword                                                *neojj_commit_reword*
     Edit the last commit message without modifying the committed changes. Any
     staged changes are ignored.
 
-  • Amend                                                  *neogit_commit_amend*
+  • Amend                                                  *neojj_commit_amend*
     Amend the last commit.
 
-  • Fixup                                                  *neogit_commit_fixup*
+  • Fixup                                                  *neojj_commit_fixup*
     Creates a fixup commit. If a commit is selected it will be used, otherwise
     the user is prompted to pick a commit.
 
     `git commit --fixup=COMMIT --no-edit`
 
-  • Squash                                                *neogit_commit_squash*
+  • Squash                                                *neojj_commit_squash*
     Creates a squash commit. If a commit is selected it will be used,
     otherwise the user is prompted to pick a commit.
 
     `git commit --squash=COMMIT --no-edit`
 
-  • Augment                                              *neogit_commit_augment*
+  • Augment                                              *neojj_commit_augment*
     Creates a squash commit, editing the squash message. If a commit is
     selected it will be used, otherwise the user is prompted to pick a commit.
 
     `git commit --squash=COMMIT --edit`
 
-  • Alter                                                  *neogit_commit_alter*
+  • Alter                                                  *neojj_commit_alter*
     Create a squash commit, authoring the final message now.
 
     During a later rebase, when this commit gets squashed into its targeted
@@ -1417,7 +1417,7 @@ Actions:                                           *neogit_commit_popup_actions*
 
     `git commit --fixup=amend:COMMIT --edit`
 
-  • Revise                                                *neogit_commit_revise*
+  • Revise                                                *neojj_commit_revise*
     Reword the message of an existing commit, without editing its tree.
     Later, when the commit is squashed into its targeted commit, a combined
     commit is created which uses the message of the fixup commit and the tree
@@ -1425,32 +1425,32 @@ Actions:                                           *neogit_commit_popup_actions*
 
     `git commit --fixup=reword:COMMIT --edit`
 
-  • Instant Fixup                                  *neogit_commit_instant_fixup*
-    Similar to |neogit_commit_fixup|, but instantly rebases after.
+  • Instant Fixup                                  *neojj_commit_instant_fixup*
+    Similar to |neojj_commit_fixup|, but instantly rebases after.
 
-  • Instant Squash                                *neogit_commit_instant_squash*
-    Similar to |neogit_commit_squash|, but instantly rebases after.
+  • Instant Squash                                *neojj_commit_instant_squash*
+    Similar to |neojj_commit_squash|, but instantly rebases after.
 
 ==============================================================================
-Diff Popup                                                   *neogit_diff_popup*
+Diff Popup                                                   *neojj_diff_popup*
 
 The diff popup actions allow inspection of changes in the index (staged
 changes), the working tree (unstaged changes and untracked files), any
 ref range.
 
-For these actions to become available, Neogit needs to have a diff viewer
+For these actions to become available, NeoJJ needs to have a diff viewer
 integration enabled. Supported viewers are:
 - `diffview.nvim`: https://github.com/sindrets/diffview.nvim
 - `codediff.nvim`: https://github.com/esmuellert/codediff.nvim
 
-By default, Neogit will auto-detect which viewer is available. You can
-explicitly set the viewer with the `diff_viewer` option. See |neogit_setup_plugin|.
+By default, NeoJJ will auto-detect which viewer is available. You can
+explicitly set the viewer with the `diff_viewer` option. See |neojj_setup_plugin|.
 
-  • Diff this                                                 *neogit_diff_this*
+  • Diff this                                                 *neojj_diff_this*
     Show the diff for the file referred to by a hunk under the cursor.
 
-  • Diff range                                               *neogit_diff_range*
-    View a diff between a specified range of commits. Neogit presents a select
+  • Diff range                                               *neojj_diff_range*
+    View a diff between a specified range of commits. NeoJJ presents a select
     for an `A` and a `B` ref and allows specifying the type of range.
 
     A two-dot range `A..B` shows all of the commits that `B` has that `A`
@@ -1458,29 +1458,29 @@ explicitly set the viewer with the `diff_viewer` option. See |neogit_setup_plugi
     and `B` have independently, excluding the commits shared by both refs.
 
 
-  • Diff paths                                               *neogit_diff_paths*
+  • Diff paths                                               *neojj_diff_paths*
     (Not yet implemented)
 
-  • Diff unstaged                                         *neogit_diff_unstaged*
+  • Diff unstaged                                         *neojj_diff_unstaged*
     Show the diff for the working tree, without untracked files.
 
-  • Diff staged                                             *neogit_diff_staged*
+  • Diff staged                                             *neojj_diff_staged*
     Show the diff for the index.
 
-  • Diff worktree                                         *neogit_diff_worktree*
+  • Diff worktree                                         *neojj_diff_worktree*
     Show the full diff of the working tree, including untracked files.
 
-  • Show commit                                             *neogit_show_commit*
+  • Show commit                                             *neojj_show_commit*
     Display the diff of the commits within a branch.
 
-  • Show stash                                               *neogit_show_stash*
+  • Show stash                                               *neojj_show_stash*
     Display the diff of a specific stash.
 
 
 ==============================================================================
-Fetch Popup                                                 *neogit_fetch_popup*
+Fetch Popup                                                 *neojj_fetch_popup*
 
-Arguments:                                             *neogit_fetch_popup_args*
+Arguments:                                             *neojj_fetch_popup_args*
   • --prune
     Before fetching, remove any remote-tracking references that no longer
     exist on the remote. Tags are not subject to pruning if they are fetched
@@ -1503,14 +1503,14 @@ Arguments:                                             *neogit_fetch_popup_args*
     for more detail.
 
 
-Actions:                                            *neogit_fetch_popup_actions*
-  • Fetch from pushRemote                              *neogit_fetch_pushremote*
+Actions:                                            *neojj_fetch_popup_actions*
+  • Fetch from pushRemote                              *neojj_fetch_pushremote*
     Fetches from the current pushRemote.
 
     When the pushRemote is not configured, the user will be prompted to choose
     from the existing remotes to set it.
 
-  • Fetch from upstream                                  *neogit_fetch_upstream*
+  • Fetch from upstream                                  *neojj_fetch_upstream*
     Fetches from the upstream of the current branch.
 
     If the upstream is configured for the current branch and names an existing
@@ -1518,57 +1518,57 @@ Actions:                                            *neogit_fetch_popup_actions*
     single remote is configured, then use that. Otherwise if a remote named
     "origin" exists, then use that.
 
-  • Fetch from elsewhere                                *neogit_fetch_elsewhere*
+  • Fetch from elsewhere                                *neojj_fetch_elsewhere*
     Provides a select interface for the user to choose which remote to fetch
     from.
 
-  • Fetch from All Remotes                                    *neogit_fetch_all*
+  • Fetch from All Remotes                                    *neojj_fetch_all*
     Fetches from all configured remotes.
 
-  • Fetch Another Branch                                   *neogit_fetch_branch*
+  • Fetch Another Branch                                   *neojj_fetch_branch*
     Fetches only a specific branch from a remote, both of which are selected
     by the user.
 
-  • Fetch Explicit Refspec                                *neogit_fetch_refspec*
+  • Fetch Explicit Refspec                                *neojj_fetch_refspec*
     Fetches from a remote using an explicit refspec.
 
-  • Fetch Submodules                                   *neogit_fetch_submodules*
+  • Fetch Submodules                                   *neojj_fetch_submodules*
     Fetches all submodules.
 
-  • Set Variables                                   *neogit_fetch_set_variables*
+  • Set Variables                                   *neojj_fetch_set_variables*
     Opens Branch Config popup for the current branch.
-    See |neogit_branch_config_popup|.
+    See |neojj_branch_config_popup|.
 
 ==============================================================================
-Log Popup                                                     *neogit_log_popup*
+Log Popup                                                     *neojj_log_popup*
 
 (TODO)
 
 ==============================================================================
-Merge Popup                                                 *neogit_merge_popup*
+Merge Popup                                                 *neojj_merge_popup*
 
-Arguments:                                             *neogit_merge_popup_args*
+Arguments:                                             *neojj_merge_popup_args*
   (TODO)
 
-Actions:                                            *neogit_merge_popup_actions*
-  • Merge                                                   *neogit_merge_merge*
+Actions:                                            *neojj_merge_popup_actions*
+  • Merge                                                   *neojj_merge_merge*
     This command merges another branch or revision into the current branch.
 
-  • Merge and edit message                                *neogit_merge_editmsg*
+  • Merge and edit message                                *neojj_merge_editmsg*
     Like `Merge` above, but opens editor to modify commit message.
 
-  • Merge but don't commit                               *neogit_merge_nocommit*
+  • Merge but don't commit                               *neojj_merge_nocommit*
     This command merges another branch or revision into the current branch,
     but does not actually create the merge commit, allowing the user to make
     modifications before committing themselves.
 
-  • Absorb                                                 *neogit_merge_absorb*
+  • Absorb                                                 *neojj_merge_absorb*
     (Not yet implemented)
 
-  • Preview Merge                                         *neogit_merge_preview*
+  • Preview Merge                                         *neojj_merge_preview*
     (Not yet implemented)
 
-  • Squash Merge                                           *neogit_merge_squash*
+  • Squash Merge                                           *neojj_merge_squash*
     This command squashes the changes introduced by another branch or revision
     into the current branch. This only applies the changes made by the
     squashed commits. No information is preserved that would allow creating an
@@ -1576,51 +1576,51 @@ Actions:                                            *neogit_merge_popup_actions*
 
     Instead of this command you should probably use a cherry-pick command.
 
-  • Dissolve                                             *neogit_merge_dissolve*
+  • Dissolve                                             *neojj_merge_dissolve*
     (Not yet implemented)
 
 ==============================================================================
-Remote Popup                                               *neogit_remote_popup*
+Remote Popup                                               *neojj_remote_popup*
 
 (TODO)
 
 ==============================================================================
-Remote Config Popup                                 *neogit_remote_config_popup*
+Remote Config Popup                                 *neojj_remote_config_popup*
 
 Allows configuring some common config variables for the selected remote.
 
 Remote:
-  • remote.<name>.url                                 *neogit_remote_config_url*
+  • remote.<name>.url                                 *neojj_remote_config_url*
     The URL of a remote repository.
 
-  • remote.<name>.fetch                             *neogit_remote_config_fetch*
+  • remote.<name>.fetch                             *neojj_remote_config_fetch*
     The default set of "refspec" for git fetch.
 
-  • remote.<name>.pushurl                         *neogit_remote_config_pushurl*
+  • remote.<name>.pushurl                         *neojj_remote_config_pushurl*
     The push URL of a remote repository
 
-  • remote.<name>.push                               *neogit_remote_config_push*
+  • remote.<name>.push                               *neojj_remote_config_push*
     The default set of "refspec" for git-push
 
-  • remote.<name>.tagOpt                           *neogit_remote_config_tagOpt*
+  • remote.<name>.tagOpt                           *neojj_remote_config_tagOpt*
     Setting this value to --no-tags disables automatic tag following when
     fetching from remote <name>. Setting it to --tags will fetch every tag
     from remote <name>, even if they are not reachable from remote branch
     heads.
 
     Passing these flags directly to git fetch can override this setting.
-    See |neogit_fetch_popup_args|.
+    See |neojj_fetch_popup_args|.
 
 ==============================================================================
-Pull Popup                                                   *neogit_pull_popup*
+Pull Popup                                                   *neojj_pull_popup*
 
-Variables:                                         *neogit_pull_popup_variables*
+Variables:                                         *neojj_pull_popup_variables*
   • branch.<name>.rebase
     When true, rebase the branch <name> on top of the fetched branch, instead
     of merging the default branch from the default remote when "git pull" is
     run. See "pull.rebase" for doing this in a non branch-specific manner.
 
-Arguments:                                              *neogit_pull_popup_args*
+Arguments:                                              *neojj_pull_popup_args*
   • --ff-only
     Only update to the new history if there is no divergent local history.
     This is the default when no method for reconciling divergent histories is
@@ -1652,29 +1652,29 @@ Arguments:                                              *neogit_pull_popup_args*
     local tags with the same name), in addition to whatever else would
     otherwise be fetched.
 
-Actions:                                             *neogit_pull_popup_actions*
-  • Pull into <current> from pushRemote                 *neogit_pull_pushRemote*
+Actions:                                             *neojj_pull_popup_actions*
+  • Pull into <current> from pushRemote                 *neojj_pull_pushRemote*
     Pulls into the current branch from `branch.<name>.pushRemote`. If that is
     unset, the user will be prompted to select a remote branch, which will
     pulled from and used to set `branch.<name>.pushRemote`.
 
-  • Pull into <current> from @{upstream}                  *neogit_pull_upstream*
+  • Pull into <current> from @{upstream}                  *neojj_pull_upstream*
     Pulls into the current branch from its upstream counterpart. If that is
     unset, the user will be prompted to select a remote branch, which will
     pulled from and set as the upstream.
 
-  • Pull into <current> from elsewhere                   *neogit_pull_elsewhere*
+  • Pull into <current> from elsewhere                   *neojj_pull_elsewhere*
     Prompts the user to select a branch (local or remote), which is then
     pulled in the current branch.
 
-  • Set Variables                                    *neogit_pull_set_variables*
+  • Set Variables                                    *neojj_pull_set_variables*
     Opens Branch Config popup for the current branch.
-    See |neogit_branch_config_popup|.
+    See |neojj_branch_config_popup|.
 
 ==============================================================================
-Push Popup                                                   *neogit_push_popup*
+Push Popup                                                   *neojj_push_popup*
 
-Arguments:                                              *neogit_push_popup_args*
+Arguments:                                              *neojj_push_popup_args*
   • --force-with-lease
     Usually, "git push" refuses to update a remote ref that is not an ancestor
     of the local ref used to overwrite it.
@@ -1721,46 +1721,46 @@ Arguments:                                              *neogit_push_popup_args*
   • --dry-run
     Do everything except actually send the updates.
 
-Actions:                                             *neogit_push_popup_actions*
-  • Push <current> to pushRemote                        *neogit_push_pushRemote*
+Actions:                                             *neojj_push_popup_actions*
+  • Push <current> to pushRemote                        *neojj_push_pushRemote*
     Pushes the current branch to `branch.<name>.pushRemote`. If that is unset,
     to `remote.pushDefault`. And if _that_ is unset, the user will be prompted
     to select a remote, which will be used to set `branch.<name>.pushRemote`,
     and pushed to.
 
-  • Push <current> to @{upstream}                         *neogit_push_upstream*
+  • Push <current> to @{upstream}                         *neojj_push_upstream*
     Pushes the current branch to its upstream branch. If not set, then the
     user will be prompted to select a remote, which will be set as the
     current branch's upstream and pushed to.
 
-  • Push <current> elsewhere                             *neogit_push_elsewhere*
+  • Push <current> elsewhere                             *neojj_push_elsewhere*
     Pushes the current branch to a branch selected by the user.
 
-  • Push another branch                             *neogit_push_another_branch*
+  • Push another branch                             *neojj_push_another_branch*
     Push a branch or commit somewhere. Both source and target are selected by
     the user.
 
-  • Push explicit refspecs                       *neogit_push_explicit_refspecs*
+  • Push explicit refspecs                       *neojj_push_explicit_refspecs*
     Push a refspec to a remote.
 
-  • Push matching branches                       *neogit_push_matching_branches*
+  • Push matching branches                       *neojj_push_matching_branches*
     Push all matching branches to another repository.
 
-  • Push a tag                                                 *neogit_push_tag*
+  • Push a tag                                                 *neojj_push_tag*
     Pushes a single tag to a remote.
 
-  • Push all tags                                         *neogit_push_all_tags*
+  • Push all tags                                         *neojj_push_all_tags*
     Pushes all tags to selected remote. If only one remote exists, that will
     be used; otherwise the user will be prompted to select a remote.
 
-  • Set Variables                                    *neogit_push_set_variables*
+  • Set Variables                                    *neojj_push_set_variables*
     Opens Branch Config popup for the current branch.
-    See |neogit_branch_config_popup|.
+    See |neojj_branch_config_popup|.
 
 ==============================================================================
-Rebase Popup                                               *neogit_rebase_popup*
+Rebase Popup                                               *neojj_rebase_popup*
 
-Arguments:                                            *neogit_rebase_popup_args*
+Arguments:                                            *neojj_rebase_popup_args*
   • --keep-empty
     Keep commits that start empty before the rebase (i.e. that do not change
     anything from its parent) in the result. The default is to keep commits
@@ -1849,68 +1849,68 @@ Arguments:                                            *neogit_rebase_popup_args*
   • --gpg-sign=
     GPG-sign commits.
 
-Actions:                                           *neogit_rebase_popup_actions*
-  • Rebase onto pushRemote                            *neogit_rebase_pushRemote*
+Actions:                                           *neojj_rebase_popup_actions*
+  • Rebase onto pushRemote                            *neojj_rebase_pushRemote*
     This action rebases the current branch onto its pushRemote.
 
     When the pushRemote is not configured, then the user can first set it
     before rebasing.
 
-  • Rebase onto upstream                                *neogit_rebase_upstream*
+  • Rebase onto upstream                                *neojj_rebase_upstream*
     This action rebases the current branch onto its upstream branch.
 
     When the upstream is not configured, then the user can first set it
     before rebasing.
 
-  • Rebase onto elsewhere                              *neogit_rebase_elsewhere*
+  • Rebase onto elsewhere                              *neojj_rebase_elsewhere*
     This command rebases the current branch onto a branch read in the picker.
     All commits that are reachable from HEAD but not from the selected branch
     TARGET will be rebased.
 
-  • Rebase onto base                                        *neogit_rebase_base*
+  • Rebase onto base                                        *neojj_rebase_base*
     Rebases the current branch onto either the user-configured base branch,
-    main, or master. The base branch is read from the neogit.baseBranch git
+    main, or master. The base branch is read from the neojj.baseBranch git
     config, which can be set in the branch config popup.
 
-    See |neogit_branch_config_baseBranch|
+    See |neojj_branch_config_baseBranch|
 
-  • Rebase interactively                           *neogit_rebase_interactively*
+  • Rebase interactively                           *neojj_rebase_interactively*
     This action begins an interactive rebase.
 
-  • Rebase a subset                                       *neogit_rebase_subset*
+  • Rebase a subset                                       *neojj_rebase_subset*
     This action starts a non-interactive rebase sequence to transfer commits
     from START to HEAD onto NEWBASE. User will be prompted to select NEWBASE,
     then a START commit.
 
-  • Rebase to modify a commit                      *neogit_rebase_modify_commit*
+  • Rebase to modify a commit                      *neojj_rebase_modify_commit*
     Begins an interactive rebase, allowing you to edit a single commit.
 
-  • Rebase to reword a commit                      *neogit_rebase_reword_commit*
+  • Rebase to reword a commit                      *neojj_rebase_reword_commit*
     Begins an interactive rebase, letting you reword an single older commit.
 
-  • Rebase to remove a commit                      *neogit_rebase_remove_commit*
+  • Rebase to remove a commit                      *neojj_rebase_remove_commit*
     Uses rebase to remove a single commit from the history.
 
-  • Rebase to autosquash                              *neogit_rebase_autosquash*
+  • Rebase to autosquash                              *neojj_rebase_autosquash*
     Combines `squash!` and `fixup!` commits with their target commits.
 
 When a rebase is in progress, the following actions are available instead:
-  • Continue                                            *neogit_rebase_continue*
+  • Continue                                            *neojj_rebase_continue*
     Continue with a rebase in progress after sorting out a conflict. May open
     the Commit editor.
 
-  • Skip                                                    *neogit_rebase_skip*
+  • Skip                                                    *neojj_rebase_skip*
     Skips the current commit in a rebase-todo.
 
-  • Edit                                                    *neogit_rebase_edit*
+  • Edit                                                    *neojj_rebase_edit*
     Edit the todo-list of the current rebase sequence.
 
-  • Abort                                                  *neogit_rebase_abort*
+  • Abort                                                  *neojj_rebase_abort*
     Aborts the current rebase sequence, restoring everything to how it looked
     before the rebase was attempted.
 
 Notes:
-  By default Neogit uses the --autostash argument, which causes uncommitted
+  By default NeoJJ uses the --autostash argument, which causes uncommitted
   changes to be stored in a stash before the rebase begins. These changes are
   restored after the rebase completes and if possible the stash is removed.
 
@@ -1919,9 +1919,9 @@ Notes:
   of the other, non-interactive rebase variants, into an interactive rebase.
 
 ==============================================================================
-Revert Popup                                               *neogit_revert_popup*
+Revert Popup                                               *neojj_revert_popup*
 
-Arguments:                                            *neogit_revert_popup_args*
+Arguments:                                            *neojj_revert_popup_args*
   • --mainline
     Usually you cannot revert a merge because you do not know which side of the
     merge should be considered the mainline. This option specifies the parent
@@ -1945,26 +1945,26 @@ Arguments:                                            *neogit_revert_popup_args*
 
     Cannot be used with --edit
 
-Actions:                                           *neogit_revert_popup_actions*
-  • Revert Commit(s)                                     *neogit_revert_commits*
+Actions:                                           *neojj_revert_popup_actions*
+  • Revert Commit(s)                                     *neojj_revert_commits*
     Reverts one or more commits. If any commits are under the cursor, or
     selected, they will be used. Otherwise a selector interface will come up.
 
     Will create a commit of the reverted changes.
 
-  • Revert Changes                                       *neogit_revert_changes*
+  • Revert Changes                                       *neojj_revert_changes*
     Reverts one or more commits WITHOUT committing the worktree. If any commits
     are under the cursor, or selected, they will be used. Otherwise a selector
     interface will come up.
 
 ==============================================================================
-Reset Popup                                                 *neogit_reset_popup*
+Reset Popup                                                 *neojj_reset_popup*
 
 All actions will default to the commit under cursor if there is one, or prompt
 the user to select one if there is not.
 
-Variables:                                        *neogit_reset_popup_variables*
-  • neogit.resetThisTo                                    *neogit_reset_this_to*
+Variables:                                        *neojj_reset_popup_variables*
+  • neojj.resetThisTo                                    *neojj_reset_this_to*
     When "Commit", will pass the commit hash to `git reset` unaltered. This has
     the effect of resetting "to" the commit.
 
@@ -1974,134 +1974,134 @@ Variables:                                        *neogit_reset_popup_variables*
     Only applies when a commit is selected before launching the popup. Commits
     chosen via the finder will be used unmodified, ignoring this setting.
 
-Actions:                                            *neogit_reset_popup_actions*
-  • Mixed                                                   *neogit_reset_mixed*
+Actions:                                            *neojj_reset_popup_actions*
+  • Mixed                                                   *neojj_reset_mixed*
     Resets the index but not the working tree (i.e., the changed files are
     preserved but not marked for commit).
 
-  • Soft                                                     *neogit_reset_soft*
+  • Soft                                                     *neojj_reset_soft*
     Does not touch the index file or the working tree at all (but resets the
     head to <commit>, just like all modes do). This leaves all your changed
     files "Changes to be committed", as git status would put it.
 
-  • Hard                                                     *neogit_reset_hard*
+  • Hard                                                     *neojj_reset_hard*
     Resets the index and working tree. Any changes to tracked files in the
     working tree since <commit> are discarded, however a reflog entry will be
     created with their current state, so changes can be restored if needed.
     Any untracked files or directories in the way of writing any tracked files
     are simply deleted.
 
-  • Keep                                                     *neogit_reset_keep*
+  • Keep                                                     *neojj_reset_keep*
     Resets index entries and updates files in the working tree that are
     different between <commit> and HEAD. If a file that is different between
     <commit> and HEAD has local changes, reset is aborted.
 
-  • Index                                                   *neogit_reset_index*
+  • Index                                                   *neojj_reset_index*
     Reset the index to <commit>, keeping the HEAD and working tree as-is.
 
     For example, if the commit refers to the HEAD, then this would unstage all
     changes.
 
-  • Worktree                                             *neogit_reset_worktree*
+  • Worktree                                             *neojj_reset_worktree*
     Resets current worktree to specified commit.
 
-  • Branch                                                 *neogit_reset_branch*
-    see: |neogit_branch_reset|
+  • Branch                                                 *neojj_reset_branch*
+    see: |neojj_branch_reset|
 
-  • File                                                     *neogit_reset_file*
+  • File                                                     *neojj_reset_file*
     Attempts to perform a `git checkout` from the specified revision, and if
     that fails, tries `git reset` instead.
 
 ==============================================================================
-Stash Popup                                                 *neogit_stash_popup*
+Stash Popup                                                 *neojj_stash_popup*
 
 The stash popup actions will affect the current index (staged changes) and the
 working tree (unstaged changes and untracked files). When the cursor is on a
 stash in the stash list, actions under the "Use" column (pop, apply and drop)
 will affect the stash under the cursor.
 
-Actions:                                            *neogit_stash_popup_actions*
-  • Stash both                                               *neogit_stash_both*
+Actions:                                            *neojj_stash_popup_actions*
+  • Stash both                                               *neojj_stash_both*
     Stash both the index and the working tree.
 
-  • Stash index                                             *neogit_stash_index*
+  • Stash index                                             *neojj_stash_index*
     Stash the index only, excluding unstaged changes and untracked files.
 
-  • Stash worktree                                       *neogit_stash_worktree*
+  • Stash worktree                                       *neojj_stash_worktree*
     (Not yet implemented)
 
-  • Stash keeping index                             *neogit_stash_keeping_index*
+  • Stash keeping index                             *neojj_stash_keeping_index*
     Stash both the index and the working tree, but still leave behind the
     index.
 
-  • Stash push                                               *neogit_stash_push*
+  • Stash push                                               *neojj_stash_push*
     Select a changed file to push it to the stash.
 
-  • Snapshot both                                         *neogit_snapshot_both*
+  • Snapshot both                                         *neojj_snapshot_both*
     (Not yet implemented)
 
-  • Snapshot index                                       *neogit_snapshot_index*
+  • Snapshot index                                       *neojj_snapshot_index*
     (Not yet implemented)
 
-  • Snapshot worktree                                 *neogit_snapshot_worktree*
+  • Snapshot worktree                                 *neojj_snapshot_worktree*
     (Not yet implemented)
 
-  • Snapshot to wip ref                             *neogit_snapshot_to_wip_ref*
+  • Snapshot to wip ref                             *neojj_snapshot_to_wip_ref*
     (Not yet implemented)
 
-  • Pop                                                       *neogit_stash_pop*
+  • Pop                                                       *neojj_stash_pop*
     Apply a stash to the working tree. If there are conflicts, leave the stash
     intact. If there aren't any conflicts, remove the stash from the list.
 
-  • Apply                                                   *neogit_stash_apply*
+  • Apply                                                   *neojj_stash_apply*
     Apply a stash to the working tree without removing it from the stash list.
 
-  • Drop                                                     *neogit_stash_drop*
+  • Drop                                                     *neojj_stash_drop*
     Remove a stash from the stash list.
 
-  • List                                                     *neogit_stash_list*
+  • List                                                     *neojj_stash_list*
     Display the list of all stashes, and show a diff if a stash is selected.
 
-  • Show                                                     *neogit_stash_show*
+  • Show                                                     *neojj_stash_show*
     (Not yet implemented)
 
-  • Branch                                                 *neogit_stash_branch*
+  • Branch                                                 *neojj_stash_branch*
     (Not yet implemented)
 
-  • Branch here                                       *neogit_stash_branch_here*
+  • Branch here                                       *neojj_stash_branch_here*
     (Not yet implemented)
 
-  • Rename                                                 *neogit_stash_rename*
+  • Rename                                                 *neojj_stash_rename*
     Rename an existing stash.
 
-  • Format patch                                     *neogit_stash_format_patch*
+  • Format patch                                     *neojj_stash_format_patch*
     (Not yet implemented)
 
 
 ==============================================================================
-Ignore Popup                                               *neogit_ignore_popup*
+Ignore Popup                                               *neojj_ignore_popup*
 
-Actions:                                           *neogit_ignore_popup_actions*
-  • Shared at top-level                                 *neogit_ignore_toplevel*
+Actions:                                           *neojj_ignore_popup_actions*
+  • Shared at top-level                                 *neojj_ignore_toplevel*
     Appends selected filepaths to the `.gitignore` file located in the
     project's root.
 
-  • Shared in sub-directory                               *neogit_ignore_subdir*
+  • Shared in sub-directory                               *neojj_ignore_subdir*
     Appends selected filepaths to the `.gitignore` file located in the
     selected subdirectory, creating one if it doesn't exist.
 
-  • Private for Repo                                     *neogit_ignore_private*
+  • Private for Repo                                     *neojj_ignore_private*
     Appends selected filepaths to the user's private exclude file in the
     current repository.
 
-  • Private Global                                        *neogit_ignore_global*
+  • Private Global                                        *neojj_ignore_global*
     If git config value {core.excludesFile} is set, this action will append
     selected filepaths to the global excludes file.
 
 ==============================================================================
-Tag Popup                                                     *neogit_tag_popup*
+Tag Popup                                                     *neojj_tag_popup*
 
-Arguments:                                               *neogit_tag_popup_args*
+Arguments:                                               *neojj_tag_popup_args*
   • --force
     Replace an existing tag with the given name (instead of failing)
 
@@ -2116,79 +2116,79 @@ Arguments:                                               *neogit_tag_popup_args*
   • --local-user
     Make a GPG-signed tag, using the given key.
 
-Actions:                                              *neogit_tag_popup_actions*
-  • Tag                                                         *neogit_tag_tag*
+Actions:                                              *neojj_tag_popup_actions*
+  • Tag                                                         *neojj_tag_tag*
     Creates a new TAG at specified REV.
 
-  • Release                                                 *neogit_tag_release*
+  • Release                                                 *neojj_tag_release*
     (Not yet implemented)
 
-  • Delete                                                   *neogit_tag_delete*
+  • Delete                                                   *neojj_tag_delete*
     Deletes one or more tags.
 
-  • Prune                                                     *neogit_tag_prune*
+  • Prune                                                     *neojj_tag_prune*
     Offers to delete tags missing locally from REMOTE, and vice versa.
 
 ==============================================================================
-Worktree Popup                                           *neogit_worktree_popup*
+Worktree Popup                                           *neojj_worktree_popup*
 
-Actions:                                         *neogit_worktree_popup_actions*
-  • Checkout worktree                                 *neogit_worktree_checkout*
+Actions:                                         *neojj_worktree_popup_actions*
+  • Checkout worktree                                 *neojj_worktree_checkout*
     Checks out an existing branch in a new directory.
 
     Changes CWD.
 
-  • Create branch and worktree                   *neogit_worktree_create_branch*
+  • Create branch and worktree                   *neojj_worktree_create_branch*
     Creates a new branch and checks it out in a new worktree, at the directory
     specified by the user.
 
     Changes CWD.
 
-  • Goto                                                  *neogit_worktree_goto*
+  • Goto                                                  *neojj_worktree_goto*
     Changes CWD to an existing worktree.
 
-  • Move                                                  *neogit_worktree_move*
+  • Move                                                  *neojj_worktree_move*
     Moves a worktree to a new directory in the filesystem.
 
-  • Delete                                              *neogit_worktree_delete*
+  • Delete                                              *neojj_worktree_delete*
     Removes a worktree. If uncommitted changes or untracked files exist, user
     will be prompted to execute command forcefully. When the worktree selected
     is the CWD, then CWD will be changed to the main worktree.
 
 
 ==============================================================================
-Status Buffer                                             *neogit_status_buffer*
+Status Buffer                                             *neojj_status_buffer*
 (TODO)
 
-Untracked Files                                 *neogit_status_buffer_untracked*
-  Neogit respects status.showUntrackedFiles. It can be set to "no" to hide
+Untracked Files                                 *neojj_status_buffer_untracked*
+  NeoJJ respects status.showUntrackedFiles. It can be set to "no" to hide
   untracked files entirely, "normal" to show files and directories (default),
   or "all" to show all files in all directories.
 
 ==============================================================================
-Editor Buffer                                             *neogit_editor_buffer*
+Editor Buffer                                             *neojj_editor_buffer*
 
 User customizations can be made via `gitcommit` ftplugin.
 
-Commands:                                               *neogit_editor_commands*
-  • Submit                                                *neogit_editor_submit*
+Commands:                                               *neojj_editor_commands*
+  • Submit                                                *neojj_editor_submit*
     Default key: `<c-c><c-c>`
 
     Writes and closes the editor. Available in both normal and insert modes.
 
-  • Abort                                                  *neogit_editor_abort*
+  • Abort                                                  *neojj_editor_abort*
     Default key: `<c-c><c-k>`
 
     Closes the editor buffer, discarding any changes that might have been
     written. Available in both normal and insert modes.
 
-  • Close                                                  *neogit_editor_close*
+  • Close                                                  *neojj_editor_close*
     Default key: `q`
 
     Closes the editor buffer. If there are unsaved changes, user will be
     prompted to save them. Discarding the changes will abort.
 
-  • PrevMessage                                     *neogit_editor_prev_message*
+  • PrevMessage                                     *neojj_editor_prev_message*
     Default key: `<m-p>`
 
     Replaces the current commit message with the previously used one, via
@@ -2196,34 +2196,34 @@ Commands:                                               *neogit_editor_commands*
     well. Any changes a user makes to a message will be stored while the
     editor is open.
 
-  • NextMessage                                     *neogit_editor_next_message*
+  • NextMessage                                     *neojj_editor_next_message*
     Default key: `<m-n>`
 
     Replaces the current commit message with the next used one, via
-    reflog. Same semantics as |neogit_editor_prev_message| apply.
+    reflog. Same semantics as |neojj_editor_prev_message| apply.
 
-  • ResetMessage                                   *neogit_editor_reset_message*
+  • ResetMessage                                   *neojj_editor_reset_message*
     Default key: `<m-r>`
 
     If a user has changed a message that was found via reflog, reset it to how
     it appeared in reflog.
 
 ==============================================================================
-Log Buffer                                                   *neogit_log_buffer*
+Log Buffer                                                   *neojj_log_buffer*
 (TODO)
 
 ==============================================================================
-Reflog Buffer                                             *neogit_reflog_buffer*
+Reflog Buffer                                             *neojj_reflog_buffer*
 (TODO)
 
 ==============================================================================
-Commit Buffer                                             *neogit_commit_buffer*
+Commit Buffer                                             *neojj_commit_buffer*
 The commit buffer shows a single commit, including metadata, summary, and an
 inline diff. It opens via |:NeoJJCommit|, from log/graph views, or when
-pressing `<cr>` on a commit hash elsewhere in Neogit.
+pressing `<cr>` on a commit hash elsewhere in NeoJJ.
 
 Mappings (normal mode):
-  • `a`          (|neogit_setup_mappings|: "OpenFileInWorktree" in commit_view)
+  • `a`          (|neojj_setup_mappings|: "OpenFileInWorktree" in commit_view)
                  On a diff hunk, try to jump to that location in the worktree
                  (i.e. current version of the file).
                  Note: it can fail if the file no longer exists or it can take
@@ -2241,7 +2241,7 @@ Mappings (normal mode):
   • `{` / `}`      Jump to previous/next hunk or diff header.
 
   • `q` / `<esc>`  Close the commit buffer (keys are configurable via
-               |neogit_setup_mappings| for the commit view).
+               |neojj_setup_mappings| for the commit view).
 
   • `Y`          Opens the Yank popup, allowing copying of different details
                from the commit.
@@ -2251,17 +2251,17 @@ Mappings (normal mode):
 
   • `za` / `<tab>` Toggle folding for the current section.
 
-  • Popup shortcuts honour |neogit_setup_mappings|, default keys:
+  • Popup shortcuts honour |neojj_setup_mappings|, default keys:
       - `A` Cherry-pick, `b` Branch, `B` Bisect, `c` Commit, `d` Diff,
         `f` Fetch, `i` Ignore, `l` Log, `m` Merge, `p` Pull, `P` Push,
         `r` Rebase, `t` Tag, `v` Revert, `w` Worktree, `X` Reset, `Z` Stash.
 
 ==============================================================================
-Refs Buffer                                                 *neogit_refs_buffer*
+Refs Buffer                                                 *neojj_refs_buffer*
 (TODO)
 
 ==============================================================================
-Rebase Todo Buffer                                   *neogit_rebase_todo_buffer*
+Rebase Todo Buffer                                   *neojj_rebase_todo_buffer*
 
 User customizations can be made via `gitrebase` ftplugin.
 
@@ -2279,9 +2279,9 @@ The following keys, in normal mode, will act on the commit under the cursor:
 • `<cr>` Open current commit in Commit Buffer
 
 ==============================================================================
-Popup Builder                                             *neogit_popup_builder*
+Popup Builder                                             *neojj_popup_builder*
 
-You can leverage Neogit's infrastructure to create your own popups and
+You can leverage NeoJJ's infrastructure to create your own popups and
 actions. For example, you can define actions as a function which will take the
 popup instance as its argument:
 >lua
@@ -2289,12 +2289,12 @@ popup instance as its argument:
       -- You can access the popup state (enabled flags) like so:
       local cli_args = popup:get_arguments()
 
-      -- You can use Neogit's git abstraction for many common operations
-      -- local git = require("neogit.lib.git")
+      -- You can use NeoJJ's git abstraction for many common operations
+      -- local git = require("neojj.lib.git")
 
       -- The input library provides some helpful interfaces for getting user
       -- input
-      local input = require("neogit.lib.input")
+      local input = require("neojj.lib.input")
       local user_input = input.get_user_input("User-specified free text for the action")
 
       vim.notify(
@@ -2304,7 +2304,7 @@ popup instance as its argument:
     end
 
     function create_custom_popup()
-      local popup = require("neogit.lib.popup")
+      local popup = require("neojj.lib.popup")
       local p = popup
         .builder()
         :name("NeoJJMyCustomPopup")
@@ -2327,17 +2327,17 @@ popup instance as its argument:
       return p
     end
 
-  require("neogit")
+  require("neojj")
 <
 
-Look at the builder APIs in `lua/neogit/lib/popup/builder.lua`, the built-in
-popups/actions in `lua/neogit/popups/*`, and the git APIs in
-`lua/neogit/lib/git` for more information (and inspiration!).
+Look at the builder APIs in `lua/neojj/lib/popup/builder.lua`, the built-in
+popups/actions in `lua/neojj/popups/*`, and the git APIs in
+`lua/neojj/lib/git` for more information (and inspiration!).
 
 To access your custom popup via a keymapping, you can include a mapping when
 calling the setup function:
 >lua
-    require("neogit").setup({
+    require("neojj").setup({
       mappings = {
         status = {
           ["<leader>A"] = create_custom_popup,
@@ -2347,14 +2347,14 @@ calling the setup function:
 <
 
 ==============================================================================
-Customizing Popups                                        *neogit_custom_popups*
+Customizing Popups                                        *neojj_custom_popups*
 
-You can customize existing popups via the Neogit config.
+You can customize existing popups via the NeoJJ config.
 
 Below is an example of adding a custom switch, but you can use any function
 from the builder API.
 >lua
-    require("neogit").setup({
+    require("neojj").setup({
       builders = {
         NeoJJPushPopup = function(builder)
           builder:switch('m', 'merge_request.create', 'Create merge request', { cli_prefix = '-o ', persisted = false })
