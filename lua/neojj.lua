@@ -63,7 +63,7 @@ function M.setup(opts)
   end
 
   M.lib = require("neojj.lib")
-  M.cli = M.lib.git.cli
+  M.cli = require("neojj.lib.jj.cli")
   M.popups = require("neojj.popups")
   M.config = config
   M.notification = require("neojj.lib.notification")
@@ -83,10 +83,10 @@ local function construct_opts(opts)
   end
 
   if not opts.cwd then
-    local git = require("neojj.lib.git")
-    opts.cwd = git.cli.worktree_root(".")
+    local jj_cli = require("neojj.lib.jj.cli")
+    opts.cwd = jj_cli.workspace_root(".")
 
-    if opts.cwd == "" then
+    if not opts.cwd or opts.cwd == "" then
       opts.cwd = vim.uv.cwd()
     end
   end
@@ -110,32 +110,22 @@ local function open_status_buffer(opts)
   -- We need to construct the repo instance manually here since the actual CWD may not be the directory neojj is
   -- going to open into. We will use vim.fn.lcd() in the status buffer constructor, so this will eventually be
   -- correct.
-  local repo = require("neojj.lib.git.repository").instance(opts.cwd)
+  local repo = require("neojj.lib.jj.repository").instance(opts.cwd)
   status.new(config.values, repo.worktree_root, opts.cwd):open(opts.kind):dispatch_refresh()
 end
 
 ---@alias Popup
----| "bisect"
----| "branch"
----| "branch_config"
----| "cherry_pick"
+---| "bookmark"
 ---| "commit"
+---| "describe"
 ---| "diff"
 ---| "fetch"
 ---| "help"
----| "ignore"
 ---| "log"
----| "merge"
----| "pull"
 ---| "push"
 ---| "rebase"
 ---| "remote"
----| "remote_config"
----| "reset"
----| "revert"
----| "stash"
----| "tag"
----| "worktree"
+---| "squash"
 
 ---@class OpenOpts
 ---@field cwd string|nil
@@ -151,25 +141,22 @@ function M.open(opts)
 
   opts = construct_opts(opts)
 
-  local git = require("neojj.lib.git")
-  if not git.cli.is_inside_worktree(opts.cwd) then
-    local input = require("neojj.lib.input")
-    if input.get_permission(("Initialize repository in %s?"):format(opts.cwd)) then
-      git.init.create(opts.cwd)
-    else
-      M.notification.error("The current working directory is not a git repository")
-      return
-    end
+  local jj_cli = require("neojj.lib.jj.cli")
+  if not jj_cli.is_inside_workspace(opts.cwd) then
+    -- TODO: jj init support will be added in a future phase
+    M.notification.error("The current working directory is not a jj workspace")
+    return
   end
 
   if opts[1] ~= nil then
     local a = require("plenary.async")
+    local jj = require("neojj.lib.jj")
     local cb = function()
       open_popup(opts[1])
     end
 
     a.void(function()
-      git.repo:dispatch_refresh { source = "popup", callback = cb }
+      jj.repo:dispatch_refresh { source = "popup", callback = cb }
     end)()
   else
     open_status_buffer(opts)
@@ -182,11 +169,11 @@ end
 --
 ---@param popup  string Name of popup, as found in `lua/neojj/popups/*`
 ---@param action string Name of action for popup, found in `lua/neojj/popups/*/actions.lua`
----@param args   table? CLI arguments to pass to git command
+---@param args   table? CLI arguments to pass to jj command
 ---@return function
 function M.action(popup, action, args)
   local util = require("neojj.lib.util")
-  local git = require("neojj.lib.git")
+  local jj = require("neojj.lib.jj")
   local a = require("plenary.async")
 
   args = args or {}
@@ -216,7 +203,7 @@ function M.action(popup, action, args)
             }
           end
 
-          git.repo:dispatch_refresh { source = "action", callback = action }
+          jj.repo:dispatch_refresh { source = "action", callback = action }
         else
           M.notification.error(
             string.format(
@@ -261,27 +248,17 @@ function M.complete(arglead)
   end, {
     "kind=",
     "cwd=",
-    "bisect",
-    "branch",
-    "branch_config",
-    "cherry_pick",
+    "bookmark",
     "commit",
+    "describe",
     "diff",
     "fetch",
     "help",
-    "ignore",
     "log",
-    "merge",
-    "pull",
     "push",
     "rebase",
     "remote",
-    "remote_config",
-    "reset",
-    "revert",
-    "stash",
-    "tag",
-    "worktree",
+    "squash",
   })
 end
 
