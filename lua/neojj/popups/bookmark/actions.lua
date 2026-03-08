@@ -102,7 +102,7 @@ end
 
 function M.move(popup)
   local bookmarks = get_local_bookmarks()
-  local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Move bookmark" }
+  local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Move bookmark", refocus_status = false }
   if not name then
     return
   end
@@ -132,7 +132,7 @@ end
 
 function M.rename(_popup)
   local bookmarks = get_local_bookmarks()
-  local old_name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rename bookmark (old name)" }
+  local old_name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rename bookmark (old name)", refocus_status = false }
   if not old_name then
     return
   end

@@ -75,8 +75,6 @@ local function move_bookmarks_forward(bookmarks)
 end
 
 function M.new_change_with_bookmark(popup)
-  local bookmarks = get_local_bookmarks_at("@")
-
   local args = popup:get_arguments()
   local builder = jj.cli.new
   if #args > 0 then
@@ -88,6 +86,8 @@ function M.new_change_with_bookmark(popup)
     return
   end
 
+  -- After jj new: old @ is now @-, new @ is empty working copy
+  local bookmarks = get_local_bookmarks_at("@-")
   local moved = move_bookmarks_forward(bookmarks)
   picker_cache.invalidate_revisions()
   if #moved > 0 then
@@ -98,8 +98,6 @@ function M.new_change_with_bookmark(popup)
 end
 
 function M.commit_with_bookmark(popup)
-  local bookmarks = get_local_bookmarks_at("@")
-
   local args = popup:get_arguments()
   local builder = jj.cli.commit
   if #args > 0 then
@@ -116,6 +114,9 @@ function M.commit_with_bookmark(popup)
   })
 
   if code == 0 then
+    -- After jj commit: old @ is now @-, new @ is empty working copy
+    -- Find bookmarks on @- and move them forward to @
+    local bookmarks = get_local_bookmarks_at("@-")
     local moved = move_bookmarks_forward(bookmarks)
     picker_cache.invalidate_revisions()
     if #moved > 0 then
