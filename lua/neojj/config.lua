@@ -223,6 +223,7 @@ end
 ---| "ResolvePopup"
 ---| "YankPopup"
 ---| "OperationsPopup"
+---| "WorkspacePopup"
 ---| false
 
 ---@alias NeoJJConfigMappingsCommitEditor
@@ -311,6 +312,9 @@ end
 ---@field sections? NeoJJConfigSections
 ---@field ignored_settings? string[] Settings to never persist, format: "Filetype--cli-value", i.e. "NeoJJCommitPopup--author"
 ---@field mappings? NeoJJConfigMappings
+---@field workspace_open_command? string Shell command to open a new workspace ({path} is replaced with workspace path)
+---@field workspace_initialize_command? string Shell command to run in workspace dir before opening ({path} is replaced)
+---@field workspace_worktrees_directory? string Base directory for quick-add worktrees (default: ~/.worktrees)
 ---@field notification_icon? string
 ---@field use_default_keymaps? boolean
 ---@field highlight? HighlightOptions
@@ -359,6 +363,9 @@ function M.get_default_values()
     -- the console always, or "error" to auto-show the console only on error
     auto_show_console_on = "output",
     auto_close_console = true,
+    workspace_open_command = nil,
+    workspace_initialize_command = nil,
+    workspace_worktrees_directory = "~/.worktrees",
     notification_icon = "󰊢",
     status = {
       show_head_commit_hash = true,
@@ -503,6 +510,7 @@ function M.get_default_values()
         ["R"] = "ResolvePopup",
         ["y"] = "YankPopup",
         ["O"] = "OperationsPopup",
+        ["W"] = "WorkspacePopup",
       },
       status = {
         ["j"] = "MoveDown",

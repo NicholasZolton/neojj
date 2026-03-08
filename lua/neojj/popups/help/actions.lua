@@ -50,6 +50,7 @@ M.popups = function(env)
     { "SquashPopup", "Squash", popups.open("squash", function(p) p(env.squash or {}) end) },
     { "UndoPopup", "Undo", popups.open("undo", function(p) p(env.undo or {}) end) },
     { "RemotePopup", "Remote", popups.open("remote", function(p) p(env.remote or {}) end) },
+    { "WorkspacePopup", "Workspace", popups.open("workspace", function(p) p(env.workspace or {}) end) },
     { "Command", "Command", require("neojj.buffers.status.actions").n_command(nil) },
   }
 

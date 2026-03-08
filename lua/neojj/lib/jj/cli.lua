@@ -133,6 +133,8 @@ function M._build_cmd(tbl)
     ["file list"] = true,
     ["file annotate"] = true,
     ["git remote list"] = true,
+    ["workspace list"] = true,
+    ["workspace root"] = true,
   }
   if readonly_commands[command] then
     table.insert(cmd, "--ignore-working-copy")
@@ -544,8 +546,38 @@ define_command("file untrack", {})
 -- jj file annotate
 define_command("file annotate", {})
 
+-- jj workspace add
+define_command("workspace add", {
+  options = {
+    name = "--name",
+    revision = "-r",
+    message = "-m",
+    sparse_patterns = "--sparse-patterns",
+  },
+})
+
+-- jj workspace forget
+define_command("workspace forget", {})
+
+-- jj workspace list
+define_command("workspace list", {
+  options = {
+    template = "-T",
+  },
+})
+
+-- jj workspace rename
+define_command("workspace rename", {})
+
 -- jj workspace root
-define_command("workspace root", {})
+define_command("workspace root", {
+  options = {
+    name = "--name",
+  },
+})
+
+-- jj workspace update-stale
+define_command("workspace update-stale", {})
 
 -- jj absorb
 define_command("absorb", {
@@ -579,6 +611,16 @@ setmetatable(M, {
     local cfg = commands[command_name]
     if cfg then
       return new_builder(command_name, cfg)
+    end
+
+    -- Try joining last two words with hyphen for commands like "workspace update-stale"
+    -- e.g., workspace_update_stale → "workspace update stale" → "workspace update-stale"
+    local hyphenated = command_name:gsub("(%S+) (%S+)$", "%1-%2")
+    if hyphenated ~= command_name then
+      cfg = commands[hyphenated]
+      if cfg then
+        return new_builder(hyphenated, cfg)
+      end
     end
 
     -- Also try exact name (for single-word commands like "log")

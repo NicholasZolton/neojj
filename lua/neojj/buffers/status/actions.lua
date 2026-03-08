@@ -759,10 +759,7 @@ end
 M.n_diff_popup = function(self)
   return popups.open("diff", function(p)
     local section = self.buffer.ui:get_selection().section
-    local cursor = vim.api.nvim_win_get_cursor(0)
     local yank = self.buffer.ui:get_yankable_under_cursor()
-    local notification = require("neojj.lib.notification")
-    notification.info("diff popup: cursor=" .. cursor[1] .. " yank=" .. tostring(yank), { dismiss = true })
     p {
       section = { name = section and section.name },
       item = { name = yank },
@@ -838,6 +835,12 @@ end
 ---@return fun(): nil
 M.n_commit_popup = function(_self)
   return popups.open("commit")
+end
+
+---@param _self StatusBuffer
+---@return fun(): nil
+M.n_workspace_popup = function(_self)
+  return popups.open("workspace")
 end
 
 ---@param self StatusBuffer
