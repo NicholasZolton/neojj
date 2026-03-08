@@ -421,6 +421,61 @@ M.n_discard = function(self)
   end)
 end
 
+---@param self StatusBuffer
+---@return fun(): nil
+M.n_context_delete = function(self)
+  return a.void(function()
+    local selection = self.buffer.ui:get_selection()
+    if not selection.section then
+      return
+    end
+
+    local section = selection.section.name
+    local item = selection.item
+
+    if section == "recent" and item and item.change_id then
+      local short = item.change_id:sub(1, 8)
+      if item.immutable then
+        notification.warn("Cannot abandon immutable commit " .. short, { dismiss = true })
+        return
+      end
+      if not input.get_permission("Abandon " .. short .. "?") then
+        return
+      end
+      local result = jj.cli.abandon.args(item.change_id).call()
+      if result and result.code == 0 then
+        local picker_cache = require("neojj.lib.picker_cache")
+        picker_cache.remove_revision(item.change_id)
+        notification.info("Abandoned " .. short, { dismiss = true })
+        self:dispatch_refresh(nil, "n_context_delete")
+      else
+        notification.warn("Failed to abandon " .. short, { dismiss = true })
+      end
+    elseif section == "bookmarks" and item and item.name then
+      if item.remote and item.remote ~= "" then
+        notification.warn("Cannot delete remote bookmark " .. item.name .. "@" .. item.remote .. " — delete locally and push to remove", { dismiss = true })
+        return
+      end
+      if item.deleted then
+        notification.warn("Bookmark " .. item.name .. " is already deleted (push to sync)", { dismiss = true })
+        return
+      end
+      if not input.get_permission("Delete bookmark " .. item.name .. "?") then
+        return
+      end
+      local result = jj.cli.bookmark_delete.args(item.name).call()
+      if result and result.code == 0 then
+        local picker_cache = require("neojj.lib.picker_cache")
+        picker_cache.invalidate_bookmarks()
+        notification.info("Deleted bookmark " .. item.name, { dismiss = true })
+        self:dispatch_refresh(nil, "n_context_delete")
+      else
+        notification.warn("Failed to delete bookmark " .. item.name, { dismiss = true })
+      end
+    end
+  end)
+end
+
 -- ============================================================
 -- Normal mode: Hunk navigation
 -- ============================================================

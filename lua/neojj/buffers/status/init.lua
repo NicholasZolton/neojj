@@ -191,6 +191,7 @@ function M:open(kind)
         ["A"]                                   = self:_action("n_abandon"),
         ["U"]                                   = self:_action("n_undo"),
         ["o"]                                   = self:_action("n_open_in_browser"),
+        ["x"]                                   = self:_action("n_context_delete"),
         -- jj popup bindings
         [popups.mapping_for("CommitPopup")]     = self:_action("n_commit_popup"),
         [popups.mapping_for("DiffPopup")]       = self:_action("n_diff_popup"),
