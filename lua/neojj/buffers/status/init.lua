@@ -186,7 +186,7 @@ function M:open(kind)
         [mappings["NextSection"]]               = self:_action("n_next_section"),
         [mappings["PreviousSection"]]           = self:_action("n_prev_section"),
         -- jj-specific actions
-        ["d"]                                   = self:_action("n_describe"),
+        ["D"]                                   = self:_action("n_describe"),
         ["N"]                                   = self:_action("n_new_change"),
         ["A"]                                   = self:_action("n_abandon"),
         ["U"]                                   = self:_action("n_undo"),

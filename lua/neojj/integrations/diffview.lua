@@ -8,7 +8,27 @@ local dv_utils = require("diffview.utils")
 
 local Watcher = require("neojj.watcher")
 local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
 local a = require("plenary.async")
+
+--- Resolve a jj change ID to a git commit hash (only if it looks like a jj ID)
+local function resolve_jj_to_git(ref)
+  -- jj change IDs are purely alphabetic; git hashes are hex. Skip if already hex or contains ".."
+  if not ref or ref:match("%.%.") or ref:match("^[0-9a-f]+$") then
+    return ref
+  end
+
+  local result = jj.cli.log
+    .args("-r", ref, "--no-graph", "-T", "commit_id")
+    .call()
+  if result and result.code == 0 and result.stdout then
+    local hash = type(result.stdout) == "table"
+      and result.stdout[1]
+      or result.stdout
+    if hash then return vim.trim(hash) end
+  end
+  return ref -- fallback to original ref
+end
 
 local function get_local_diff_view(section_name, item_name, opts)
   local left = Rev(RevType.STAGE)
@@ -117,6 +137,9 @@ function M.open(section_name, item_name, opts)
     })
   end
 
+  local notification = require("neojj.lib.notification")
+  notification.info("diffview.open: section=" .. tostring(section_name) .. " item=" .. tostring(item_name), { dismiss = true })
+
   local view
   -- selene: allow(if_same_then_else)
   if
@@ -125,16 +148,16 @@ function M.open(section_name, item_name, opts)
   then
     local range
     if type(item_name) == "table" then
-      range = string.format("%s..%s", item_name[1], item_name[#item_name])
+      range = string.format("%s..%s", resolve_jj_to_git(item_name[1]), resolve_jj_to_git(item_name[#item_name]))
     else
-      range = string.format("%s^!", item_name:match("[a-f0-9]+"))
+      range = string.format("%s^!", resolve_jj_to_git(item_name:match("[a-f0-9]+") or item_name))
     end
 
     view = dv_lib.diffview_open(dv_utils.tbl_pack(range))
   elseif section_name == "range" and item_name then
-    view = dv_lib.diffview_open(dv_utils.tbl_pack(item_name))
+    view = dv_lib.diffview_open(dv_utils.tbl_pack(resolve_jj_to_git(item_name)))
   elseif (section_name == "stashes" or section_name == "commit") and item_name then
-    view = dv_lib.diffview_open(dv_utils.tbl_pack(item_name .. "^!"))
+    view = dv_lib.diffview_open(dv_utils.tbl_pack(resolve_jj_to_git(item_name) .. "^!"))
   elseif section_name == "conflict" and item_name then
     view = dv_lib.diffview_open(dv_utils.tbl_pack("--selected-file=" .. item_name))
   elseif (section_name == "conflict" or section_name == "worktree") and not item_name then
@@ -143,7 +166,7 @@ function M.open(section_name, item_name, opts)
     -- for staged, unstaged, merge
     view = get_local_diff_view(section_name, item_name, opts)
   elseif section_name == nil and item_name ~= nil then
-    view = dv_lib.diffview_open(dv_utils.tbl_pack(item_name .. "^!"))
+    view = dv_lib.diffview_open(dv_utils.tbl_pack(resolve_jj_to_git(item_name) .. "^!"))
   else
     view = dv_lib.diffview_open()
   end

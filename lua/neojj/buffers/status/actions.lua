@@ -698,10 +698,13 @@ end
 M.n_diff_popup = function(self)
   return popups.open("diff", function(p)
     local section = self.buffer.ui:get_selection().section
-    local item = self.buffer.ui:get_yankable_under_cursor()
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local yank = self.buffer.ui:get_yankable_under_cursor()
+    local notification = require("neojj.lib.notification")
+    notification.info("diff popup: cursor=" .. cursor[1] .. " yank=" .. tostring(yank), { dismiss = true })
     p {
       section = { name = section and section.name },
-      item = { name = item },
+      item = { name = yank },
     }
   end)
 end
