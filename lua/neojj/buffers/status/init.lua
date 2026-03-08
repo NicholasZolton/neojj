@@ -189,7 +189,6 @@ function M:open(kind)
         ["D"]                                   = self:_action("n_describe"),
         ["N"]                                   = self:_action("n_new_change"),
         ["A"]                                   = self:_action("n_abandon"),
-        ["U"]                                   = self:_action("n_undo"),
         ["o"]                                   = self:_action("n_open_in_browser"),
         ["x"]                                   = self:_action("n_context_delete"),
         -- jj popup bindings
@@ -202,6 +201,7 @@ function M:open(kind)
         [popups.mapping_for("RebasePopup")]     = self:_action("n_rebase_popup"),
         [popups.mapping_for("RemotePopup")]     = self:_action("n_remote_popup"),
         [popups.mapping_for("SquashPopup")]     = self:_action("n_squash_popup"),
+        [popups.mapping_for("UndoPopup")]      = self:_action("n_undo_popup"),
         ["b"]                                   = self:_action("n_bookmark_popup"),
         ["V"]                                   = function()
           vim.cmd("norm! V")

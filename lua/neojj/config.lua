@@ -217,6 +217,7 @@ end
 ---| "FetchPopup"
 ---| "RemotePopup"
 ---| "SquashPopup"
+---| "UndoPopup"
 ---| "BookmarkPopup"
 ---| "SplitPopup"
 ---| "ResolvePopup"
@@ -496,6 +497,7 @@ function M.get_default_values()
         ["r"] = "RebasePopup",
         ["M"] = "RemotePopup",
         ["S"] = "SquashPopup",
+        ["u"] = "UndoPopup",
         ["b"] = "BookmarkPopup",
         ["s"] = "SplitPopup",
         ["R"] = "ResolvePopup",

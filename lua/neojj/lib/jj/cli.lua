@@ -490,6 +490,16 @@ define_command("git remote list", {})
 -- jj undo
 define_command("undo", {})
 
+-- jj redo
+define_command("redo", {})
+
+-- jj op restore
+define_command("op restore", {
+  options = {
+    what = "--what",
+  },
+})
+
 -- jj op log
 define_command("op log", {
   flags = {

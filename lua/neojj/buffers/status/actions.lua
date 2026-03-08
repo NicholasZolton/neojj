@@ -688,6 +688,12 @@ M.n_undo = function(self)
   end)
 end
 
+---@param _self StatusBuffer
+---@return fun(): nil
+M.n_undo_popup = function(_self)
+  return popups.open("undo")
+end
+
 -- ============================================================
 -- Normal mode: Command
 -- ============================================================
