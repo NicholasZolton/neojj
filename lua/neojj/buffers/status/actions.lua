@@ -870,20 +870,57 @@ end
 ---@return fun(): nil
 M.n_open_in_browser = function(self)
   return function()
+    local yank = self.buffer.ui:get_yankable_under_cursor()
+
+    -- Helper to resolve remote URL
+    local function get_remote_browser_url()
+      local shell = require("neojj.lib.jj.shell")
+      local remote_lines, code = shell.exec(
+        { "jj", "--no-pager", "--color=never", "git", "remote", "list" },
+        jj.repo.state.worktree_root
+      )
+      if code ~= 0 or not remote_lines or #remote_lines == 0 then
+        return nil
+      end
+
+      local remote_url
+      for _, line in ipairs(remote_lines) do
+        local url = line:match("^%S+%s+(%S+)")
+        if url then
+          remote_url = url
+          break
+        end
+      end
+
+      if not remote_url then return nil end
+
+      return remote_url
+        :gsub("%.git$", "")
+        :gsub("^git@([^:]+):", "https://%1/")
+        :gsub("^ssh://git@([^/]+)/", "https://%1/")
+    end
+
+    -- Project header: open repo URL directly
+    if yank == "__project__" then
+      local browser_url = get_remote_browser_url()
+      if not browser_url then
+        notification.warn("No remote found", { dismiss = true })
+        return
+      end
+      vim.ui.open(browser_url)
+      return
+    end
+
     local item = self.buffer.ui:get_item_under_cursor()
     local change_id
     if item and item.change_id then
       change_id = item.change_id
+    elseif yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
+      change_id = yank
     else
-      -- Head/Parent sections set yankable=change_id but no item.
-      -- Check if we're in the head/parent section by matching yankable against known IDs.
-      local yank = self.buffer.ui:get_yankable_under_cursor()
-      if yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
-        change_id = yank
-      else
-        change_id = jj.repo.state.head.change_id
-      end
+      change_id = jj.repo.state.head.change_id
     end
+
     if not change_id or change_id == "" then
       notification.warn("No change under cursor", { dismiss = true })
       return
@@ -897,37 +934,11 @@ M.n_open_in_browser = function(self)
     end
     local commit_hash = result.stdout[1]
 
-    -- Get remote URL
-    local shell = require("neojj.lib.jj.shell")
-    local remote_lines, code = shell.exec(
-      { "jj", "--no-pager", "--color=never", "git", "remote", "list" },
-      jj.repo.state.worktree_root
-    )
-    if code ~= 0 or not remote_lines or #remote_lines == 0 then
+    local browser_url = get_remote_browser_url()
+    if not browser_url then
       notification.warn("No remote found", { dismiss = true })
       return
     end
-
-    -- Parse first remote URL (format: "origin https://github.com/user/repo.git")
-    local remote_url
-    for _, line in ipairs(remote_lines) do
-      local url = line:match("^%S+%s+(%S+)")
-      if url then
-        remote_url = url
-        break
-      end
-    end
-
-    if not remote_url then
-      notification.warn("Could not parse remote URL", { dismiss = true })
-      return
-    end
-
-    -- Convert git URL to browser URL
-    local browser_url = remote_url
-      :gsub("%.git$", "")
-      :gsub("^git@([^:]+):", "https://%1/")
-      :gsub("^ssh://git@([^/]+)/", "https://%1/")
 
     -- Construct commit URL (works for GitHub, GitLab, etc.)
     browser_url = browser_url .. "/commit/" .. commit_hash

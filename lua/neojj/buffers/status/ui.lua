@@ -71,6 +71,14 @@ local HINT = Component.new(function(props)
   }
 end)
 
+--- Project header showing workspace name
+local ProjectHeader = Component.new(function(props)
+  local project_name = vim.fn.fnamemodify(props.root, ":t")
+  return row({
+    text.highlight("NeojjSectionHeader")(project_name),
+  }, { yankable = "__project__" })
+end)
+
 --- Head/Parent section showing current change and its parent
 local JJHead = Component.new(function(props)
   local change_id = props.change_id or ""
@@ -338,6 +346,8 @@ function M.Status(state, config)
       items = {
         show_hint and HINT { config = config },
         show_hint and EmptyLine(),
+        ProjectHeader { root = state.worktree_root },
+        EmptyLine(),
         col.tag("Section")({
           JJHead {
             name = "Change",
