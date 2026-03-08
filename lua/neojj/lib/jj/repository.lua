@@ -107,7 +107,7 @@ function Repo.instance(dir)
   dir = vim.fn.fnamemodify(dir, ":p")
 
   if not instances[dir] then
-    local root = jj_cli.workspace_root(dir)
+    local root = jj_cli.find_workspace_root(dir)
     if not root then
       error("Not inside a jj workspace: " .. dir)
     end

@@ -84,7 +84,7 @@ local function construct_opts(opts)
 
   if not opts.cwd then
     local jj_cli = require("neojj.lib.jj.cli")
-    local root = jj_cli.workspace_root(".")
+    local root = jj_cli.find_workspace_root(".")
     opts.cwd = root or vim.uv.cwd()
     opts._workspace_root = root
   end

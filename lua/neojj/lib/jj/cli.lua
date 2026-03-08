@@ -661,7 +661,7 @@ end
 ---Get the workspace root directory
 ---@param dir? string Directory to check from
 ---@return string|nil root
-function M.workspace_root(dir)
+function M.find_workspace_root(dir)
   dir = dir or vim.fn.getcwd()
   local key = vim.fn.fnamemodify(dir, ":p")
 
@@ -689,7 +689,7 @@ end
 ---@param dir? string Directory to check
 ---@return boolean
 function M.is_inside_workspace(dir)
-  return M.workspace_root(dir) ~= nil
+  return M.find_workspace_root(dir) ~= nil
 end
 
 ---Clear the workspace root cache (e.g., after init)

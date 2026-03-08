@@ -6,7 +6,7 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local WORKSPACE_TEMPLATE = 'self.name() ++ "\\t" ++ self.path() ++ "\\n"'
+local WORKSPACE_NAME_TEMPLATE = 'self.name() ++ "\\n"'
 
 --- Get the default destination path (parent of current repo root + /)
 ---@return string
@@ -39,38 +39,49 @@ local function worktrees_dir()
   return vim.fn.expand("~/.worktrees")
 end
 
+--- Resolve the root path of a workspace by name
+---@param name string
+---@return string|nil
+local function resolve_workspace_path(name)
+  local result = jj.cli.workspace_root.name(name).call()
+  if result and result.code == 0 and result.stdout then
+    return vim.trim(table.concat(result.stdout, ""))
+  end
+  return nil
+end
+
 --- Get list of workspace names (excluding current)
 ---@param include_current? boolean
 ---@return string[] names, table<string, string> paths
 local function get_workspaces(include_current)
-  local result = jj.cli.workspace_list.template(WORKSPACE_TEMPLATE).call()
+  local result = jj.cli.workspace_list.template(WORKSPACE_NAME_TEMPLATE).call()
   if not result or result.code ~= 0 or not result.stdout then
     return {}, {}
   end
 
-  local current_root = jj.cli.workspace_root.call()
-  local current_path = current_root and current_root.code == 0 and current_root.stdout
-    and table.concat(current_root.stdout, "")
-    or nil
-  if current_path then
-    current_path = vim.trim(current_path)
+  local current_path = resolve_workspace_path("default")
+  -- Fall back: if no "default" workspace, use current root
+  if not current_path then
+    local root = jj.repo.state.worktree_root
+    if root then
+      current_path = root
+    end
   end
 
   local names = {}
   local paths = {}
   for _, line in ipairs(result.stdout) do
-    local parts = vim.split(line, "\t", { plain = true })
-    if #parts >= 2 then
-      local name = vim.trim(parts[1])
-      local path = vim.trim(parts[2])
-      if name ~= "" then
-        local is_current = current_path and path == current_path
-        if include_current or not is_current then
-          local label = name
-          if is_current then
-            label = label .. " (current)"
-          end
-          table.insert(names, label)
+    local name = vim.trim(line)
+    if name ~= "" then
+      local path = resolve_workspace_path(name)
+      local is_current = current_path and path == current_path
+      if include_current or not is_current then
+        local label = name
+        if is_current then
+          label = label .. " (current)"
+        end
+        table.insert(names, label)
+        if path then
           paths[name] = path
         end
       end
