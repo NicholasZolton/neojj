@@ -767,6 +767,29 @@ end
 
 ---@param self StatusBuffer
 ---@return fun(): nil
+M.n_edit_change = function(self)
+  return a.void(function()
+    local ctx = cursor_context(self)
+    local change_id = ctx.change_id
+    if not change_id then
+      notification.warn("No change under cursor", { dismiss = true })
+      return
+    end
+
+    if ctx.immutable then
+      notification.warn("Cannot edit immutable commit", { dismiss = true })
+      return
+    end
+
+    local short = change_id:sub(1, 8)
+    jj.cli.edit.args(change_id).call()
+    notification.info("Now editing " .. short, { dismiss = true })
+    self:dispatch_refresh(nil, "n_edit_change")
+  end)
+end
+
+---@param self StatusBuffer
+---@return fun(): nil
 M.n_new_change = function(self)
   return a.void(function()
     jj.cli.new.call()
