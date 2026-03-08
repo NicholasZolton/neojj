@@ -132,7 +132,7 @@ end
 ---@param limit? number Max entries
 ---@return NeojjChangeLogEntry[]
 -- Template that appends immutable/empty/conflict/bookmarks as tab-separated fields after json
-local LIST_TEMPLATE = 'json(self) ++ if(immutable, "\\t1", "\\t0") ++ if(empty, "\\t1", "\\t0") ++ if(conflict, "\\t1", "\\t0") ++ "\\t" ++ bookmarks.map(|b| b.name()).join(",") ++ "\\n"'
+local LIST_TEMPLATE = 'json(self) ++ if(immutable, "\\t1", "\\t0") ++ if(empty, "\\t1", "\\t0") ++ if(conflict, "\\t1", "\\t0") ++ "\\t" ++ local_bookmarks.map(|b| b.name()).join(",") ++ "\\t" ++ remote_bookmarks.filter(|b| b.remote() != "git").map(|b| b.name() ++ "@" ++ b.remote()).join(",") ++ "\\n"'
 
 --- Parse lines produced by LIST_TEMPLATE into entries
 ---@param lines string[]
@@ -152,6 +152,9 @@ local function parse_enriched_lines(lines)
           entry.conflict = parts[3] == "1"
           if parts[4] and parts[4] ~= "" then
             entry.bookmarks = vim.split(parts[4], ",")
+          end
+          if parts[5] and parts[5] ~= "" then
+            entry.remote_bookmarks = vim.split(parts[5], ",")
           end
           table.insert(entries, entry)
         end

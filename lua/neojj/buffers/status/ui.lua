@@ -258,6 +258,12 @@ local SectionItemChange = Component.new(function(item)
       table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
     end
   end
+  if item.remote_bookmarks and #item.remote_bookmarks > 0 then
+    for _, bm in ipairs(item.remote_bookmarks) do
+      table.insert(bookmark_parts, text(" "))
+      table.insert(bookmark_parts, text.highlight("NeojjRemote")(bm))
+    end
+  end
 
   local status_parts = {}
   if item.immutable then
