@@ -19,28 +19,43 @@ function M.parse_commit_overview(raw)
     files = {},
   }
 
-  -- jj show --stat output may have a header line, then file stats, then summary
-  -- Find the first line with " | " pattern to start parsing files
-  local start_idx = 1
-  for i = 1, #raw do
-    if raw[i]:match("|") then
+  -- jj show --stat output: header lines, blank, description, blank, stat file lines, summary
+  -- Find stat file lines by searching backwards from the summary line.
+  -- The summary line (last) is "N files changed, ..." — stat file lines are just above it.
+  local end_idx = #raw - 1
+  local start_idx = nil
+
+  for i = end_idx, 1, -1 do
+    if raw[i]:match("%s*|%s+%d") or raw[i]:match("%s*|%s+Bin ") then
       start_idx = i
-      break
+    else
+      if start_idx then
+        break
+      end
     end
   end
 
-  for i = start_idx, #raw - 1 do
+  if not start_idx then
+    setmetatable(overview, { __index = CommitOverview })
+    return overview
+  end
+
+  for i = start_idx, end_idx do
     local file = {}
     if raw[i] ~= "" then
-      -- matches: tests/specs/neojj/popups/rebase_spec.lua | 2 +-
-      file.path, file.changes, file.insertions, file.deletions = raw[i]:match(" (.*)%s+|%s+(%d+) ?(%+*)(%-*)")
+      -- matches: lua/neojj/config.lua              | 10 +++++-----
+      -- jj stat lines have no leading space, so match from start
+      file.path, file.changes, file.insertions, file.deletions =
+        raw[i]:match("^(.-)%s+|%s+(%d+) ?(%+*)(%-*)")
 
       if vim.tbl_isempty(file) then
         -- matches: .../db/b8571c4f873daff059c04443077b43a703338a      | Bin 0 -> 192 bytes
-        file.path, file.changes = raw[i]:match(" (.*)%s+|%s+(Bin .*)$")
+        file.path, file.changes = raw[i]:match("^(.-)%s+|%s+(Bin .*)$")
       end
 
       if not vim.tbl_isempty(file) then
+        -- Trim leading/trailing whitespace from path
+        file.path = util.trim(file.path)
         table.insert(overview.files, file)
       end
     end

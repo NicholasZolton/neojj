@@ -53,9 +53,9 @@ local M = {
 ---@param change_id string
 ---@return CommitInfo
 local function build_commit_info(change_id)
-  -- Get change metadata via template
+  -- Get change metadata via jj log (not jj show, which appends the diff after template output)
   local tpl = 'change_id.short(12) ++ "\\n" ++ commit_id.short(12) ++ "\\n" ++ author.name() ++ "\\n" ++ author.email() ++ "\\n" ++ author.timestamp() ++ "\\n" ++ description'
-  local meta_result = jj.cli.show.template(tpl).args(change_id).call { hidden = true, trim = false }
+  local meta_result = jj.cli.log.no_graph.revisions(change_id).template(tpl).call { hidden = true, trim = false }
 
   local info = {
     oid = change_id,
