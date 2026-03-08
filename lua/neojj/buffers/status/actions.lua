@@ -731,6 +731,7 @@ M.n_describe = function(self)
         },
         show_diff = true,
         interactive = true,
+        revision = change_id,
       })
     else
       -- Inline input mode

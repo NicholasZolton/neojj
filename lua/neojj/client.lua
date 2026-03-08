@@ -33,12 +33,18 @@ function M.get_nvim_remote_editor(show_diff)
   return table.concat(shell_cmd, " ")
 end
 
-function M.get_envs_git_editor(show_diff)
+---@param show_diff boolean
+---@param revision? string Optional revision for diff context
+function M.get_envs_git_editor(show_diff, revision)
   local nvim_cmd = M.get_nvim_remote_editor(show_diff)
 
   local env = {
     JJ_EDITOR = nvim_cmd,
   }
+
+  if revision then
+    env.NEOJJ_DESCRIBE_REVISION = revision
+  end
 
   if os.getenv("NEOJJ_DEBUG") then
     env.NEOJJ_LOG_LEVEL = "debug"
@@ -63,7 +69,14 @@ function M.client(opts)
   local client = fn.serverstart()
   logger.debug(("[CLIENT] Client address: %s"):format(client))
 
-  local lua_cmd = fmt('lua require("neojj.client").editor(%q, %q, %s)', file_target, client, opts.show_diff)
+  -- Read revision from env (set by parent on the jj process, inherited by this headless nvim)
+  local revision = vim.env.NEOJJ_DESCRIBE_REVISION
+  local revision_arg = revision and fmt("%q", revision) or "nil"
+
+  local lua_cmd = fmt(
+    'lua require("neojj.client").editor(%q, %q, %s, %s)',
+    file_target, client, opts.show_diff, revision_arg
+  )
   local rpc_server = RPC.create_connection(nvim_server)
   rpc_server:send_cmd(lua_cmd)
 end
@@ -72,7 +85,8 @@ end
 ---@param target string Filename to open
 ---@param client string Address returned from vim.fn.serverstart()
 ---@param show_diff boolean
-function M.editor(target, client, show_diff)
+---@param revision? string Optional revision for diff context
+function M.editor(target, client, show_diff, revision)
   logger.debug(("[CLIENT] Invoked editor with target: %s, from: %s"):format(target, client))
   require("neojj.process").hide_preview_buffers()
 
@@ -98,7 +112,7 @@ function M.editor(target, client, show_diff)
   end
 
   local editor = require("neojj.buffers.editor")
-  editor.new(target, send_client_quit, show_diff):open(kind)
+  editor.new(target, send_client_quit, show_diff, revision):open(kind)
 end
 
 ---@class NotifyMsg
@@ -111,6 +125,7 @@ end
 ---@field msg NotifyMsg
 ---@field show_diff boolean?
 ---@field interactive boolean?
+---@field revision string? Optional revision for diff context
 
 ---@param cmd any
 ---@param opts WrapOpts
@@ -126,7 +141,7 @@ function M.wrap(cmd, opts)
   end
 
   logger.debug("[CLIENT] Calling editor command")
-  local result = cmd.env(M.get_envs_git_editor(opts.show_diff)).call { pty = opts.interactive }
+  local result = cmd.env(M.get_envs_git_editor(opts.show_diff, opts.revision)).call { pty = opts.interactive }
 
   a.util.scheduler()
   logger.debug("[CLIENT] DONE editor command")
@@ -138,7 +153,15 @@ function M.wrap(cmd, opts)
     vim.api.nvim_exec_autocmds("User", { pattern = opts.autocmd, modeline = false })
   else
     if opts.msg.fail then
-      notification.warn(opts.msg.fail, { dismiss = true })
+      local stderr = result.stderr
+      if type(stderr) == "table" then
+        stderr = table.concat(stderr, "\n")
+      end
+      local msg = opts.msg.fail
+      if stderr and stderr ~= "" then
+        msg = msg .. ": " .. stderr
+      end
+      notification.warn(msg, { dismiss = true })
     end
   end
 

@@ -18,8 +18,9 @@ local M = {}
 M.__index = M
 
 ---@param header string
+---@param revision? string Optional revision to show diff for (default: working copy)
 ---@return DiffBuffer
-function M:new(header)
+function M:new(header, revision)
   -- Get diff stat using --ignore-working-copy since jj describe may hold the lock
   local shell = require("neojj.lib.jj.shell")
   local cwd
@@ -29,11 +30,17 @@ function M:new(header)
   end
   cwd = cwd or vim.fn.getcwd()
 
-  local stat_lines_raw, stat_code = shell.exec({
+  local stat_cmd = {
     "jj", "--no-pager", "--color=never", "--ignore-working-copy",
     "-R", cwd,
     "diff", "--stat",
-  }, cwd)
+  }
+  if revision then
+    table.insert(stat_cmd, "-r")
+    table.insert(stat_cmd, revision)
+  end
+
+  local stat_lines_raw, stat_code = shell.exec(stat_cmd, cwd)
 
   local stat_lines = (stat_code == 0 and stat_lines_raw) or {}
   local stats = {
@@ -57,13 +64,19 @@ function M:new(header)
     end
   end
 
-  -- Get full diff for the working copy using --ignore-working-copy
+  -- Get full diff using --ignore-working-copy
   local diffs = {}
-  local diff_lines_raw, diff_code = shell.exec({
+  local diff_cmd = {
     "jj", "--no-pager", "--color=never", "--ignore-working-copy",
     "-R", cwd,
     "diff", "--git",
-  }, cwd)
+  }
+  if revision then
+    table.insert(diff_cmd, "-r")
+    table.insert(diff_cmd, revision)
+  end
+
+  local diff_lines_raw, diff_code = shell.exec(diff_cmd, cwd)
 
   if diff_code == 0 and diff_lines_raw and #diff_lines_raw > 0 then
     -- Split the combined diff output into per-file diffs

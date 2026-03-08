@@ -19,12 +19,15 @@ local M = {}
 --- Creates a new EditorBuffer
 ---@param filename string the filename of buffer
 ---@param on_unload function the event dispatched on buffer unload
+---@param show_diff boolean show the diff view or not
+---@param revision? string optional revision for diff context
 ---@return EditorBuffer
-function M.new(filename, on_unload, show_diff)
+function M.new(filename, on_unload, show_diff, revision)
   local instance = {
     show_diff = show_diff,
     filename = filename,
     on_unload = on_unload,
+    revision = revision,
     buffer = nil,
   }
 
@@ -205,8 +208,11 @@ function M:open(kind)
         and config.values.commit_editor.show_diff ~= false
         and kind ~= "floating"
       if show_diff then
-        logger.debug("[EDITOR] Opening Diffview for current changes")
-        self.diff_view = DiffViewBuffer:new("Current Changes"):open()
+        local diff_header = self.revision
+          and ("Changes in " .. self.revision:sub(1, 8))
+          or "Current Changes"
+        logger.debug("[EDITOR] Opening Diffview for " .. diff_header)
+        self.diff_view = DiffViewBuffer:new(diff_header, self.revision):open()
       end
     end,
     mappings = {
