@@ -10,9 +10,7 @@ function M.undo(_popup)
     picker_cache.invalidate()
     notification.info("Undone", { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Undo failed: " .. msg, { dismiss = true })
+    notification.warn("Undo failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -22,9 +20,7 @@ function M.redo(_popup)
     picker_cache.invalidate()
     notification.info("Redone", { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Redo failed: " .. msg, { dismiss = true })
+    notification.warn("Redo failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -73,9 +69,7 @@ function M.op_restore(_popup)
     picker_cache.invalidate()
     notification.info("Restored to operation " .. op_id, { dismiss = true })
   else
-    local err = restore_result and restore_result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Restore failed: " .. msg, { dismiss = true })
+    notification.warn("Restore failed: " .. picker_cache.error_msg(restore_result), { dismiss = true })
   end
 end
 

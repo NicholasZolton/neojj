@@ -7,13 +7,6 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
---- Extract a human-readable error message from a command result
----@param result table?
----@return string
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
 
 function M.commit(popup)
   local args = popup:get_arguments()
@@ -43,7 +36,7 @@ function M.new_change(popup)
     picker_cache.invalidate_revisions()
     notification.info("Created new change", { dismiss = true })
   else
-    notification.warn("Failed to create new change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to create new change: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -84,7 +77,7 @@ local function advance_bookmarks()
     if r and r.code == 0 then
       table.insert(moved, name .. " → @")
     else
-      table.insert(failed, name .. ": " .. error_msg(r))
+      table.insert(failed, name .. ": " .. picker_cache.error_msg(r))
     end
   end
 
@@ -95,7 +88,7 @@ local function advance_bookmarks()
     if r and r.code == 0 then
       table.insert(moved, name .. " → @-")
     else
-      table.insert(failed, name .. ": " .. error_msg(r))
+      table.insert(failed, name .. ": " .. picker_cache.error_msg(r))
     end
   end
 
@@ -110,7 +103,7 @@ function M.new_change_with_bookmark(popup)
   end
   local result = builder.call()
   if not result or result.code ~= 0 then
-    notification.warn("Failed to create new change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to create new change: " .. picker_cache.error_msg(result), { dismiss = true })
     return
   end
 
@@ -201,7 +194,7 @@ function M.edit_change(_popup)
     return
   end
 
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then
     return
   end
@@ -210,7 +203,7 @@ function M.edit_change(_popup)
   if result and result.code == 0 then
     notification.info("Now editing " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to edit change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to edit change: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -226,7 +219,7 @@ function M.edit_bookmark(_popup)
     return
   end
 
-  local bookmark_name = selection:match("^(%S+)")
+  local bookmark_name = picker_cache.parse_selection(selection)
   if not bookmark_name then
     return
   end
@@ -235,7 +228,7 @@ function M.edit_bookmark(_popup)
   if result and result.code == 0 then
     notification.info("Now editing " .. bookmark_name, { dismiss = true })
   else
-    notification.warn("Failed to edit bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to edit bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -251,7 +244,7 @@ function M.abandon(_popup)
     return
   end
 
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then
     return
   end
@@ -265,7 +258,7 @@ function M.abandon(_popup)
     picker_cache.remove_revision(change_id)
     notification.info("Abandoned " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to abandon change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to abandon change: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -281,7 +274,7 @@ function M.duplicate(_popup)
     return
   end
 
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then
     return
   end
@@ -291,7 +284,7 @@ function M.duplicate(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Duplicated " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to duplicate change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to duplicate change: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -307,7 +300,7 @@ function M.revert(_popup)
     return
   end
 
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then
     return
   end
@@ -317,7 +310,7 @@ function M.revert(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Reverted " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to revert change: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to revert change: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

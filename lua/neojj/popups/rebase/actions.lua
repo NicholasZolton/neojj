@@ -4,24 +4,14 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
-
-local function extract_change_id(selection)
-  if not selection then return nil end
-  return selection:match("^(%S+)")
-end
-
 function M.source_onto(popup)
   local options = picker_cache.get_all_revisions()
   local source_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Rebase source", refocus_status = false }
-  local source = extract_change_id(source_sel)
+  local source = picker_cache.parse_selection(source_sel)
   if not source then return end
 
   local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination", refocus_status = false }
-  local dest = extract_change_id(dest_sel)
+  local dest = picker_cache.parse_selection(dest_sel)
   if not dest then return end
 
   local args = popup:get_arguments()
@@ -32,7 +22,7 @@ function M.source_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased " .. source .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Rebase failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -40,12 +30,12 @@ function M.bookmark_onto(popup)
   local bookmarks = picker_cache.get_all_bookmarks()
   local bm_sel = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rebase bookmark", refocus_status = false }
   if not bm_sel then return end
-  local bm = bm_sel:match("^(%S+)")
+  local bm = picker_cache.parse_selection(bm_sel)
   if not bm then return end
 
   local options = picker_cache.get_all_revisions()
   local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination", refocus_status = false }
-  local dest = extract_change_id(dest_sel)
+  local dest = picker_cache.parse_selection(dest_sel)
   if not dest then return end
 
   local args = popup:get_arguments()
@@ -56,18 +46,18 @@ function M.bookmark_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased bookmark " .. bm .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Rebase failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
 function M.revision_onto(popup)
   local options = picker_cache.get_all_revisions()
   local rev_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Rebase revision", refocus_status = false }
-  local rev = extract_change_id(rev_sel)
+  local rev = picker_cache.parse_selection(rev_sel)
   if not rev then return end
 
   local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "onto destination", refocus_status = false }
-  local dest = extract_change_id(dest_sel)
+  local dest = picker_cache.parse_selection(dest_sel)
   if not dest then return end
 
   local args = popup:get_arguments()
@@ -78,14 +68,14 @@ function M.revision_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased " .. rev .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Rebase failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
 function M.here_onto(popup)
   local options = picker_cache.get_all_revisions()
   local dest_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Rebase @ onto" }
-  local dest = extract_change_id(dest_sel)
+  local dest = picker_cache.parse_selection(dest_sel)
   if not dest then return end
 
   local args = popup:get_arguments()
@@ -96,7 +86,7 @@ function M.here_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased @ onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Rebase failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -104,7 +94,7 @@ local function fetch_and_rebase(popup, mode_flag, mode_value, desc)
   notification.info("Fetching from remote...", { dismiss = true })
   local fetch_result = jj.cli.git_fetch.call()
   if not fetch_result or fetch_result.code ~= 0 then
-    notification.warn("Fetch failed: " .. error_msg(fetch_result), { dismiss = true })
+    notification.warn("Fetch failed: " .. picker_cache.error_msg(fetch_result), { dismiss = true })
     return
   end
 
@@ -116,9 +106,7 @@ local function fetch_and_rebase(popup, mode_flag, mode_value, desc)
     picker_cache.invalidate()
     notification.info(desc, { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Rebase onto trunk failed: " .. msg, { dismiss = true })
+    notification.warn("Rebase onto trunk failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -135,7 +123,7 @@ end
 function M.parallelize(_popup)
   local options = picker_cache.get_all_revisions()
   local sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Parallelize from" }
-  local change_id = extract_change_id(sel)
+  local change_id = picker_cache.parse_selection(sel)
   if not change_id then return end
 
   local result = jj.cli.parallelize.args(change_id .. "::@").call()
@@ -143,7 +131,7 @@ function M.parallelize(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Parallelized changes", { dismiss = true })
   else
-    notification.warn("Parallelize failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Parallelize failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

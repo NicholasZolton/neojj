@@ -140,4 +140,12 @@ function M.parse_selection(selection)
   return selection:match("^(%S+)")
 end
 
+--- Extract a human-readable error message from a command result's stderr.
+---@param result table?
+---@return string
+function M.error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 return M

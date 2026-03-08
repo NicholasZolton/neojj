@@ -6,11 +6,6 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
-
 function M.create(_popup)
   local name = input.get_user_input("Bookmark name")
   if not name or name == "" then
@@ -21,7 +16,7 @@ function M.create(_popup)
   if result and result.code == 0 then
     notification.info("Created bookmark " .. name, { dismiss = true })
   else
-    notification.warn("Failed to create bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to create bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -50,7 +45,7 @@ function M.set(popup)
   if result and result.code == 0 then
     notification.info("Set bookmark " .. name .. (target and (" to " .. target) or " to @"), { dismiss = true })
   else
-    notification.warn("Failed to set bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to set bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -80,7 +75,7 @@ function M.move(popup)
   if result and result.code == 0 then
     notification.info("Moved bookmark " .. name .. (target and (" to " .. target) or " to @"), { dismiss = true })
   else
-    notification.warn("Failed to move bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to move bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -100,7 +95,7 @@ function M.rename(_popup)
   if result and result.code == 0 then
     notification.info("Renamed bookmark " .. old_name .. " to " .. new_name, { dismiss = true })
   else
-    notification.warn("Failed to rename bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to rename bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -119,7 +114,7 @@ function M.delete(_popup)
   if result and result.code == 0 then
     notification.info("Deleted bookmark " .. name, { dismiss = true })
   else
-    notification.warn("Failed to delete bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to delete bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -138,7 +133,7 @@ function M.forget(_popup)
   if result and result.code == 0 then
     notification.info("Forgot bookmark " .. name, { dismiss = true })
   else
-    notification.warn("Failed to forget bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to forget bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -153,7 +148,7 @@ function M.track(_popup)
   if result and result.code == 0 then
     notification.info("Tracking " .. name, { dismiss = true })
   else
-    notification.warn("Failed to track bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to track bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -168,7 +163,7 @@ function M.untrack(_popup)
   if result and result.code == 0 then
     notification.info("Untracked " .. name, { dismiss = true })
   else
-    notification.warn("Failed to untrack bookmark: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to untrack bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -188,7 +183,7 @@ function M.advance(_popup)
   if result and result.code == 0 then
     notification.info("Advanced bookmarks" .. (target and (" to " .. target) or ""), { dismiss = true })
   else
-    notification.warn("Failed to advance bookmarks: " .. error_msg(result), { dismiss = true })
+    notification.warn("Failed to advance bookmarks: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

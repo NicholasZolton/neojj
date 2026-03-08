@@ -4,11 +4,6 @@ local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local jj = require("neojj.lib.jj")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
-
 local function get_diff_integration()
   local viewer = config.get_diff_viewer()
   if viewer == "codediff" then
@@ -54,7 +49,7 @@ function M.range(popup)
     refocus_status = false,
   }
   if not from_sel then return end
-  local from_change = from_sel:match("^(%S+)")
+  local from_change = picker_cache.parse_selection(from_sel)
   local from_hash = resolve_to_git_hash(from_change)
   if not from_hash then return end
 
@@ -63,7 +58,7 @@ function M.range(popup)
     refocus_status = false,
   }
   if not to_sel then return end
-  local to_change = to_sel:match("^(%S+)")
+  local to_change = picker_cache.parse_selection(to_sel)
   local to_hash = resolve_to_git_hash(to_change)
   if not to_hash then return end
 
@@ -81,7 +76,7 @@ function M.change(popup)
 
   local selected = FuzzyFinderBuffer.new(options):open_async { refocus_status = false }
   if not selected then return end
-  local change_id = selected:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selected)
   if not change_id then return end
   local git_hash = resolve_to_git_hash(change_id)
   if not git_hash then return end
@@ -95,7 +90,7 @@ function M.diffedit(_popup)
 
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Diffedit revision" }
   if not selection then return end
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then return end
 
   local notification = require("neojj.lib.notification")
@@ -103,7 +98,7 @@ function M.diffedit(_popup)
   if result and result.code == 0 then
     notification.info("Diffedit complete", { dismiss = true })
   else
-    notification.warn("Diffedit failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Diffedit failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

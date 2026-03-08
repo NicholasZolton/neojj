@@ -4,11 +4,6 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
-
 function M.split_current(popup)
   local args = popup:get_arguments()
   local builder = jj.cli.split
@@ -17,7 +12,7 @@ function M.split_current(popup)
   if result and result.code == 0 then
     notification.info("Split change", { dismiss = true })
   else
-    notification.warn("Split failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Split failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -34,7 +29,7 @@ function M.split_revision(popup)
   if result and result.code == 0 then
     notification.info("Split " .. rev, { dismiss = true })
   else
-    notification.warn("Split failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Split failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

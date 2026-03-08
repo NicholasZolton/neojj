@@ -5,12 +5,6 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
-local function extract_change_id(selection)
-  if not selection then
-    return nil
-  end
-  return selection:match("^(%S+)")
-end
 
 function M.squash(popup)
   local args = popup:get_arguments()
@@ -23,9 +17,7 @@ function M.squash(popup)
     picker_cache.invalidate_revisions()
     notification.info("Squashed into parent", { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Squash failed: " .. msg, { dismiss = true })
+    notification.warn("Squash failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -37,7 +29,7 @@ function M.squash_into(popup)
   end
 
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Squash into" }
-  local rev = extract_change_id(selection)
+  local rev = picker_cache.parse_selection(selection)
   if not rev then
     return
   end
@@ -52,9 +44,7 @@ function M.squash_into(popup)
     picker_cache.invalidate_revisions()
     notification.info("Squashed into " .. rev, { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Squash failed: " .. msg, { dismiss = true })
+    notification.warn("Squash failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -66,7 +56,7 @@ function M.squash_revision(popup)
   end
 
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Squash revision into its parent" }
-  local rev = extract_change_id(selection)
+  local rev = picker_cache.parse_selection(selection)
   if not rev then
     return
   end
@@ -81,9 +71,7 @@ function M.squash_revision(popup)
     picker_cache.invalidate_revisions()
     notification.info("Squashed " .. rev .. " into its parent", { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Squash failed: " .. msg, { dismiss = true })
+    notification.warn("Squash failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -95,19 +83,19 @@ function M.squash_range(popup)
   end
 
   local from_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Squash range from", refocus_status = false }
-  local from_rev = extract_change_id(from_sel)
+  local from_rev = picker_cache.parse_selection(from_sel)
   if not from_rev then
     return
   end
 
   local to_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Squash range to", refocus_status = false }
-  local to_rev = extract_change_id(to_sel)
+  local to_rev = picker_cache.parse_selection(to_sel)
   if not to_rev then
     return
   end
 
   local into_sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Squash into", refocus_status = false }
-  local into_rev = extract_change_id(into_sel)
+  local into_rev = picker_cache.parse_selection(into_sel)
   if not into_rev then
     return
   end
@@ -123,9 +111,7 @@ function M.squash_range(popup)
     picker_cache.invalidate_revisions()
     notification.info("Squashed " .. range .. " into " .. into_rev, { dismiss = true })
   else
-    local err = result and result.stderr or {}
-    local msg = type(err) == "table" and table.concat(err, "\n") or tostring(err)
-    notification.warn("Squash failed: " .. msg, { dismiss = true })
+    notification.warn("Squash failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

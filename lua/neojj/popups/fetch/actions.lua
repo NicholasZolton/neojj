@@ -3,11 +3,7 @@ local M = {}
 local jj = require("neojj.lib.jj")
 local notification = require("neojj.lib.notification")
 local input = require("neojj.lib.input")
-
-local function error_msg(result)
-  local err = result and result.stderr or {}
-  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
-end
+local picker_cache = require("neojj.lib.picker_cache")
 
 function M.fetch_all(_popup)
   notification.info("Fetching from all remotes")
@@ -15,7 +11,7 @@ function M.fetch_all(_popup)
   if result and result.code == 0 then
     notification.info("Fetched from all remotes", { dismiss = true })
   else
-    notification.warn("Fetch failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Fetch failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
@@ -30,7 +26,7 @@ function M.fetch_remote(_popup)
   if result and result.code == 0 then
     notification.info("Fetched from " .. remote, { dismiss = true })
   else
-    notification.warn("Fetch failed: " .. error_msg(result), { dismiss = true })
+    notification.warn("Fetch failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 
