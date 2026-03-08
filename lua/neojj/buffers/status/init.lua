@@ -176,7 +176,7 @@ function M:open(kind)
         [mappings["CommandHistory"]]            = self:_action("n_command_history"),
         [mappings["YankSelected"]]              = self:_action("n_yank_commit_hash"),
         [mappings["ShowRefs"]]                  = self:_action("n_yank_selected"),
-        [mappings["Discard"]]                   = self:_action("n_discard"),
+        [mappings["Discard"]]                   = self:_action("n_context_delete"),
         [mappings["GoToNextHunkHeader"]]        = self:_action("n_go_to_next_hunk_header"),
         [mappings["GoToPreviousHunkHeader"]]    = self:_action("n_go_to_previous_hunk_header"),
         [mappings["GoToFile"]]                  = self:_action("n_goto_file"),
@@ -190,7 +190,6 @@ function M:open(kind)
         ["N"]                                   = self:_action("n_new_change"),
         ["A"]                                   = self:_action("n_abandon"),
         ["o"]                                   = self:_action("n_open_in_browser"),
-        ["x"]                                   = self:_action("n_context_delete"),
         -- jj popup bindings
         [popups.mapping_for("CommitPopup")]     = self:_action("n_commit_popup"),
         [popups.mapping_for("DiffPopup")]       = self:_action("n_diff_popup"),

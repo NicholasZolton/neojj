@@ -433,7 +433,30 @@ M.n_context_delete = function(self)
     local section = selection.section.name
     local item = selection.item
 
-    if section == "recent" and item and item.change_id then
+    if section == "files" then
+      -- Delegate to discard logic for files
+      local action, message
+      if item and item.first == fn.line(".") then
+        message = ("Discard %q?"):format(item.name)
+        action = function()
+          jj.cli.restore.files(item.escaped_path).call()
+        end
+      elseif item then
+        message = ("Discard changes in %q?"):format(item.name)
+        action = function()
+          jj.cli.restore.files(item.escaped_path).call()
+        end
+      else
+        message = ("Discard all %s modified files?"):format(#selection.section.items)
+        action = function()
+          jj.cli.restore.call()
+        end
+      end
+      if action and input.get_permission(message) then
+        action()
+        self:dispatch_refresh(nil, "n_context_delete")
+      end
+    elseif section == "recent" and item and item.change_id then
       local short = item.change_id:sub(1, 8)
       if item.immutable then
         notification.warn("Cannot abandon immutable commit " .. short, { dismiss = true })
