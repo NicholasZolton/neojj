@@ -16,7 +16,12 @@ local function get_changes(popup, revset)
     end
   end
 
-  return jj_log.list(revset, limit)
+  local internal = popup:get_internal_arguments()
+  if internal.graph then
+    return jj_log.list_with_graph(revset, limit)
+  else
+    return jj_log.list(revset, limit)
+  end
 end
 
 local function open_log(popup, changes, header)

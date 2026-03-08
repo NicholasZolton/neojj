@@ -127,13 +127,14 @@ function M.parse_graph(lines)
   return entries
 end
 
----Fetch recent changes via JSON template
----@param revset? string Revset expression (default: ancestors(@, 20))
+---Fetch recent changes via JSON template (no graph)
+---@param revset? string Revset expression (default: ancestors(@, N))
 ---@param limit? number Max entries
 ---@return NeojjChangeLogEntry[]
 function M.list(revset, limit)
   local jj = require("neojj.lib.jj")
-  limit = limit or 20
+  local config = require("neojj.config")
+  limit = limit or config.values.status.recent_commit_count
   revset = revset or ("ancestors(@, " .. limit .. ")")
 
   local result = jj.cli.log.no_graph
@@ -156,11 +157,58 @@ function M.list(revset, limit)
   return entries
 end
 
+---Fetch changes with graph characters from `jj log -T 'json(self)'` (with graph).
+---Each output line is either graph-only (connectors) or graph + JSON.
+---@param revset? string Revset expression
+---@param limit? number Max entries
+---@return NeojjChangeLogEntry[]
+function M.list_with_graph(revset, limit)
+  local jj = require("neojj.lib.jj")
+  local config = require("neojj.config")
+  limit = limit or config.values.status.recent_commit_count
+  revset = revset or ("ancestors(@, " .. limit .. ")")
+
+  local result = jj.cli.log
+    .template("json(self)")
+    .revisions(revset)
+    .call { hidden = true, trim = true }
+
+  if not result or result.code ~= 0 then
+    return {}
+  end
+
+  local entries = {}
+  for _, line in ipairs(result.stdout) do
+    local json_start = line:find("{")
+    if json_start then
+      local graph = line:sub(1, json_start - 1)
+      local json_str = line:sub(json_start)
+      local ok, obj = pcall(vim.json.decode, json_str)
+      if ok and obj then
+        local entry = M.json_to_entry(obj)
+        entry.graph = graph
+        entry.immutable = graph:match("◆") ~= nil
+        entry.current_working_copy = graph:match("@") ~= nil
+        table.insert(entries, entry)
+      end
+    else
+      -- Graph-only line (connectors like │, ╭, ~, etc.)
+      table.insert(entries, {
+        change_id = nil,
+        graph = line,
+      })
+    end
+  end
+
+  return entries
+end
+
 ---Update repository state with recent changes
 ---@param state NeojjRepoState
 function meta.update(state)
   local shell = require("neojj.lib.jj.shell")
-  local limit = 20
+  local config = require("neojj.config")
+  local limit = config.values.status.recent_commit_count
   local revset = "ancestors(@, " .. limit .. ")"
   local lines, code = shell.exec({
     "jj", "--no-pager", "--color=never", "--ignore-working-copy",
