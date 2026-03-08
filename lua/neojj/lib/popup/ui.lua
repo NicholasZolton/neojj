@@ -32,23 +32,23 @@ local function construct_config_options(config, prefix, suffix)
     local highlight
     if config.value == option.value then
       set = true
-      highlight = "NeoJJPopupConfigEnabled"
+      highlight = "NeojjPopupConfigEnabled"
     else
-      highlight = "NeoJJPopupConfigDisabled"
+      highlight = "NeojjPopupConfigDisabled"
     end
 
     return text.highlight(highlight)(option.display)
   end)
 
-  local value = intersperse(options, text.highlight("NeoJJPopupConfigDisabled")("|"))
-  table.insert(value, 1, text.highlight("NeoJJPopupConfigDisabled")("["))
-  table.insert(value, #value + 1, text.highlight("NeoJJPopupConfigDisabled")("]"))
+  local value = intersperse(options, text.highlight("NeojjPopupConfigDisabled")("|"))
+  table.insert(value, 1, text.highlight("NeojjPopupConfigDisabled")("["))
+  table.insert(value, #value + 1, text.highlight("NeojjPopupConfigDisabled")("]"))
 
   if prefix then
     table.insert(
       value,
       1,
-      text.highlight(set and "NeoJJPopupConfigEnabled" or "NeoJJPopupConfigDisabled")(prefix)
+      text.highlight(set and "NeojjPopupConfigEnabled" or "NeojjPopupConfigDisabled")(prefix)
     )
   end
 
@@ -56,7 +56,7 @@ local function construct_config_options(config, prefix, suffix)
     table.insert(
       value,
       #value + 1,
-      text.highlight(set and "NeoJJPopupConfigEnabled" or "NeoJJPopupConfigDisabled")(suffix)
+      text.highlight(set and "NeojjPopupConfigEnabled" or "NeojjPopupConfigDisabled")(suffix)
     )
   end
 
@@ -67,30 +67,30 @@ end
 ---@return string
 local function get_highlight_for_switch(switch)
   if switch.enabled then
-    return "NeoJJPopupSwitchEnabled"
+    return "NeojjPopupSwitchEnabled"
   end
 
-  return "NeoJJPopupSwitchDisabled"
+  return "NeojjPopupSwitchDisabled"
 end
 
 -- Determines the correct highlight group for an option based on it's state.
 ---@return string
 local function get_highlight_for_option(option)
   if option.value ~= nil and option.value ~= "" then
-    return "NeoJJPopupOptionEnabled"
+    return "NeojjPopupOptionEnabled"
   end
 
-  return "NeoJJPopupOptionDisabled"
+  return "NeojjPopupOptionDisabled"
 end
 
 -- Determines the correct highlight group for a config based on it's type and state.
 ---@return string
 local function get_highlight_for_config(config)
   if config.value and config.value ~= "" then
-    return config.type or "NeoJJPopupConfigEnabled"
+    return config.type or "NeojjPopupConfigEnabled"
   end
 
-  return "NeoJJPopupConfigDisabled"
+  return "NeojjPopupConfigDisabled"
 end
 
 local Switch = Component.new(function(switch)
@@ -104,7 +104,7 @@ local Switch = Component.new(function(switch)
   end
 
   return row.tag("Switch").value(switch)({
-    row.highlight("NeoJJPopupSwitchKey") {
+    row.highlight("NeojjPopupSwitchKey") {
       text(switch.key_prefix),
       text(switch.key),
     },
@@ -118,7 +118,7 @@ end)
 
 local Option = Component.new(function(option)
   return row.tag("Option").value(option)({
-    row.highlight("NeoJJPopupOptionKey") {
+    row.highlight("NeojjPopupOptionKey") {
       text(option.key_prefix),
       text(option.key),
     },
@@ -137,7 +137,7 @@ end)
 
 local Section = Component.new(function(title, items)
   return col {
-    text.highlight("NeoJJPopupSectionTitle")(title),
+    text.highlight("NeojjPopupSectionTitle")(title),
     col(items),
   }
 end)
@@ -146,14 +146,14 @@ local Config = Component.new(function(props)
   local c = {}
 
   if not props.state[1].heading then
-    table.insert(c, text.highlight("NeoJJPopupSectionTitle")("Variables"))
+    table.insert(c, text.highlight("NeojjPopupSectionTitle")("Variables"))
   end
 
   table.insert(
     c,
     col(map(props.state, function(config)
       if config.heading then
-        return row.highlight("NeoJJPopupSectionTitle") { text(config.heading) }
+        return row.highlight("NeojjPopupSectionTitle") { text(config.heading) }
       end
 
       local value
@@ -180,7 +180,7 @@ local Config = Component.new(function(props)
       end
 
       return row.tag("Config").value(config)({
-        row.highlight("NeoJJPopupConfigKey") { text(key) },
+        row.highlight("NeojjPopupConfigKey") { text(key) },
         text(" " .. config.name .. " "),
         row.id(config.id) { unpack(value) },
       }, { interactive = true })
@@ -199,10 +199,10 @@ local function render_action(action)
   elseif action.keys == "" then
     table.insert(items, text("")) -- spacer
   elseif #action.keys == 0 then
-    table.insert(items, text.highlight("NeoJJPopupActionDisabled")("_"))
+    table.insert(items, text.highlight("NeojjPopupActionDisabled")("_"))
   else
     for i, key in ipairs(action.keys) do
-      table.insert(items, text.highlight("NeoJJPopupActionKey")(key))
+      table.insert(items, text.highlight("NeojjPopupActionKey")(key))
       if i < #action.keys then
         table.insert(items, text(","))
       end
@@ -222,9 +222,9 @@ local Actions = Component.new(function(props)
       gap = 3,
       render_item = function(item)
         if item.heading then
-          return row.highlight("NeoJJPopupSectionTitle") { text(item.heading) }
+          return row.highlight("NeojjPopupSectionTitle") { text(item.heading) }
         elseif not item.callback then
-          return row.highlight("NeoJJPopupActionDisabled")(render_action(item))
+          return row.highlight("NeojjPopupActionDisabled")(render_action(item))
         else
           return row(render_action(item))
         end

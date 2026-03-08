@@ -86,14 +86,14 @@ end
 ---| "floating_console" Open in a floating window across the bottom of the screen
 ---| "auto" vsplit if window would have 80 cols, otherwise split
 
----@class NeoJJCommitBufferConfig Commit buffer options
+---@class NeojjCommitBufferConfig Commit buffer options
 ---@field kind WindowKind The type of window that should be opened
 ---@field verify_commit boolean Show commit signature information in the buffer
 
----@class NeoJJConfigPopup Popup window options
+---@class NeojjConfigPopup Popup window options
 ---@field kind WindowKind The type of window that should be opened
 
----@class NeoJJConfigFloating
+---@class NeojjConfigFloating
 ---@field relative? string
 ---@field width? number
 ---@field height? number
@@ -102,27 +102,27 @@ end
 ---@field style? string
 ---@field border? string
 
----@class NeoJJCommitEditorConfigPopup Popup window options
+---@class NeojjCommitEditorConfigPopup Popup window options
 ---@field kind WindowKind The type of window that should be opened
 ---@field show_staged_diff? boolean Display current changes diff when editing description
 ---@field staged_diff_split_kind? string Split direction for diff view ("split" or "vsplit")
 ---@field spell_check? boolean Enable/Disable spell checking
 
----@alias NeoJJConfigSignsIcon { [1]: string, [2]: string }
+---@alias NeojjConfigSignsIcon { [1]: string, [2]: string }
 
----@class NeoJJConfigSigns
----@field hunk NeoJJConfigSignsIcon The icons to use for open and closed hunks
----@field item NeoJJConfigSignsIcon The icons to use for open and closed items
----@field section NeoJJConfigSignsIcon The icons to use for open and closed sections
+---@class NeojjConfigSigns
+---@field hunk NeojjConfigSignsIcon The icons to use for open and closed hunks
+---@field item NeojjConfigSignsIcon The icons to use for open and closed items
+---@field section NeojjConfigSignsIcon The icons to use for open and closed sections
 
----@class NeoJJConfigSection A section to show in the NeoJJ Status buffer, e.g. Staged/Unstaged/Untracked
+---@class NeojjConfigSection A section to show in the Neojj Status buffer, e.g. Staged/Unstaged/Untracked
 ---@field folded boolean Whether or not this section should be open or closed by default
 ---@field hidden boolean Whether or not this section should be shown
 
----@class NeoJJConfigSections
----@field untracked NeoJJConfigSection|nil
----@field recent NeoJJConfigSection|nil
----@field sequencer NeoJJConfigSection|nil
+---@class NeojjConfigSections
+---@field untracked NeojjConfigSection|nil
+---@field recent NeojjConfigSection|nil
+---@field sequencer NeojjConfigSection|nil
 
 ---@class HighlightOptions
 ---@field italic?     boolean
@@ -152,11 +152,11 @@ end
 ---@field bg_purple?  string  Background purple
 ---@field md_purple?  string  Background _medium_ purple. Lighter than bg_purple. Used for hunk headers.
 
----@class NeoJJFilewatcherConfig
+---@class NeojjFilewatcherConfig
 ---@field enabled boolean
----@field filewatcher NeoJJFilewatcherConfig|nil
+---@field filewatcher NeojjFilewatcherConfig|nil
 
----@alias NeoJJConfigMappingsFinder
+---@alias NeojjConfigMappingsFinder
 ---| "Select"
 ---| "Close"
 ---| "Next"
@@ -171,7 +171,7 @@ end
 ---| "MouseClick"
 ---| false
 
----@alias NeoJJConfigMappingsStatus
+---@alias NeojjConfigMappingsStatus
 ---| "Close"
 ---| "MoveDown"
 ---| "MoveUp"
@@ -207,7 +207,7 @@ end
 ---| false
 ---| fun()
 
----@alias NeoJJConfigMappingsPopup
+---@alias NeojjConfigMappingsPopup
 ---| "HelpPopup"
 ---| "DiffPopup"
 ---| "RebasePopup"
@@ -226,7 +226,7 @@ end
 ---| "WorkspacePopup"
 ---| false
 
----@alias NeoJJConfigMappingsCommitEditor
+---@alias NeojjConfigMappingsCommitEditor
 ---| "Close"
 ---| "Submit"
 ---| "Abort"
@@ -236,29 +236,29 @@ end
 ---| false
 ---| fun()
 
----@alias NeoJJConfigMappingsCommitEditor_I
+---@alias NeojjConfigMappingsCommitEditor_I
 ---| "Submit"
 ---| "Abort"
 ---| false
 ---| fun()
 
----@alias NeoJJConfigMappingsRefsView
+---@alias NeojjConfigMappingsRefsView
 ---| "DeleteBranch"
 ---| false
 ---| fun()
 
----@alias NeoJJGraphStyle
+---@alias NeojjGraphStyle
 ---| "ascii"
 ---| "unicode"
 ---| "kitty"
 ---
----@alias NeoJJCommitOrder
+---@alias NeojjCommitOrder
 ---| ""
 ---| "topo"
 ---| "author-date"
 ---| "date"
 
----@class NeoJJConfigStatusOptions
+---@class NeojjConfigStatusOptions
 ---@field recent_commit_count? integer The number of recent commits to display
 ---@field mode_padding? integer The amount of padding to add to the right of the mode column
 ---@field HEAD_padding? integer The amount of padding to add to the right of the HEAD label
@@ -266,23 +266,23 @@ end
 ---@field mode_text? { [string]: string } The text to display for each mode
 ---@field show_head_commit_hash? boolean Show the commit hash for HEADs in the status buffer
 
----@class NeoJJConfigMappings Consult the config file or documentation for values
----@field finder? { [string]: NeoJJConfigMappingsFinder } A dictionary that uses finder commands to set multiple keybinds
----@field status? { [string]: NeoJJConfigMappingsStatus } A dictionary that uses status commands to set a single keybind
----@field popup? { [string]: NeoJJConfigMappingsPopup } A dictionary that uses popup commands to set a single keybind
----@field commit_editor? { [string]: NeoJJConfigMappingsCommitEditor } A dictionary that uses Commit editor commands to set a single keybind
----@field commit_editor_I? { [string]: NeoJJConfigMappingsCommitEditor_I } A dictionary that uses Commit editor commands to set a single keybind
----@field refs_view? { [string]: NeoJJConfigMappingsRefsView } A dictionary that uses Refs view editor commands to set a single keybind
+---@class NeojjConfigMappings Consult the config file or documentation for values
+---@field finder? { [string]: NeojjConfigMappingsFinder } A dictionary that uses finder commands to set multiple keybinds
+---@field status? { [string]: NeojjConfigMappingsStatus } A dictionary that uses status commands to set a single keybind
+---@field popup? { [string]: NeojjConfigMappingsPopup } A dictionary that uses popup commands to set a single keybind
+---@field commit_editor? { [string]: NeojjConfigMappingsCommitEditor } A dictionary that uses Commit editor commands to set a single keybind
+---@field commit_editor_I? { [string]: NeojjConfigMappingsCommitEditor_I } A dictionary that uses Commit editor commands to set a single keybind
+---@field refs_view? { [string]: NeojjConfigMappingsRefsView } A dictionary that uses Refs view editor commands to set a single keybind
 
----@class NeoJJConfig NeoJJ configuration settings
+---@class NeojjConfig Neojj configuration settings
 ---@field jj_binary? string Path to jj binary (bypasses shim detection). "auto" = auto-detect (default).
----@field filewatcher? NeoJJFilewatcherConfig Values for filewatcher
----@field graph_style? NeoJJGraphStyle Style for graph
+---@field filewatcher? NeojjFilewatcherConfig Values for filewatcher
+---@field graph_style? NeojjGraphStyle Style for graph
 ---@field commit_date_format? string Commit date format
 ---@field log_date_format? string Log date format
 ---@field disable_hint? boolean Remove the top hint in the Status buffer
 ---@field disable_context_highlighting? boolean Disable context highlights based on cursor position
----@field disable_signs? boolean Special signs to draw for sections etc. in NeoJJ
+---@field disable_signs? boolean Special signs to draw for sections etc. in Neojj
 ---@field prompt_amend_commit? boolean Request confirmation when amending already published commits
 ---@field telescope_sorter? function The sorter telescope will use
 ---@field process_spinner? boolean Hide/Show the process spinner
@@ -290,28 +290,28 @@ end
 ---@field use_per_project_settings? boolean Scope persisted settings on a per-project basis
 ---@field remember_settings? boolean Whether neojj should persist flags from popups
 ---@field kind? WindowKind The default type of window neojj should open in
----@field floating? NeoJJConfigFloating The floating window style
+---@field floating? NeojjConfigFloating The floating window style
 ---@field disable_line_numbers? boolean Whether to disable line numbers
 ---@field disable_relative_line_numbers? boolean Whether to disable line numbers
 ---@field console_timeout? integer Time in milliseconds after a console is created for long running commands
 ---@field auto_show_console? boolean Automatically show the console if a command takes longer than console_timeout
 ---@field auto_show_console_on? string Specify "output" (show always; default) or "error" if `auto_show_console` enabled
 ---@field auto_close_console? boolean Automatically hide the console if the process exits with a 0 status
----@field status? NeoJJConfigStatusOptions Status buffer options
----@field commit_editor? NeoJJCommitEditorConfigPopup Commit editor options
----@field commit_select_view? NeoJJConfigPopup Commit select view options
----@field commit_view? NeoJJCommitBufferConfig Commit buffer options
----@field log_view? NeoJJConfigPopup Log view options
----@field reflog_view? NeoJJConfigPopup Reflog view options
----@field refs_view? NeoJJConfigPopup Refs view options
----@field preview_buffer? NeoJJConfigPopup Preview options
----@field popup? NeoJJConfigPopup Set the default way of opening popups
----@field signs? NeoJJConfigSigns Signs used for toggled regions
+---@field status? NeojjConfigStatusOptions Status buffer options
+---@field commit_editor? NeojjCommitEditorConfigPopup Commit editor options
+---@field commit_select_view? NeojjConfigPopup Commit select view options
+---@field commit_view? NeojjCommitBufferConfig Commit buffer options
+---@field log_view? NeojjConfigPopup Log view options
+---@field reflog_view? NeojjConfigPopup Reflog view options
+---@field refs_view? NeojjConfigPopup Refs view options
+---@field preview_buffer? NeojjConfigPopup Preview options
+---@field popup? NeojjConfigPopup Set the default way of opening popups
+---@field signs? NeojjConfigSigns Signs used for toggled regions
 ---@field integrations? { diffview: boolean, codediff: boolean, telescope: boolean, fzf_lua: boolean, mini_pick: boolean, snacks: boolean } Which integrations to enable
 ---@field diff_viewer? "diffview"|"codediff"|nil Which diff viewer to use (nil = auto-detect)
----@field sections? NeoJJConfigSections
----@field ignored_settings? string[] Settings to never persist, format: "Filetype--cli-value", i.e. "NeoJJCommitPopup--author"
----@field mappings? NeoJJConfigMappings
+---@field sections? NeojjConfigSections
+---@field ignored_settings? string[] Settings to never persist, format: "Filetype--cli-value", i.e. "NeojjCommitPopup--author"
+---@field mappings? NeojjConfigMappings
 ---@field workspace_open_command? string Shell command to open a new workspace ({path} is replaced with workspace path)
 ---@field workspace_initialize_command? string Shell command to run in workspace dir before opening ({path} is replaced)
 ---@field workspace_worktrees_directory? string Base directory for quick-add worktrees (default: ~/.worktrees)
@@ -320,8 +320,8 @@ end
 ---@field highlight? HighlightOptions
 ---@field builders? { [string]: fun(builder: PopupBuilder) }
 
----Returns the default NeoJJ configuration
----@return NeoJJConfig
+---Returns the default Neojj configuration
+---@return NeojjConfig
 function M.get_default_values()
   return {
     jj_binary = "auto",
@@ -1114,10 +1114,10 @@ function M.setup(opts)
   if vim.tbl_count(config_errs) == 0 then
     return
   end
-  local header = "====NeoJJ Configuration Errors===="
+  local header = "====Neojj Configuration Errors===="
   local header_message = {
-    "NeoJJ has NOT been setup!",
-    "You have a misconfiguration in your NeoJJ setup!",
+    "Neojj has NOT been setup!",
+    "You have a misconfiguration in your Neojj setup!",
     'Validate that your configuration passed to `require("neojj").setup()` is valid!',
   }
   local header_sep = ""

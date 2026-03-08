@@ -1,6 +1,6 @@
 local git = require("neojj.lib.git")
 
----@class NeoJJGitFetch
+---@class NeojjGitFetch
 local M = {}
 
 ---Fetches from the remote and handles password questions

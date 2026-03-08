@@ -280,9 +280,9 @@ end
 ---@param c Component
 ---@return boolean
 local function is_jumpable_hunk_line_component(c)
-  return c.options.line_hl == "NeoJJDiffContext"
-    or c.options.line_hl == "NeoJJDiffAdd"
-    or c.options.line_hl == "NeoJJDiffDelete"
+  return c.options.line_hl == "NeojjDiffContext"
+    or c.options.line_hl == "NeojjDiffAdd"
+    or c.options.line_hl == "NeojjDiffDelete"
 end
 
 ---Opens the CommitViewBuffer
@@ -295,8 +295,8 @@ function M:open(kind)
   M.instance = self
 
   self.buffer = Buffer.create {
-    name = "NeoJJCommitView",
-    filetype = "NeoJJCommitView",
+    name = "NeojjCommitView",
+    filetype = "NeojjCommitView",
     kind = kind,
     status_column = not config.values.disable_signs and "" or nil,
     context_highlight = not config.values.disable_context_highlighting,
@@ -319,7 +319,7 @@ function M:open(kind)
         end,
         ["<cr>"] = function()
           local c = self.buffer.ui:get_component_under_cursor(function(c)
-            return c.options.highlight == "NeoJJFilePath" or is_jumpable_hunk_line_component(c)
+            return c.options.highlight == "NeojjFilePath" or is_jumpable_hunk_line_component(c)
           end)
 
           if not c then
@@ -335,7 +335,7 @@ function M:open(kind)
           -- in order to use them as match patterns.
           local selected_path = vim.fn.trim(c.value)
 
-          -- Recursively navigate the layout until we hit NeoJJDiffHeader leaf nodes
+          -- Recursively navigate the layout until we hit NeojjDiffHeader leaf nodes
           local diff_headers = {}
           local function find_diff_headers(layout)
             if layout.children then
@@ -346,7 +346,7 @@ function M:open(kind)
                 end
               end
             else
-              if layout.options.line_hl == "NeoJJDiffHeader" then
+              if layout.options.line_hl == "NeojjDiffHeader" then
                 return { layout.value, layout:row_range_abs() }
               end
             end

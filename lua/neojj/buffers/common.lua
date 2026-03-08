@@ -19,7 +19,7 @@ end)
 
 M.Diff = Component.new(function(diff)
   return col.tag("Diff")({
-    text(string.format("%s %s", diff.kind, diff.file), { line_hl = "NeoJJDiffHeader" }),
+    text(string.format("%s %s", diff.kind, diff.file), { line_hl = "NeojjDiffHeader" }),
     M.DiffHunks(diff),
   }, { foldable = true, folded = false, context = true })
 end)
@@ -75,21 +75,21 @@ local HunkLine = Component.new(function(line)
       or line:match("..=======")
       or line:match("..>>>>>>>")
     then
-      line_hl = "NeoJJHunkMergeHeader"
+      line_hl = "NeojjHunkMergeHeader"
     elseif first_char == diff_add_start or first_chars == diff_add_start_2 then
-      line_hl = "NeoJJDiffAdd"
+      line_hl = "NeojjDiffAdd"
     elseif first_char == diff_delete_start or first_chars == diff_delete_start_2 then
-      line_hl = "NeoJJDiffDelete"
+      line_hl = "NeojjDiffDelete"
     else
-      line_hl = "NeoJJDiffContext"
+      line_hl = "NeojjDiffContext"
     end
   else
     if first_char == diff_add_start then
-      line_hl = "NeoJJDiffAdd"
+      line_hl = "NeojjDiffAdd"
     elseif first_char == diff_delete_start then
-      line_hl = "NeoJJDiffDelete"
+      line_hl = "NeojjDiffDelete"
     else
-      line_hl = "NeoJJDiffContext"
+      line_hl = "NeojjDiffContext"
     end
   end
 
@@ -98,7 +98,7 @@ end)
 
 M.Hunk = Component.new(function(props)
   return col.tag("Hunk")({
-    text.line_hl("NeoJJHunkHeader")(props.header),
+    text.line_hl("NeojjHunkHeader")(props.header),
     col.tag("HunkContent")(map(props.content, HunkLine)),
   }, { foldable = true, folded = props.folded or false, context = true, hunk = props.hunk })
 end)
@@ -132,7 +132,7 @@ local function build_graph(graph, opts)
         char = ""
       end
 
-      return text(char, { highlight = string.format("NeoJJGraph%s", g.color) })
+      return text(char, { highlight = string.format("NeojjGraph%s", g.color) })
     end)
   else
     return { text(graph, { highlight = "Include" }) }
@@ -149,7 +149,7 @@ local function short_id(id)
   return string.sub(id, 1, 12)
 end
 
----@param commit NeoJJChangeLogEntry
+---@param commit NeojjChangeLogEntry
 ---@param args table
 M.CommitEntry = Component.new(function(commit, _remotes, args)
   local ref = {}
@@ -157,7 +157,7 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
   -- Render bookmarks as decorations
   if args.decorate and commit.bookmarks and #commit.bookmarks > 0 then
     for _, bm in ipairs(commit.bookmarks) do
-      table.insert(ref, text(bm, { highlight = "NeoJJBranch" }))
+      table.insert(ref, text(bm, { highlight = "NeojjBranch" }))
       table.insert(ref, text(" "))
     end
   end
@@ -165,13 +165,13 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
   -- Status markers
   local markers = {}
   if commit.conflict then
-    table.insert(markers, text("conflict ", { highlight = "NeoJJDiffDeletions" }))
+    table.insert(markers, text("conflict ", { highlight = "NeojjDiffDeletions" }))
   end
   if commit.empty then
-    table.insert(markers, text("empty ", { highlight = "NeoJJSubtleText" }))
+    table.insert(markers, text("empty ", { highlight = "NeojjSubtleText" }))
   end
   if commit.immutable then
-    table.insert(markers, text("immutable ", { highlight = "NeoJJSubtleText" }))
+    table.insert(markers, text("immutable ", { highlight = "NeojjSubtleText" }))
   end
 
   -- Build the abbreviated IDs
@@ -196,20 +196,20 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
     details = col.padding_left(#change_short + 1) {
       row(util.merge(graph, {
         text(" "),
-        text("Commit ID:  ", { highlight = "NeoJJSubtleText" }),
-        text(commit_short, { highlight = "NeoJJObjectId" }),
+        text("Commit ID:  ", { highlight = "NeojjSubtleText" }),
+        text(commit_short, { highlight = "NeojjObjectId" }),
       })),
       row(util.merge(graph, {
         text(" "),
-        text("Author:     ", { highlight = "NeoJJSubtleText" }),
-        text(commit.author_name or "", { highlight = "NeoJJGraphAuthor" }),
+        text("Author:     ", { highlight = "NeojjSubtleText" }),
+        text(commit.author_name or "", { highlight = "NeojjGraphAuthor" }),
         text(" <"),
         text(commit.author_email or ""),
         text(">"),
       })),
       row(util.merge(graph, {
         text(" "),
-        text("Date:       ", { highlight = "NeoJJSubtleText" }),
+        text("Date:       ", { highlight = "NeojjSubtleText" }),
         text(commit.author_date or ""),
       })),
       row(graph),
@@ -228,7 +228,7 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
             return lines
           end
         end),
-        { highlight = "NeoJJCommitViewDescription" }
+        { highlight = "NeojjCommitViewDescription" }
       ),
     }
   end
@@ -236,9 +236,9 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
   local graph = args.graph and build_graph(commit.graph) or { text("") }
 
   -- Working copy marker
-  local id_highlight = "NeoJJObjectId"
+  local id_highlight = "NeojjObjectId"
   if commit.current_working_copy then
-    id_highlight = "NeoJJBranchHead"
+    id_highlight = "NeojjBranchHead"
   end
 
   return col.tag("commit")({
@@ -252,7 +252,7 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
           { " ", "Constant" },
           {
             util.str_clamp(commit.author_name or "", 30 - (#date > 10 and #date or 10)),
-            "NeoJJGraphAuthor",
+            "NeojjGraphAuthor",
           },
           { util.str_min_width(date, 10), "Special" },
         },

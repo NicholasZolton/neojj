@@ -91,7 +91,7 @@ local function window_belongs_to_user(win)
   end
 
   local filetype = api.nvim_get_option_value("filetype", { buf = buf }) or ""
-  return not vim.startswith(filetype, "NeoJJ")
+  return not vim.startswith(filetype, "Neojj")
 end
 
 ---@return table Ordered list of tabs to check for user windows
@@ -122,7 +122,7 @@ local function ordered_tabpages()
   return order
 end
 
----@return integer? A window handle that doesn't belong to NeoJJ
+---@return integer? A window handle that doesn't belong to Neojj
 local function find_user_window()
   for _, tab in ipairs(ordered_tabpages()) do
     for _, win in ipairs(api.nvim_tabpage_list_wins(tab)) do

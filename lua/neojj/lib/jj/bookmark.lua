@@ -1,6 +1,6 @@
 local M = {}
 
----@class NeoJJBookmarkMeta
+---@class NeojjBookmarkMeta
 local meta = {}
 
 ---Parse `jj bookmark list --all` output
@@ -9,7 +9,7 @@ local meta = {}
 ---Local tracking: "  @remote: change_id commit_id description"
 ---Remote format: "name@remote: change_id commit_id description"
 ---@param lines string[]
----@return NeoJJBookmarkItem[]
+---@return NeojjBookmarkItem[]
 function M.parse_list(lines)
   local items = {}
   local current_name = nil
@@ -71,7 +71,7 @@ function M.parse_list(lines)
 end
 
 ---List bookmarks
----@return NeoJJBookmarkItem[]
+---@return NeojjBookmarkItem[]
 function M.list()
   local jj = require("neojj.lib.jj")
   local result = jj.cli.bookmark_list.call { hidden = true, trim = true }
@@ -172,7 +172,7 @@ end
 ---Parse structured bookmark template output (tab-separated)
 ---Format: name\tremote\tchange_id\tcommit_id\ttimestamp\tdescription
 ---@param lines string[]
----@return NeoJJBookmarkItem[]
+---@return NeojjBookmarkItem[]
 function M.parse_template_list(lines)
   local items = {}
   for _, line in ipairs(lines) do
@@ -207,7 +207,7 @@ end
 local BOOKMARK_TEMPLATE = 'self.name() ++ "\\t" ++ if(self.remote(), self.remote(), "") ++ "\\t" ++ if(self.normal_target(), self.normal_target().change_id() ++ "\\t" ++ self.normal_target().commit_id() ++ "\\t" ++ self.normal_target().committer().timestamp() ++ "\\t" ++ self.normal_target().description().first_line(), "\\t\\t\\t\\t(deleted)") ++ "\\n"'
 
 ---Update repository state with bookmark data
----@param state NeoJJRepoState
+---@param state NeojjRepoState
 function meta.update(state)
   local config = require("neojj.config")
   local section_config = config.values.sections and config.values.sections.bookmarks or {}

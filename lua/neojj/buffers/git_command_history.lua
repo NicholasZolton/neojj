@@ -52,8 +52,8 @@ function M:show()
 
   self.buffer = Buffer.create {
     kind = "popup",
-    name = "NeoJJGitCommandHistory",
-    filetype = "NeoJJGitCommandHistory",
+    name = "NeojjGitCommandHistory",
+    filetype = "NeojjGitCommandHistory",
     mappings = {
       n = {
         [status_maps["Close"]] = function()
@@ -107,31 +107,31 @@ function M:show()
         local time = string.format("(%3.3f ms)", item.time)
         local stdio = string.format("[%s %3d]", "stdout", #item.stdout)
 
-        local highlight_code = "NeoJJCommandCodeNormal"
+        local highlight_code = "NeojjCommandCodeNormal"
 
         if is_err then
           stdio = string.format("[%s %3d]", "stderr", #item.stderr)
-          highlight_code = "NeoJJCommandCodeError"
+          highlight_code = "NeojjCommandCodeError"
         end
 
         local spacing = string.rep(" ", win_width - #code - #command - #time - #stdio - 6)
 
         return col({
           row {
-            text.highlight("NeoJJGraphAuthor")(
+            text.highlight("NeojjGraphAuthor")(
               os.getenv("NEOJJ_DEBUG") and (item.hidden and "H" or " ") or ""
             ),
             text.highlight(highlight_code)(code),
             text(" "),
             text(command),
             text(spacing),
-            text.highlight("NeoJJCommandTime")(time),
+            text.highlight("NeojjCommandTime")(time),
             text(" "),
-            text.highlight("NeoJJCommandTime")(stdio),
+            text.highlight("NeojjCommandTime")(stdio),
           },
           col
             .padding_left("  | ")
-            .highlight("NeoJJCommandText")(map(util.merge(item.stdout, item.stderr), wrap_text)),
+            .highlight("NeojjCommandText")(map(util.merge(item.stdout, item.stderr), wrap_text)),
         }, { foldable = true, folded = true })
       end)
     end,

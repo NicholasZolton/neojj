@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJWorkspacePopup")
+    :name("NeojjWorkspacePopup")
     :arg_heading("Sparse Patterns")
     :switch("s", "sparse-patterns=copy", "Copy sparse patterns from current", {
       cli_prefix = "--",

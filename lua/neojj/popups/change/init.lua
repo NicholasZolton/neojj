@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJChangePopup")
+    :name("NeojjChangePopup")
     :switch("B", "insert-before", "Insert before target")
     :switch("A", "insert-after", "Insert after target")
     :option("m", "message", "", "Description for new change")

@@ -110,8 +110,8 @@ function M:open()
   local status_maps = config.get_reversed_status_maps()
 
   self.buffer = Buffer.create {
-    name = "NeoJJDiffView",
-    filetype = "NeoJJDiffView",
+    name = "NeojjDiffView",
+    filetype = "NeojjDiffView",
     status_column = not config.values.disable_signs and "" or nil,
     kind = config.values.commit_editor.staged_diff_split_kind,
     context_highlight = not config.values.disable_context_highlighting,

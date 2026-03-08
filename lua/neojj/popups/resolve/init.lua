@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJResolvePopup")
+    :name("NeojjResolvePopup")
     :option("t", "tool", "", "Merge tool")
     :group_heading("Resolve")
     :action("r", "Resolve conflicts", actions.resolve)

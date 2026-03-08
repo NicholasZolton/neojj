@@ -14,7 +14,7 @@ local event = require("neojj.lib.event")
 
 ---@class StatusBuffer
 ---@field buffer Buffer instance
----@field config NeoJJConfig
+---@field config NeojjConfig
 ---@field root string
 ---@field cwd string
 local M = {}
@@ -79,7 +79,7 @@ function M.instance(dir)
   return instances[vim.fs.normalize(dir)]
 end
 
----@param config NeoJJConfig
+---@param config NeojjConfig
 ---@param root string
 ---@param cwd string
 ---@return StatusBuffer
@@ -134,8 +134,8 @@ function M:open(kind)
   local mappings = config.get_reversed_status_maps()
 
   self.buffer = Buffer.create {
-    name = "NeoJJStatus",
-    filetype = "NeoJJStatus",
+    name = "NeojjStatus",
+    filetype = "NeojjStatus",
     cwd = self.cwd,
     context_highlight = not config.values.disable_context_highlighting,
     kind = kind or config.values.kind or "tab",
@@ -227,8 +227,8 @@ function M:open(kind)
     user_autocmds = {
       -- Resetting doesn't yield the correct repo state instantly, so we need to re-refresh after a few seconds
       -- in order to show the user the correct state.
-      ["NeoJJReset"] = self:deferred_refresh("reset"),
-      ["NeoJJBranchReset"] = self:deferred_refresh("reset_branch"),
+      ["NeojjReset"] = self:deferred_refresh("reset"),
+      ["NeojjBranchReset"] = self:deferred_refresh("reset_branch"),
     },
     autocmds = {
       ["FocusGained"] = self:deferred_refresh("focused", 10),

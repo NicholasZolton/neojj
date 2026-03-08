@@ -5,7 +5,7 @@ local M = {}
 
 -- TODO: Better alignment for labels, keys
 function M.create(env)
-  local p = popup.builder():name("NeoJJHelpPopup"):group_heading("Commands")
+  local p = popup.builder():name("NeojjHelpPopup"):group_heading("Commands")
 
   local popups = actions.popups(env)
   for i, cmd in ipairs(popups) do

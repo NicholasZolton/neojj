@@ -1,7 +1,7 @@
 local Path = require("plenary.path")
 local git = require("neojj.lib.git")
 
-local M = {} ---@class NeoJJGitHooks
+local M = {} ---@class NeojjGitHooks
 
 local hooks = {
   commit = {

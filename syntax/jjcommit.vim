@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	jj (Jujutsu) commit/describe message
-" Maintainer:	NeoJJ
+" Maintainer:	Neojj
 
 if exists("b:current_syntax")
   finish

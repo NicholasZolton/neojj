@@ -1,6 +1,6 @@
 local logger = require("neojj.logger")
 
----@class NeoJJRepoHead
+---@class NeojjRepoHead
 ---@field change_id string Short change ID
 ---@field commit_id string Short commit ID
 ---@field description string Change description
@@ -8,13 +8,13 @@ local logger = require("neojj.logger")
 ---@field empty boolean Whether the change is empty
 ---@field conflict boolean Whether the change has conflicts
 
----@class NeoJJRepoParent
+---@class NeojjRepoParent
 ---@field change_id string
 ---@field commit_id string
 ---@field description string
 ---@field bookmarks string[]
 
----@class NeoJJFileItem
+---@class NeojjFileItem
 ---@field name string File path
 ---@field absolute_path string Full file path
 ---@field escaped_path string Vim-escaped path
@@ -23,12 +23,12 @@ local logger = require("neojj.logger")
 ---@field diff any|nil Lazy-loaded diff
 ---@field folded boolean|nil
 
----@class NeoJJConflictItem
+---@class NeojjConflictItem
 ---@field name string File path
 ---@field absolute_path string
 ---@field escaped_path string
 
----@class NeoJJChangeLogEntry
+---@class NeojjChangeLogEntry
 ---@field change_id string
 ---@field commit_id string
 ---@field description string
@@ -42,7 +42,7 @@ local logger = require("neojj.logger")
 ---@field current_working_copy boolean
 ---@field graph string|nil Graph ASCII art
 
----@class NeoJJBookmarkItem
+---@class NeojjBookmarkItem
 ---@field name string
 ---@field change_id string
 ---@field commit_id string
@@ -51,18 +51,18 @@ local logger = require("neojj.logger")
 ---@field timestamp string|nil Committer timestamp for sorting
 ---@field deleted boolean|nil True if bookmark has been deleted locally
 
----@class NeoJJRepoState
+---@class NeojjRepoState
 ---@field worktree_root string
----@field head NeoJJRepoHead
----@field parent NeoJJRepoParent
----@field files { items: NeoJJFileItem[] }
----@field conflicts { items: NeoJJConflictItem[] }
----@field recent { items: NeoJJChangeLogEntry[] }
----@field bookmarks { items: NeoJJBookmarkItem[] }
+---@field head NeojjRepoHead
+---@field parent NeojjRepoParent
+---@field files { items: NeojjFileItem[] }
+---@field conflicts { items: NeojjConflictItem[] }
+---@field recent { items: NeojjChangeLogEntry[] }
+---@field bookmarks { items: NeojjBookmarkItem[] }
 
 local M = {}
 
----@return NeoJJRepoState
+---@return NeojjRepoState
 local function empty_state()
   return {
     worktree_root = "",
@@ -87,9 +87,9 @@ local function empty_state()
   }
 end
 
----@class NeoJJRepo
----@field state NeoJJRepoState
----@field lib table<string, { update: fun(state: NeoJJRepoState) }>
+---@class NeojjRepo
+---@field state NeojjRepoState
+---@field lib table<string, { update: fun(state: NeojjRepoState) }>
 ---@field worktree_root string
 ---@field running boolean
 ---@field callbacks table<string, fun()>
@@ -100,7 +100,7 @@ local instances = {}
 
 ---Get or create singleton repo instance for a directory
 ---@param dir? string
----@return NeoJJRepo
+---@return NeojjRepo
 function Repo.instance(dir)
   local jj_cli = require("neojj.lib.jj.cli")
   dir = dir or vim.fn.getcwd()
@@ -119,7 +119,7 @@ end
 
 ---Create a new repo instance
 ---@param root string Workspace root directory
----@return NeoJJRepo
+---@return NeojjRepo
 function Repo.new(root)
   local self = setmetatable({}, Repo)
   self.state = empty_state()

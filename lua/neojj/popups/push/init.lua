@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJPushPopup")
+    :name("NeojjPushPopup")
     :switch("d", "dry-run", "Dry run")
     :switch("D", "deleted", "Push deleted bookmarks")
     :group_heading("Push")

@@ -1,7 +1,7 @@
 local git = require("neojj.lib.git")
 local util = require("neojj.lib.util")
 
----@class NeoJJGitRevParse
+---@class NeojjGitRevParse
 local M = {}
 
 ---@param oid string

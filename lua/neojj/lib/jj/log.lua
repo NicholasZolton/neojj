@@ -1,6 +1,6 @@
 local M = {}
 
----@class NeoJJLogMeta
+---@class NeojjLogMeta
 local meta = {}
 
 ---Parse concatenated JSON objects from jj log -T 'json(self)'
@@ -48,7 +48,7 @@ end
 
 ---Convert a JSON commit object to a ChangeLogEntry
 ---@param obj table Decoded JSON object from jj log -T 'json(self)'
----@return NeoJJChangeLogEntry
+---@return NeojjChangeLogEntry
 function M.json_to_entry(obj)
   return {
     change_id = obj.change_id or "",
@@ -69,7 +69,7 @@ end
 ---Parse graph lines from `jj log` default output (with graph)
 ---Returns entries with graph characters and basic info parsed from the display format
 ---@param lines string[]
----@return NeoJJChangeLogEntry[]
+---@return NeojjChangeLogEntry[]
 function M.parse_graph(lines)
   local entries = {}
   local current = nil
@@ -130,7 +130,7 @@ end
 ---Fetch recent changes via JSON template
 ---@param revset? string Revset expression (default: ancestors(@, 20))
 ---@param limit? number Max entries
----@return NeoJJChangeLogEntry[]
+---@return NeojjChangeLogEntry[]
 function M.list(revset, limit)
   local jj = require("neojj.lib.jj")
   limit = limit or 20
@@ -157,7 +157,7 @@ function M.list(revset, limit)
 end
 
 ---Update repository state with recent changes
----@param state NeoJJRepoState
+---@param state NeojjRepoState
 function meta.update(state)
   local shell = require("neojj.lib.jj.shell")
   local limit = 20

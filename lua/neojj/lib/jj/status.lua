@@ -1,6 +1,6 @@
 local M = {}
 
----@class NeoJJStatusMeta
+---@class NeojjStatusMeta
 local meta = {}
 
 ---Run a jj command via the shell module (resolves real binary, bypasses shims)
@@ -15,7 +15,7 @@ end
 ---Parse `jj diff --summary` output into file items
 ---@param lines string[]
 ---@param root string Workspace root for absolute paths
----@return NeoJJFileItem[]
+---@return NeojjFileItem[]
 function M.parse_diff_summary(lines, root)
   local items = {}
   for _, line in ipairs(lines) do
@@ -38,7 +38,7 @@ end
 ---Parse changed files from `jj status` output (the "Working copy changes:" section)
 ---@param lines string[]
 ---@param root string Workspace root for absolute paths
----@return NeoJJFileItem[]
+---@return NeojjFileItem[]
 function M.parse_status_files(lines, root)
   local items = {}
   local in_changes = false
@@ -69,7 +69,7 @@ end
 
 ---Parse `jj status` output for working copy and parent info
 ---@param lines string[]
----@return { head: NeoJJRepoHead, parent: NeoJJRepoParent }
+---@return { head: NeojjRepoHead, parent: NeojjRepoParent }
 function M.parse_status_lines(lines)
   local head = {
     change_id = "",
@@ -136,7 +136,7 @@ end
 ---Parse conflict file list from `jj status` output
 ---@param lines string[]
 ---@param root string
----@return NeoJJConflictItem[]
+---@return NeojjConflictItem[]
 function M.parse_conflicts(lines, root)
   local conflicts = {}
   local in_conflicts = false
@@ -162,7 +162,7 @@ function M.parse_conflicts(lines, root)
 end
 
 ---Update repository state with jj status data
----@param state NeoJJRepoState
+---@param state NeojjRepoState
 function meta.update(state)
   local cwd = state.worktree_root
 

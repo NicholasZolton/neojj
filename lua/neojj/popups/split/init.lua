@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJSplitPopup")
+    :name("NeojjSplitPopup")
     :switch("i", "interactive", "Select changes interactively")
     :group_heading("Split")
     :action("s", "Working copy", actions.split_current)

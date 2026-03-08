@@ -24,7 +24,7 @@ function M.setup()
       if
         not autocmd_disabled
         and status_buffer.is_open()
-        and not api.nvim_get_option_value("filetype", { buf = o.buf }):match("^NeoJJ")
+        and not api.nvim_get_option_value("filetype", { buf = o.buf }):match("^Neojj")
       then
         local path = git.files.relpath_from_repository(o.file)
         if path then
@@ -49,7 +49,7 @@ function M.setup()
 
   -- Ensure vim buffers are updated
   api.nvim_create_autocmd("User", {
-    pattern = "NeoJJStatusRefreshed",
+    pattern = "NeojjStatusRefreshed",
     callback = function()
       vim.cmd("set autoread | checktime")
     end,

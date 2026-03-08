@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJRemotePopup")
+    :name("NeojjRemotePopup")
     :group_heading("Actions")
     :action("a", "Add", actions.add)
     :action("r", "Rename", actions.rename)

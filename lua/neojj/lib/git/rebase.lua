@@ -4,7 +4,7 @@ local client = require("neojj.client")
 local notification = require("neojj.lib.notification")
 local event = require("neojj.lib.event")
 
----@class NeoJJGitRebase
+---@class NeojjGitRebase
 local M = {}
 
 local function rebase_command(cmd)
@@ -84,7 +84,7 @@ function M.reword(commit)
   local status = client.wrap(
     git.cli.commit.only.allow_empty.edit.with_message(("amend! %s\n\n%s"):format(commit, message)),
     {
-      autocmd = "NeoJJCommitComplete",
+      autocmd = "NeojjCommitComplete",
       msg = {
         success = "Commit Updated",
       },

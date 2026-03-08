@@ -1,22 +1,22 @@
 local api = vim.api
 
-api.nvim_create_user_command("NeoJJ", function(o)
+api.nvim_create_user_command("Neojj", function(o)
   local neojj = require("neojj")
   neojj.open(require("neojj.lib.util").parse_command_args(o.fargs))
 end, {
   nargs = "*",
-  desc = "Open NeoJJ",
+  desc = "Open Neojj",
   complete = function(arglead)
     local neojj = require("neojj")
     return neojj.complete(arglead)
   end,
 })
 
-api.nvim_create_user_command("NeoJJResetState", function()
+api.nvim_create_user_command("NeojjResetState", function()
   require("neojj.lib.state")._reset()
 end, { nargs = "*", desc = "Reset any saved flags" })
 
-api.nvim_create_user_command("NeoJJLogCurrent", function(args)
+api.nvim_create_user_command("NeojjLogCurrent", function(args)
   local action = require("neojj").action
   local path = vim.fn.expand(args.fargs[1] or "%")
 
@@ -32,7 +32,7 @@ end, {
   complete = "file",
 })
 
-api.nvim_create_user_command("NeoJJCommit", function(args)
+api.nvim_create_user_command("NeojjCommit", function(args)
   local commit = args.fargs[1] or "HEAD"
   local CommitViewBuffer = require("neojj.buffers.commit_view")
   CommitViewBuffer.new(commit):open()

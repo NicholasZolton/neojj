@@ -3,7 +3,7 @@ local config = require("neojj.config")
 local record = require("neojj.lib.record")
 local util = require("neojj.lib.util")
 
----@class NeoJJGitRefs
+---@class NeojjGitRefs
 local M = {}
 
 ---@return fun(format?: string, sortby?: string, filter?: table): string[]

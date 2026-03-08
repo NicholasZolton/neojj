@@ -409,7 +409,7 @@ function M:show()
 
   self.buffer = Buffer.create {
     name = self.state.name,
-    filetype = "NeoJJPopup",
+    filetype = "NeojjPopup",
     kind = "popup",
     mappings = self:mappings(),
     status_column = " ",
@@ -424,15 +424,15 @@ function M:show()
 
       if self.state.env.highlight then
         for i = 1, #self.state.env.highlight, 1 do
-          vim.fn.matchadd("NeoJJPopupBranchName", self.state.env.highlight[i], 100)
+          vim.fn.matchadd("NeojjPopupBranchName", self.state.env.highlight[i], 100)
         end
       else
-        vim.fn.matchadd("NeoJJPopupBranchName", git.repo.state.head.branch, 100)
+        vim.fn.matchadd("NeojjPopupBranchName", git.repo.state.head.branch, 100)
       end
 
       if self.state.env.bold then
         for i = 1, #self.state.env.bold, 1 do
-          vim.fn.matchadd("NeoJJPopupBold", self.state.env.bold[i], 100)
+          vim.fn.matchadd("NeojjPopupBold", self.state.env.bold[i], 100)
         end
       end
 

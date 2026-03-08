@@ -4,7 +4,7 @@ local util = require("neojj.lib.util")
 
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 
----@class NeoJJGitBranch
+---@class NeojjGitBranch
 local M = {}
 
 ---@param branches string[]
@@ -417,7 +417,7 @@ end
 
 local INITIAL_COMMIT = "(initial)"
 
----@param state NeoJJRepoState
+---@param state NeojjRepoState
 local function update_branch_information(state)
   local status = M.status()
 

@@ -10,7 +10,7 @@ function M.create(env)
 
   local p = popup
     .builder()
-    :name("NeoJJDiffPopup")
+    :name("NeojjDiffPopup")
     :group_heading("Diff")
     :action_if(has_diff_viewer and has_item, "d", "this", actions.this)
     :action_if(has_diff_viewer, "r", "range", actions.range)

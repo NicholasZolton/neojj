@@ -352,7 +352,7 @@ function Finder:find(on_select)
     local snacks_picker = require("snacks.picker")
     local confirm, on_close = snacks_confirm(on_select, self.opts.allow_multi, self.opts.refocus_status)
     snacks_picker.pick(nil, {
-      title = "NeoJJ",
+      title = "Neojj",
       prompt = string.format("%s > ", self.opts.prompt_prefix),
       items = entries_to_snack_items(self.entries),
       format = "text",

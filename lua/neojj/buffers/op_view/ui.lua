@@ -11,16 +11,16 @@ local M = {}
 ---Render a single operation entry
 ---@param op table { id: string, description: string, time: string, tags: string, current: boolean }
 function M.OpEntry(op)
-  local id_hl = op.current and "NeoJJBranchHead" or "NeoJJObjectId"
+  local id_hl = op.current and "NeojjBranchHead" or "NeojjObjectId"
   local marker = op.current and "@ " or "  "
 
   return row.tag("OpEntry")({
-    text(marker, { highlight = op.current and "NeoJJBranchHead" or "NeoJJSubtleText" }),
+    text(marker, { highlight = op.current and "NeojjBranchHead" or "NeojjSubtleText" }),
     text(op.id, { highlight = id_hl }),
     text(" "),
     text(op.time or "", { highlight = "Special" }),
     text(" "),
-    text(op.description and vim.split(op.description, "\n")[1] or "", { highlight = "NeoJJGraphAuthor" }),
+    text(op.description and vim.split(op.description, "\n")[1] or "", { highlight = "NeojjGraphAuthor" }),
   }, {
     item = op,
     oid = op.id,
@@ -35,20 +35,20 @@ function M.View(ops)
 
   table.insert(entries, 1, col { row { text("") } })
   table.insert(entries, 2, row {
-    text.highlight("NeoJJFloatHeaderHighlight")("Operations Log"),
+    text.highlight("NeojjFloatHeaderHighlight")("Operations Log"),
   })
   table.insert(entries, 3, col { row { text("") } })
 
   table.insert(entries, col {
     row { text("") },
     row {
-      text.highlight("NeoJJSubtleText")("u"),
+      text.highlight("NeojjSubtleText")("u"),
       text(" = undo last op, "),
-      text.highlight("NeoJJSubtleText")("R"),
+      text.highlight("NeojjSubtleText")("R"),
       text(" = restore to op under cursor, "),
-      text.highlight("NeoJJSubtleText")("q"),
+      text.highlight("NeojjSubtleText")("q"),
       text("/"),
-      text.highlight("NeoJJSubtleText")("<esc>"),
+      text.highlight("NeojjSubtleText")("<esc>"),
       text(" = close"),
     },
   })

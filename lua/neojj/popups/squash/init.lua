@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJSquashPopup")
+    :name("NeojjSquashPopup")
     :arg_heading("Flags")
     :switch("i", "interactive", "Select changes interactively")
     :switch("k", "keep-emptied", "Keep emptied source revision")

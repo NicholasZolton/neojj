@@ -3,58 +3,62 @@
 Contributions of all kinds are very welcome. If you are planning to implement a larger feature please open an issue
 prior to minimize the risk of duplicate work, or to discuss some specifics of the feature; such as keybindings.
 
-NeoJJ draws heavy inspiration from [Magit](https://magit.vc/), but aims to be its own thing. Many of our features
-are inspired by Magit, such as the branch keybindings.
+Neojj draws heavy inspiration from [Magit](https://magit.vc/), but aims to be its own thing. Many of our features
+are inspired by Magit, such as the bookmark keybindings.
 
 
 ## Architecture
 
 - [`./lua/neojj/`]
-  - [`./lua/neojj/lib/`] Contains various git and filesystem abstractions
-  - [`./lua/neojj/lib/git/`] High level git wrappers for common commands such as branches, fetch. These are also used
-  to supply the status buffer
-  - [`./lua/neojj/lib/git/cli.lua`] Builder like pattern for constructing git cli invocations
-  - [`./lua/neojj/lib/git/repository.lua`] Modules from `git/` for updating the status buffer
+  - [`./lua/neojj/lib/`] Contains various jj and filesystem abstractions
+  - [`./lua/neojj/lib/jj/`] High level jj wrappers for common commands such as bookmarks, fetch, status, log. These also supply the status buffer state.
+  - [`./lua/neojj/lib/jj/cli.lua`] Builder-like pattern for constructing jj CLI invocations
+  - [`./lua/neojj/lib/jj/repository.lua`] Modules from `jj/` for updating the status buffer
+  - [`./lua/neojj/lib/picker_cache.lua`] Centralized picker data, caching, and utilities shared across all popups
   - [`./lua/neojj/popups/`] Contains all the popups and keybindings
   - [`./lua/neojj/buffers/`] Contains all the buffer views, such as `commit_editor` or `log_view`
 
-`NeoJJ` uses its own UI drawing library for drawing columns and rows of text.
+Neojj uses its own UI drawing library for drawing columns and rows of text.
 
 ### Making a new view
 
-NeoJJ's views, such as the `commit` buffer, `log` graph buffer, etc are located in [`./lua/neojj/buffers/`]. They
+Neojj's views, such as the `commit` buffer, `log` graph buffer, etc are located in [`./lua/neojj/buffers/`]. They
 are split in a `init.lua` for creating the buffer and setting up keymaps and actions, and `ui.lua` for rendering the
-buffer. The split is such that it is easier to get an overview of how the buffer will *look* without the clutter of git
+buffer. The split is such that it is easier to get an overview of how the buffer will *look* without the clutter of jj
 commands and actions.
 
 Opening a view is typically done through a *popup* which allows you to configure options before invoking the view.
 
 These reside inside [`./lua/neojj/popups/`], and are split into `init.lua` and `actions.lua` for the setup and
-keybindings, and the git commands to execute, likewise intended to get an overview of the options and keybindings for
-the popup in `init.lua` without concerning yourself with the git commands and parsing in `actions.lua`.
+keybindings, and the jj commands to execute, likewise intended to get an overview of the options and keybindings for
+the popup in `init.lua` without concerning yourself with the jj commands and parsing in `actions.lua`.
 
-To access your new popup through a keybinding, add it to the table in [`./lua/neojj/popups/init.lua`] inside
-`mappings_table`. This will enable you to access the popup through both the status buffer and help popup.
+To add a new popup:
+1. Create a directory under `./lua/neojj/popups/<name>/` with `init.lua` and `actions.lua`
+2. Add a mapping in `./lua/neojj/config.lua` under `mappings.popup`
+3. Add the action handler in `./lua/neojj/buffers/status/actions.lua`
+4. Register the keybinding in `./lua/neojj/buffers/status/init.lua`
+5. Add the entry to the help popup in `./lua/neojj/popups/help/actions.lua`
 
 ## Getting Started
 
 If you are using [`Lazy.nvim`](https://github.com/folke/lazy.nvim) you can configure it to prefer sourcing plugins from
-a local directory instead of from git. 
+a local directory instead of from git.
 
-Simply clone *NeoJJ* to your project directory of choice to be able to use your local changes. See
+Simply clone Neojj to your project directory of choice to be able to use your local changes. See
 [`lazy-spec`](https://github.com/folke/lazy.nvim#-plugin-spec) and
 [`lazy-configuration`](https://github.com/folke/lazy.nvim#%EF%B8%8F-configuration) for details.
 
 ### Logging
 
-Logging is a useful tool for inspecting what happens in the code and in what order. NeoJJ uses
+Logging is a useful tool for inspecting what happens in the code and in what order. Neojj uses
 [`Plenary`](https://github.com/nvim-lua/plenary.nvim) for logging.
 
 #### Enabling logging via environment variables
 
 - To enable logging to console, export `NEOJJ_LOG_CONSOLE="sync"`
 - To enable logging to a file, export `NEOJJ_LOG_FILE="true"`
-- For more verbose logging, set the log level to `debug` via `NEOJJ_LOG_LEVEL="debug"` 
+- For more verbose logging, set the log level to `debug` via `NEOJJ_LOG_LEVEL="debug"`
 
 #### Enabling logging via lua api
 
@@ -88,7 +92,7 @@ rather than:
 
 ### Testing
 
-NeoJJ is tested using [`Plenary`](https://github.com/nvim-lua/plenary.nvim#plenarytest_harness) for unit tests, and `rspec` (yes, ruby) for e2e tests.
+Neojj is tested using [`Plenary`](https://github.com/nvim-lua/plenary.nvim#plenarytest_harness) for unit tests, and `rspec` (yes, ruby) for e2e tests.
 
 It uses a *Busted* style testing, where each lua file inside [`./tests/specs/{test_name}_spec.lua`] is run.
 

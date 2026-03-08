@@ -1,6 +1,6 @@
 *neojj.txt*    A jj (Jujutsu) interface for Neovim
 
-NeoJJ                                                                  *neojj*
+Neojj                                                                  *neojj*
 
 A Magit-style interface for jj (Jujutsu VCS) in Neovim.
 Hard fork of Neogit, adapted for jj's change-based workflow.
@@ -25,17 +25,17 @@ CONTENTS                                                    *neojj-contents*
 ==============================================================================
 1. INTRODUCTION                                          *neojj-introduction*
 
-NeoJJ is a Magit-inspired interface for jj (Jujutsu VCS) in Neovim. It
+Neojj is a Magit-inspired interface for jj (Jujutsu VCS) in Neovim. It
 provides a rich, interactive text-based UI for performing version control
 tasks without leaving your editor.
 
 Unlike git, jj has no staging area. All file changes in the working copy
 are automatically part of the current change. This fundamental difference
-means NeoJJ presents a simpler, more streamlined interface: there is no
+means Neojj presents a simpler, more streamlined interface: there is no
 need to stage or unstage files before committing. You simply edit files,
 and they are part of your current change.
 
-NeoJJ is a hard fork of Neogit, adapted to work with jj's change-based
+Neojj is a hard fork of Neogit, adapted to work with jj's change-based
 workflow rather than git's commit-based workflow.
 
 ==============================================================================
@@ -56,7 +56,7 @@ Optional dependencies:
 ==============================================================================
 3. SETUP                                                      *neojj-setup*
 
-Add NeoJJ to your plugin manager and call setup: >lua
+Add Neojj to your plugin manager and call setup: >lua
 
     require("neojj").setup({
       -- See |neojj-configuration| for all options
@@ -65,24 +65,24 @@ Add NeoJJ to your plugin manager and call setup: >lua
 ==============================================================================
 4. COMMANDS                                                *neojj-commands*
 
-                                                                    *:NeoJJ*
-:NeoJJ                  Open the NeoJJ status buffer for the current
+                                                                    *:Neojj*
+:Neojj                  Open the Neojj status buffer for the current
                         workspace.
 
-:NeoJJ {popup}          Open a specific popup directly. Valid values
+:Neojj {popup}          Open a specific popup directly. Valid values
                         include: commit, bookmark, change, squash, diff,
                         fetch, push, rebase, log, remote, split, resolve,
                         yank, help.
 
-:NeoJJ cwd={path}       Open the status buffer for a specific workspace
+:Neojj cwd={path}       Open the status buffer for a specific workspace
                         path.
 
-:NeoJJ kind={kind}      Open with a specific window style. Valid values:
+:Neojj kind={kind}      Open with a specific window style. Valid values:
                         `tab`, `split`, `vsplit`, `floating`, `replace`,
                         `auto`.
 
-                                                         *:NeoJJResetState*
-:NeoJJResetState        Reset all persisted popup switch/option state.
+                                                         *:NeojjResetState*
+:NeojjResetState        Reset all persisted popup switch/option state.
                         Useful when saved settings become stale or
                         problematic.
 
@@ -102,7 +102,7 @@ the available options with their defaults: >lua
       -- Disables signs for sections/items/hunks
       disable_signs = false,
 
-      -- Disable line numbers and relative line numbers in NeoJJ buffers
+      -- Disable line numbers and relative line numbers in Neojj buffers
       disable_line_numbers = true,
       disable_relative_line_numbers = true,
 
@@ -146,7 +146,7 @@ the available options with their defaults: >lua
       -- Auto-refresh status buffer after operations
       auto_refresh = true,
 
-      -- Default window style for opening NeoJJ
+      -- Default window style for opening Neojj
       kind = "tab",
 
       -- Floating window style
@@ -409,7 +409,7 @@ YANK POPUP ~
 ==============================================================================
 8. STATUS BUFFER                                            *neojj-status*
 
-The status buffer is the main interface of NeoJJ. Open it with `:NeoJJ`.
+The status buffer is the main interface of Neojj. Open it with `:Neojj`.
 
 It displays the following sections:
 
@@ -472,7 +472,7 @@ Features:
 ==============================================================================
 11. HIGHLIGHTS                                          *neojj-highlights*
 
-NeoJJ defines the following highlight groups. If you set any of these
+Neojj defines the following highlight groups. If you set any of these
 before the plugin loads, your settings will be respected. Otherwise,
 sensible defaults are derived from your colorscheme.
 
@@ -495,116 +495,116 @@ You can provide a custom color palette via `config.highlight`: >lua
 JJ-SPECIFIC HIGHLIGHTS ~
 
   Group                    Description ~
-  `NeoJJChangeId`            Change ID (the immutable short identifier)
-  `NeoJJObjectId`            Commit/object SHA hash
-  `NeoJJBookmark`            Bookmark names
-  `NeoJJBranch`              Local branch references
-  `NeoJJBranchHead`          Accent for current HEAD in log view
-  `NeoJJConflict`            Conflict markers and indicators
-  `NeoJJImmutable`           Immutable changes
-  `NeoJJWorkingCopy`         Working copy indicator (@)
-  `NeoJJSubtleText`          De-emphasized text (timestamps, etc.)
+  `NeojjChangeId`            Change ID (the immutable short identifier)
+  `NeojjObjectId`            Commit/object SHA hash
+  `NeojjBookmark`            Bookmark names
+  `NeojjBranch`              Local branch references
+  `NeojjBranchHead`          Accent for current HEAD in log view
+  `NeojjConflict`            Conflict markers and indicators
+  `NeojjImmutable`           Immutable changes
+  `NeojjWorkingCopy`         Working copy indicator (@)
+  `NeojjSubtleText`          De-emphasized text (timestamps, etc.)
 
 DIFF HIGHLIGHTS ~
 
-  `NeoJJDiffAdd`             Added lines in diffs
-  `NeoJJDiffDelete`          Deleted lines in diffs
-  `NeoJJDiffContext`         Context lines in diffs
-  `NeoJJDiffHeader`          Diff header lines
-  `NeoJJHunkHeader`          Hunk header lines
-  `NeoJJHunkMergeHeader`     Merge hunk header lines
+  `NeojjDiffAdd`             Added lines in diffs
+  `NeojjDiffDelete`          Deleted lines in diffs
+  `NeojjDiffContext`         Context lines in diffs
+  `NeojjDiffHeader`          Diff header lines
+  `NeojjHunkHeader`          Hunk header lines
+  `NeojjHunkMergeHeader`     Merge hunk header lines
 
 Context-aware variants (applied when cursor is within the region):
 
-  `NeoJJDiffAddHighlight`    Highlighted added lines
-  `NeoJJDiffDeleteHighlight` Highlighted deleted lines
-  `NeoJJDiffContextHighlight` Highlighted context lines
-  `NeoJJDiffHeaderHighlight` Highlighted diff header
-  `NeoJJHunkHeaderHighlight` Highlighted hunk header
+  `NeojjDiffAddHighlight`    Highlighted added lines
+  `NeojjDiffDeleteHighlight` Highlighted deleted lines
+  `NeojjDiffContextHighlight` Highlighted context lines
+  `NeojjDiffHeaderHighlight` Highlighted diff header
+  `NeojjHunkHeaderHighlight` Highlighted hunk header
 
 Cursor-line variants:
 
-  `NeoJJDiffAddCursor`       Cursor line in added region
-  `NeoJJDiffDeleteCursor`    Cursor line in deleted region
-  `NeoJJDiffContextCursor`   Cursor line in context region
-  `NeoJJDiffHeaderCursor`    Cursor line on diff header
-  `NeoJJHunkHeaderCursor`    Cursor line on hunk header
+  `NeojjDiffAddCursor`       Cursor line in added region
+  `NeojjDiffDeleteCursor`    Cursor line in deleted region
+  `NeojjDiffContextCursor`   Cursor line in context region
+  `NeojjDiffHeaderCursor`    Cursor line on diff header
+  `NeojjHunkHeaderCursor`    Cursor line on hunk header
 
 GRAPH HIGHLIGHTS ~
 
-  `NeoJJGraphAuthor`         Author name in graph view
-  `NeoJJGraphRed`            Red graph lines
-  `NeoJJGraphGreen`          Green graph lines
-  `NeoJJGraphBlue`           Blue graph lines
-  `NeoJJGraphYellow`         Yellow graph lines
-  `NeoJJGraphPurple`         Purple graph lines
-  `NeoJJGraphCyan`           Cyan graph lines
-  `NeoJJGraphWhite`          White graph lines
-  `NeoJJGraphGray`           Gray graph lines
-  `NeoJJGraphOrange`         Orange graph lines
-  `NeoJJGraphBlack`          Black graph lines
-  `NeoJJGraphBoldRed`        Bold red graph lines
-  `NeoJJGraphBoldGreen`      Bold green graph lines
-  `NeoJJGraphBoldBlue`       Bold blue graph lines
-  `NeoJJGraphBoldYellow`     Bold yellow graph lines
-  `NeoJJGraphBoldPurple`     Bold purple graph lines
-  `NeoJJGraphBoldCyan`       Bold cyan graph lines
-  `NeoJJGraphBoldWhite`      Bold white graph lines
-  `NeoJJGraphBoldGray`       Bold gray graph lines
-  `NeoJJGraphBoldBlack`      Bold black graph lines
+  `NeojjGraphAuthor`         Author name in graph view
+  `NeojjGraphRed`            Red graph lines
+  `NeojjGraphGreen`          Green graph lines
+  `NeojjGraphBlue`           Blue graph lines
+  `NeojjGraphYellow`         Yellow graph lines
+  `NeojjGraphPurple`         Purple graph lines
+  `NeojjGraphCyan`           Cyan graph lines
+  `NeojjGraphWhite`          White graph lines
+  `NeojjGraphGray`           Gray graph lines
+  `NeojjGraphOrange`         Orange graph lines
+  `NeojjGraphBlack`          Black graph lines
+  `NeojjGraphBoldRed`        Bold red graph lines
+  `NeojjGraphBoldGreen`      Bold green graph lines
+  `NeojjGraphBoldBlue`       Bold blue graph lines
+  `NeojjGraphBoldYellow`     Bold yellow graph lines
+  `NeojjGraphBoldPurple`     Bold purple graph lines
+  `NeojjGraphBoldCyan`       Bold cyan graph lines
+  `NeojjGraphBoldWhite`      Bold white graph lines
+  `NeojjGraphBoldGray`       Bold gray graph lines
+  `NeojjGraphBoldBlack`      Bold black graph lines
 
 STATUS BUFFER HIGHLIGHTS ~
 
-  `NeoJJNormal`              Normal text in NeoJJ buffers
-  `NeoJJFloat`               Normal text in floating windows
-  `NeoJJFloatBorder`         Border of floating windows
-  `NeoJJRemote`              Remote references
-  `NeoJJFold`                Folded text
-  `NeoJJFoldColumn`          Fold column
-  `NeoJJSignColumn`          Sign column
-  `NeoJJSectionHeader`       Section header text
-  `NeoJJSectionHeaderCount`  Count number in section headers
-  `NeoJJFilePath`            File paths
-  `NeoJJActiveItem`          Currently active item highlight
+  `NeojjNormal`              Normal text in Neojj buffers
+  `NeojjFloat`               Normal text in floating windows
+  `NeojjFloatBorder`         Border of floating windows
+  `NeojjRemote`              Remote references
+  `NeojjFold`                Folded text
+  `NeojjFoldColumn`          Fold column
+  `NeojjSignColumn`          Sign column
+  `NeojjSectionHeader`       Section header text
+  `NeojjSectionHeaderCount`  Count number in section headers
+  `NeojjFilePath`            File paths
+  `NeojjActiveItem`          Currently active item highlight
 
 CHANGE MODE HIGHLIGHTS ~
 
-  `NeoJJChangeModified`      Modified files
-  `NeoJJChangeAdded`         Added files
-  `NeoJJChangeDeleted`       Deleted files
-  `NeoJJChangeRenamed`       Renamed files
-  `NeoJJChangeUpdated`       Updated files
-  `NeoJJChangeCopied`        Copied files
-  `NeoJJChangeNewFile`       New files
+  `NeojjChangeModified`      Modified files
+  `NeojjChangeAdded`         Added files
+  `NeojjChangeDeleted`       Deleted files
+  `NeojjChangeRenamed`       Renamed files
+  `NeojjChangeUpdated`       Updated files
+  `NeojjChangeCopied`        Copied files
+  `NeojjChangeNewFile`       New files
 
 POPUP HIGHLIGHTS ~
 
-  `NeoJJPopupSectionTitle`   Section headers in popups
-  `NeoJJPopupBold`           Emphasized text in popups
-  `NeoJJPopupSwitchKey`      Key for toggling a switch
-  `NeoJJPopupSwitchEnabled`  Enabled switch flag
-  `NeoJJPopupSwitchDisabled` Disabled switch flag
-  `NeoJJPopupOptionKey`      Key for setting an option
-  `NeoJJPopupOptionEnabled`  Option with a value set
-  `NeoJJPopupOptionDisabled` Option without a value
-  `NeoJJPopupActionKey`      Key that triggers an action
-  `NeoJJPopupActionDisabled` Key for unimplemented action
+  `NeojjPopupSectionTitle`   Section headers in popups
+  `NeojjPopupBold`           Emphasized text in popups
+  `NeojjPopupSwitchKey`      Key for toggling a switch
+  `NeojjPopupSwitchEnabled`  Enabled switch flag
+  `NeojjPopupSwitchDisabled` Disabled switch flag
+  `NeojjPopupOptionKey`      Key for setting an option
+  `NeojjPopupOptionEnabled`  Option with a value set
+  `NeojjPopupOptionDisabled` Option without a value
+  `NeojjPopupActionKey`      Key that triggers an action
+  `NeojjPopupActionDisabled` Key for unimplemented action
 
 COMMAND HISTORY HIGHLIGHTS ~
 
-  `NeoJJCommandText`         Command text that was run
-  `NeoJJCommandTime`         Execution time
-  `NeoJJCommandCodeNormal`   Successful exit status (0)
-  `NeoJJCommandCodeError`    Non-zero exit status
+  `NeojjCommandText`         Command text that was run
+  `NeojjCommandTime`         Execution time
+  `NeojjCommandCodeNormal`   Successful exit status (0)
+  `NeojjCommandCodeError`    Non-zero exit status
 
 ==============================================================================
 12. EVENTS                                                *neojj-events*
 
-NeoJJ emits autocmd events using the `User` pattern. You can listen for
+Neojj emits autocmd events using the `User` pattern. You can listen for
 them with: >lua
 
     vim.api.nvim_create_autocmd("User", {
-      pattern = "NeoJJStatusRefreshed",
+      pattern = "NeojjStatusRefreshed",
       callback = function()
         -- your handler
       end,
@@ -614,10 +614,10 @@ them with: >lua
 Available events:
 
   Event                       When ~
-  `NeoJJStatusRefreshed`        Status buffer has been reloaded
-  `NeoJJCommitComplete`         A commit/describe operation completed
-  `NeoJJPushComplete`           A push operation completed
-  `NeoJJFetchComplete`          A fetch operation completed
+  `NeojjStatusRefreshed`        Status buffer has been reloaded
+  `NeojjCommitComplete`         A commit/describe operation completed
+  `NeojjPushComplete`           A push operation completed
+  `NeojjFetchComplete`          A fetch operation completed
 
 ==============================================================================
 13. JJ CONCEPTS                                        *neojj-jj-concepts*

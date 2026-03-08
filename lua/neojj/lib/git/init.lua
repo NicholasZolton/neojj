@@ -2,7 +2,7 @@ local git = require("neojj.lib.git")
 local notification = require("neojj.lib.notification")
 local input = require("neojj.lib.input")
 
----@class NeoJJGitInit
+---@class NeojjGitInit
 local M = {}
 
 M.create = function(directory)

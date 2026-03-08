@@ -9,7 +9,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJMarginPopup")
+    :name("NeojjMarginPopup")
     -- :option("n", "max-count", "256", "Limit number of commits", { default = "256", key_prefix = "-" })
     :switch(
       "o",

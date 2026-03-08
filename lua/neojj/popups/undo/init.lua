@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJUndoPopup")
+    :name("NeojjUndoPopup")
     :group_heading("Undo")
     :action("u", "Undo last operation", actions.undo)
     :action("r", "Redo last undo", actions.redo)

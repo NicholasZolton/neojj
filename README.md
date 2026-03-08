@@ -1,6 +1,6 @@
 <div align="center">
     <div>
-        <div><h1>NeoJJ</h1></div>
+        <div><h1>Neojj</h1></div>
     </div>
     <table>
         <tr>
@@ -15,7 +15,7 @@
   [![MIT](https://img.shields.io/badge/MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 </div>
 
-NeoJJ is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit), adapted to work with [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) instead of git.
+Neojj is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit), adapted to work with [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) instead of git.
 
 **Maintainer:** [Nicholas Zolton](https://github.com/nicholaszolton)
 
@@ -27,7 +27,7 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
 
 ```lua
 {
-  "NeoJJ/neojj",
+  "Neojj/neojj",
   lazy = true,
   dependencies = {
     "nvim-lua/plenary.nvim",         -- required
@@ -42,33 +42,33 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
     "nvim-mini/mini.pick",           -- optional
     "folke/snacks.nvim",             -- optional
   },
-  cmd = "NeoJJ",
+  cmd = "Neojj",
   keys = {
-    { "<leader>gg", "<cmd>NeoJJ<cr>", desc = "Show NeoJJ UI" }
+    { "<leader>gg", "<cmd>Neojj<cr>", desc = "Show Neojj UI" }
   }
 }
 ```
 
 ## Usage
 
-You can either open NeoJJ by using the `NeoJJ` command:
+You can either open Neojj by using the `Neojj` command:
 
 ```vim
-:NeoJJ             " Open the status buffer in a new tab
-:NeoJJ cwd=<cwd>   " Use a different repository path
-:NeoJJ cwd=%:p:h   " Uses the repository of the current file
-:NeoJJ kind=<kind> " Open specified popup directly
-:NeoJJ commit      " Open commit popup
-:NeoJJ bookmark    " Open bookmark popup
-:NeoJJ workspace   " Open workspace popup
+:Neojj             " Open the status buffer in a new tab
+:Neojj cwd=<cwd>   " Use a different repository path
+:Neojj cwd=%:p:h   " Uses the repository of the current file
+:Neojj kind=<kind> " Open specified popup directly
+:Neojj commit      " Open commit popup
+:Neojj bookmark    " Open bookmark popup
+:Neojj workspace   " Open workspace popup
 
 " Map it to a key
-nnoremap <leader>gg <cmd>NeoJJ<cr>
+nnoremap <leader>gg <cmd>Neojj<cr>
 ```
 
 ```lua
 -- Or via lua api
-vim.keymap.set("n", "<leader>gg", "<cmd>NeoJJ<cr>", { desc = "Open NeoJJ UI" })
+vim.keymap.set("n", "<leader>gg", "<cmd>Neojj<cr>", { desc = "Open Neojj UI" })
 ```
 
 Or using the lua api:
@@ -89,14 +89,14 @@ neojj.open({ kind = "split" })
 neojj.open({ cwd = "~" })
 
 -- You can map this to a key
-vim.keymap.set("n", "<leader>gg", neojj.open, { desc = "Open NeoJJ UI" })
+vim.keymap.set("n", "<leader>gg", neojj.open, { desc = "Open Neojj UI" })
 
 -- Wrap in a function to pass additional arguments
 vim.keymap.set(
     "n",
     "<leader>gg",
     function() neojj.open({ kind = "split" }) end,
-    { desc = "Open NeoJJ UI" }
+    { desc = "Open Neojj UI" }
 )
 ```
 
@@ -124,7 +124,7 @@ If you are coming from git, here are some key differences in jj:
 
 ## Configuration
 
-You can configure NeoJJ by running the `require('neojj').setup {}` function, passing a table as the argument.
+You can configure Neojj by running the `require('neojj').setup {}` function, passing a table as the argument.
 
 <details>
 <summary>Default Config</summary>
@@ -177,7 +177,7 @@ neojj.setup {
   },
   -- Set to false if you want to be responsible for creating _ALL_ keymappings
   use_default_keymaps = true,
-  -- Change the default way of opening NeoJJ
+  -- Change the default way of opening Neojj
   kind = "tab",
   -- Floating window style
   floating = {
@@ -259,7 +259,7 @@ neojj.setup {
     -- If enabled, use telescope for menu selection rather than vim.ui.select.
     -- Allows multi-select and some things that vim.ui.select doesn't.
     telescope = nil,
-    -- NeoJJ only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
+    -- Neojj only provides inline diffs. If you want a more traditional way to look at diffs, you can use `diffview`.
     -- The diffview integration enables the diff popup.
     --
     -- Requires you to have `sindrets/diffview.nvim` installed.
@@ -444,7 +444,7 @@ The status buffer shows:
 
 ## Workspace Support
 
-NeoJJ includes full support for jj workspaces via the `W` popup:
+Neojj includes full support for jj workspaces via the `W` popup:
 
 - **Add** (`a`) / **Add at revision** (`A`) — create a new workspace at a chosen path (defaults to parent of repo root)
 - **Quick add** (`q`) / **Quick add at revision** (`Q`) — instantly create a workspace with a random name under a configurable worktrees directory (default `~/.worktrees`)
@@ -474,25 +474,25 @@ See the built-in documentation for a comprehensive list of highlight groups. If 
 
 ## Events
 
-NeoJJ emits the following events:
+Neojj emits the following events:
 
 | Event                       | Description                        | Event Data                                         |
 |-----------------------------|------------------------------------|----------------------------------------------------|
-| `NeoJJStatusRefreshed`     | Status has been reloaded           | `{}`                                               |
-| `NeoJJCommitComplete`     | Commit has been created            | `{}`                                               |
-| `NeoJJDescribeComplete`   | Description has been updated       | `{}`                                               |
-| `NeoJJNewChangeComplete`  | New change has been created        | `{}`                                               |
-| `NeoJJSquashComplete`     | Squash has completed               | `{}`                                               |
-| `NeoJJPushComplete`       | Push has completed                 | `{}`                                               |
-| `NeoJJFetchComplete`      | Fetch has completed                | `{}`                                               |
-| `NeoJJBookmarkCreate`     | Bookmark was created               | `{ bookmark_name: string }`                        |
-| `NeoJJBookmarkDelete`     | Bookmark was deleted               | `{ bookmark_name: string }`                        |
-| `NeoJJRebaseComplete`     | A rebase finished                  | `{ commit: string, status: "ok"\|"conflict" }`     |
-| `NeoJJAbandonComplete`    | A change was abandoned             | `{ change_id: string }`                            |
+| `NeojjStatusRefreshed`     | Status has been reloaded           | `{}`                                               |
+| `NeojjCommitComplete`     | Commit has been created            | `{}`                                               |
+| `NeojjDescribeComplete`   | Description has been updated       | `{}`                                               |
+| `NeojjNewChangeComplete`  | New change has been created        | `{}`                                               |
+| `NeojjSquashComplete`     | Squash has completed               | `{}`                                               |
+| `NeojjPushComplete`       | Push has completed                 | `{}`                                               |
+| `NeojjFetchComplete`      | Fetch has completed                | `{}`                                               |
+| `NeojjBookmarkCreate`     | Bookmark was created               | `{ bookmark_name: string }`                        |
+| `NeojjBookmarkDelete`     | Bookmark was deleted               | `{ bookmark_name: string }`                        |
+| `NeojjRebaseComplete`     | A rebase finished                  | `{ commit: string, status: "ok"\|"conflict" }`     |
+| `NeojjAbandonComplete`    | A change was abandoned             | `{ change_id: string }`                            |
 
 ## Versioning
 
-NeoJJ follows semantic versioning.
+Neojj follows semantic versioning.
 
 ## Compatibility
 
@@ -500,4 +500,4 @@ The `master` branch will always be compatible with the latest **stable** release
 
 ## Acknowledgements
 
-NeoJJ is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit). Thanks to the Neogit contributors for building the foundation this project is based on.
+Neojj is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit). Thanks to the Neogit contributors for building the foundation this project is based on. This would not be possible without their work, and I personally use Neogit religiously for all things git.

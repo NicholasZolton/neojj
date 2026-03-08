@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJCommitPopup")
+    :name("NeojjCommitPopup")
     :arg_heading("Flags")
     :switch("i", "interactive", "Interactively select changes", { cli_prefix = "--" })
     :switch("e", "no-edit", "Don't edit the new change", { cli_prefix = "--" })

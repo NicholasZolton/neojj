@@ -1,6 +1,6 @@
 local M = {}
 
-local signs = { NeoJJBlank = " " }
+local signs = { NeojjBlank = " " }
 
 function M.get(name)
   local sign = signs[name]
@@ -15,8 +15,8 @@ function M.setup(config)
   if not config.disable_signs then
     for key, val in pairs(config.signs) do
       if key == "hunk" or key == "item" or key == "section" then
-        signs["NeoJJClosed" .. key] = val[1]
-        signs["NeoJJOpen" .. key] = val[2]
+        signs["NeojjClosed" .. key] = val[1]
+        signs["NeojjOpen" .. key] = val[2]
       end
     end
   end

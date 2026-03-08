@@ -8,22 +8,22 @@ local util = require("neojj.lib.util")
 local a = require("plenary.async")
 
 ---@class LogViewBuffer
----@field commits NeoJJChangeLogEntry[]
+---@field commits NeojjChangeLogEntry[]
 ---@field remotes string[]
 ---@field internal_args table
 ---@field files string[]
 ---@field buffer Buffer
 ---@field header string
----@field fetch_func fun(offset: number): NeoJJChangeLogEntry[]
+---@field fetch_func fun(offset: number): NeojjChangeLogEntry[]
 ---@field refresh_lock Semaphore
 local M = {}
 M.__index = M
 
 ---Opens a popup for selecting a commit
----@param commits NeoJJChangeLogEntry[]|nil
+---@param commits NeojjChangeLogEntry[]|nil
 ---@param internal_args table|nil
 ---@param files string[]|nil list of files to filter by
----@param fetch_func fun(offset: number): NeoJJChangeLogEntry[]
+---@param fetch_func fun(offset: number): NeojjChangeLogEntry[]
 ---@param header string
 ---@param remotes string[]
 ---@return LogViewBuffer
@@ -75,8 +75,8 @@ function M:open()
   M.instance = self
 
   self.buffer = Buffer.create {
-    name = "NeoJJLogView",
-    filetype = "NeoJJLogView",
+    name = "NeojjLogView",
+    filetype = "NeojjLogView",
     kind = config.values.log_view.kind,
     context_highlight = false,
     header = self.header,

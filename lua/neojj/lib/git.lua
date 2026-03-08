@@ -1,5 +1,5 @@
----@class NeoJJGitLib
----@field repo        NeoJJRepo
+---@class NeojjGitLib
+---@field repo        NeojjRepo
 ---@field branch      table
 ---@field cherry      table
 ---@field cli         table

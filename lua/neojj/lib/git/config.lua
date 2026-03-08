@@ -1,7 +1,7 @@
 local git = require("neojj.lib.git")
 local logger = require("neojj.logger")
 
----@class NeoJJGitConfig
+---@class NeojjGitConfig
 local M = {}
 
 ---@class ConfigEntry

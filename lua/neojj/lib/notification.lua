@@ -10,7 +10,7 @@ local function create(message, level, opts)
   end
 
   vim.schedule(function()
-    vim.notify(message, level, { title = "NeoJJ", icon = config.values.notification_icon })
+    vim.notify(message, level, { title = "Neojj", icon = config.values.notification_icon })
   end)
 end
 

@@ -3,10 +3,10 @@ local M = {}
 local did_setup = false
 
 ---Setup neojj
----@param opts NeoJJConfig
+---@param opts NeojjConfig
 function M.setup(opts)
   if vim.fn.has("nvim-0.10") ~= 1 then
-    vim.notify("NeoJJ HEAD requires at least NVIM 0.10 - Pin to tag 'v0.0.1' for NVIM 0.9.x")
+    vim.notify("Neojj HEAD requires at least NVIM 0.10 - Pin to tag 'v0.0.1' for NVIM 0.9.x")
     return
   end
 
@@ -23,7 +23,7 @@ function M.setup(opts)
   end
   did_setup = true
 
-  M.autocmd_group = vim.api.nvim_create_augroup("NeoJJ", { clear = false })
+  M.autocmd_group = vim.api.nvim_create_augroup("Neojj", { clear = false })
 
   M.status = require("neojj.buffers.status")
 

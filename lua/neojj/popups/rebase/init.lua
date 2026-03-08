@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJRebasePopup")
+    :name("NeojjRebasePopup")
     :arg_heading("Flags")
     :switch("e", "skip-emptied", "Skip emptied commits")
     :switch("k", "keep-divergent", "Keep divergent commits")

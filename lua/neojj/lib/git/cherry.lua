@@ -1,7 +1,7 @@
 local git = require("neojj.lib.git")
 local util = require("neojj.lib.util")
 
----@class NeoJJGitCherry
+---@class NeojjGitCherry
 local M = {}
 
 function M.list(upstream, head)

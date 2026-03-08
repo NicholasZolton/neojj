@@ -49,24 +49,24 @@ local HINT = Component.new(function(props)
     end
 
     return row {
-      text.highlight("NeoJJPopupActionKey")(key_hint),
+      text.highlight("NeojjPopupActionKey")(key_hint),
       text(" "),
       text(hint),
     }
   end
 
   return row {
-    text.highlight("NeoJJSubtleText")("Hint: "),
+    text.highlight("NeojjSubtleText")("Hint: "),
     entry("Toggle", "toggle"),
-    text.highlight("NeoJJSubtleText")(" | "),
+    text.highlight("NeojjSubtleText")(" | "),
     entry("Discard", "discard"),
-    text.highlight("NeoJJSubtleText")(" | "),
+    text.highlight("NeojjSubtleText")(" | "),
     entry("CommitPopup", "change"),
-    text.highlight("NeoJJSubtleText")(" | "),
+    text.highlight("NeojjSubtleText")(" | "),
     entry("RebasePopup", "rebase"),
-    text.highlight("NeoJJSubtleText")(" | "),
+    text.highlight("NeojjSubtleText")(" | "),
     entry("BookmarkPopup", "bookmark"),
-    text.highlight("NeoJJSubtleText")(" | "),
+    text.highlight("NeojjSubtleText")(" | "),
     entry("HelpPopup", "help"),
   }
 end)
@@ -82,7 +82,7 @@ local JJHead = Component.new(function(props)
   if props.bookmarks and #props.bookmarks > 0 then
     for _, bm in ipairs(props.bookmarks) do
       table.insert(bookmark_parts, text(" "))
-      table.insert(bookmark_parts, text.highlight("NeoJJBranchHead")(bm))
+      table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
     end
   end
 
@@ -96,14 +96,14 @@ local JJHead = Component.new(function(props)
   local status_text = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
   local header_parts = {
-    text.highlight("NeoJJStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding or 10)),
-    text.highlight("NeoJJBranch")(props.symbol .. " "),
-    text.highlight("NeoJJChangeId")(short_change),
+    text.highlight("NeojjStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding or 10)),
+    text.highlight("NeojjBranch")(props.symbol .. " "),
+    text.highlight("NeojjChangeId")(short_change),
     text(" "),
-    text.highlight("NeoJJObjectId")(short_commit),
+    text.highlight("NeojjObjectId")(short_commit),
   }
   vim.list_extend(header_parts, bookmark_parts)
-  table.insert(header_parts, text.highlight(props.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_text))
+  table.insert(header_parts, text.highlight(props.conflict and "NeojjConflict" or "NeojjSubtleText")(status_text))
 
   return col({
     row(header_parts),
@@ -115,13 +115,13 @@ local JJHead = Component.new(function(props)
 end)
 
 local SectionTitle = Component.new(function(props)
-  return { text.highlight(props.highlight or "NeoJJSectionHeader")(props.title) }
+  return { text.highlight(props.highlight or "NeojjSectionHeader")(props.title) }
 end)
 
 local Section = Component.new(function(props)
   local count
   if props.count then
-    count = { text(" ("), text.highlight("NeoJJSectionHeaderCount")(#props.items), text(")") }
+    count = { text(" ("), text.highlight("NeojjSectionHeaderCount")(#props.items), text(")") }
   end
 
   return col.tag("Section")({
@@ -219,7 +219,7 @@ local SectionItemFile = function(section, config)
     end
 
     local name = item.original_name and ("%s -> %s"):format(item.original_name, item.name) or item.name
-    local highlight = "NeoJJFileMode"
+    local highlight = "NeojjFileMode"
 
     return col.tag("Item")({
       row {
@@ -247,7 +247,7 @@ local SectionItemChange = Component.new(function(item)
   if item.bookmarks and #item.bookmarks > 0 then
     for _, bm in ipairs(item.bookmarks) do
       table.insert(bookmark_parts, text(" "))
-      table.insert(bookmark_parts, text.highlight("NeoJJBranchHead")(bm))
+      table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
     end
   end
 
@@ -261,14 +261,14 @@ local SectionItemChange = Component.new(function(item)
   local status_suffix = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
   local parts = {
-    text.highlight("NeoJJChangeId")(change_id),
+    text.highlight("NeojjChangeId")(change_id),
     text(" "),
-    text.highlight("NeoJJObjectId")(commit_id),
+    text.highlight("NeojjObjectId")(commit_id),
   }
   vim.list_extend(parts, bookmark_parts)
   table.insert(parts, text(" "))
   table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
-  table.insert(parts, text.highlight(item.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_suffix))
+  table.insert(parts, text.highlight(item.conflict and "NeojjConflict" or "NeojjSubtleText")(status_suffix))
 
   return row(parts, {
     yankable = item.change_id,
@@ -281,12 +281,12 @@ local SectionItemBookmark = Component.new(function(item)
   if item.unpushed then
     label = label .. "*"
   end
-  local highlight = "NeoJJBranch"
+  local highlight = "NeojjBranch"
   if item.deleted then
-    highlight = "NeoJJSubtleText"
+    highlight = "NeojjSubtleText"
   elseif item.remote and item.remote ~= "" then
     label = item.name .. "@" .. item.remote
-    highlight = "NeoJJRemote"
+    highlight = "NeojjRemote"
   end
 
   local parts = {
@@ -295,11 +295,11 @@ local SectionItemBookmark = Component.new(function(item)
 
   if not item.deleted then
     table.insert(parts, text(" "))
-    table.insert(parts, text.highlight("NeoJJChangeId")((item.change_id or ""):sub(1, 8)))
+    table.insert(parts, text.highlight("NeojjChangeId")((item.change_id or ""):sub(1, 8)))
     table.insert(parts, text(" "))
     table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
   else
-    table.insert(parts, text.highlight("NeoJJSubtleText")(" (deleted)"))
+    table.insert(parts, text.highlight("NeojjSubtleText")(" (deleted)"))
   end
 
   return row(parts, {
@@ -310,7 +310,7 @@ end)
 
 local SectionItemConflict = Component.new(function(item)
   return row({
-    text.highlight("NeoJJGraphRed")("C "),
+    text.highlight("NeojjGraphRed")("C "),
     text(item.name),
   }, {
     yankable = item.name,
@@ -365,7 +365,7 @@ function M.Status(state, config)
         }, { foldable = true, folded = config.status and config.status.HEAD_folded }),
         EmptyLine(),
         show_conflicts and Section {
-          title = SectionTitle { title = "Conflicts", highlight = "NeoJJSectionConflicts" },
+          title = SectionTitle { title = "Conflicts", highlight = "NeojjSectionConflicts" },
           count = true,
           render = SectionItemConflict,
           items = state.conflicts.items,
@@ -373,7 +373,7 @@ function M.Status(state, config)
           name = "conflicts",
         },
         show_files and Section {
-          title = SectionTitle { title = "Modified files", highlight = "NeoJJSectionFiles" },
+          title = SectionTitle { title = "Modified files", highlight = "NeojjSectionFiles" },
           count = true,
           render = SectionItemFile("files", config),
           items = state.files.items,
@@ -381,7 +381,7 @@ function M.Status(state, config)
           name = "files",
         },
         show_recent and Section {
-          title = SectionTitle { title = "Recent Changes", highlight = "NeoJJSectionRecent" },
+          title = SectionTitle { title = "Recent Changes", highlight = "NeojjSectionRecent" },
           count = false,
           render = SectionItemChange,
           items = state.recent.items,
@@ -389,7 +389,7 @@ function M.Status(state, config)
           name = "recent",
         },
         show_bookmarks and Section {
-          title = SectionTitle { title = "Bookmarks", highlight = "NeoJJSectionBookmarks" },
+          title = SectionTitle { title = "Bookmarks", highlight = "NeojjSectionBookmarks" },
           count = true,
           render = SectionItemBookmark,
           items = state.bookmarks.items,

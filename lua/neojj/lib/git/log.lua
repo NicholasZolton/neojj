@@ -4,7 +4,7 @@ local config = require("neojj.config")
 local record = require("neojj.lib.record")
 local state = require("neojj.lib.state")
 
----@class NeoJJGitLog
+---@class NeojjGitLog
 local M = {}
 
 local commit_header_pat = "([| ]*)(%*?)([| ]*)commit (%w+)"
@@ -425,7 +425,7 @@ function M.register(meta)
     repo_state.recent = { items = {} }
 
     local count = config.values.status.recent_commit_count
-    local order = state.get({ "NeoJJMarginPopup", "-order" }, config.values.commit_order)
+    local order = state.get({ "NeojjMarginPopup", "-order" }, config.values.commit_order)
 
     if count > 0 then
       local args = { "--max-count=" .. tostring(count) }

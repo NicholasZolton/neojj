@@ -15,57 +15,57 @@ local modules = {
   "hooks",
 }
 
----@class NeoJJRepoState
+---@class NeojjRepoState
 ---@field worktree_root     string Absolute path to the root of the current worktree
 ---@field worktree_git_dir  string Absolute path to the .git/ dir of the current worktree
 ---@field git_dir           string Absolute path of the .git/ dir for the repository
----@field head              NeoJJRepoHead
----@field upstream          NeoJJRepoRemote
----@field pushRemote        NeoJJRepoRemote
----@field untracked         NeoJJRepoIndex
----@field unstaged          NeoJJRepoIndex
----@field staged            NeoJJRepoIndex
----@field recent            NeoJJRepoRecent
----@field sequencer         NeoJJRepoSequencer
+---@field head              NeojjRepoHead
+---@field upstream          NeojjRepoRemote
+---@field pushRemote        NeojjRepoRemote
+---@field untracked         NeojjRepoIndex
+---@field unstaged          NeojjRepoIndex
+---@field staged            NeojjRepoIndex
+---@field recent            NeojjRepoRecent
+---@field sequencer         NeojjRepoSequencer
 ---@field hooks             string[]
 ---
----@class NeoJJRepoHead
+---@class NeojjRepoHead
 ---@field branch         string|nil
 ---@field oid            string|nil
 ---@field abbrev         string|nil
 ---@field detached       boolean
 ---@field commit_message string|nil
----@field tag            NeoJJRepoHeadTag
+---@field tag            NeojjRepoHeadTag
 ---
----@class NeoJJRepoHeadTag
+---@class NeojjRepoHeadTag
 ---@field name           string|nil
 ---@field oid            string|nil
 ---@field distance       number|nil
 ---
----@class NeoJJRepoRemote
+---@class NeojjRepoRemote
 ---@field branch         string|nil
 ---@field commit_message string|nil
 ---@field remote         string|nil
 ---@field ref            string|nil
 ---@field abbrev         string|nil
 ---@field oid            string|nil
----@field unmerged       NeoJJRepoIndex
----@field unpulled       NeoJJRepoIndex
+---@field unmerged       NeojjRepoIndex
+---@field unpulled       NeojjRepoIndex
 ---
----@class NeoJJRepoIndex
+---@class NeojjRepoIndex
 ---@field items          StatusItem[]
 ---
----@class NeoJJRepoRecent
+---@class NeojjRepoRecent
 ---@field items          CommitItem[]
 ---
----@class NeoJJRepoSequencer
+---@class NeojjRepoSequencer
 ---@field items          SequencerItem[]
 ---@field head           string|nil
 ---@field head_oid       string|nil
 ---@field revert         boolean
 ---@field cherry_pick    boolean
 ---
----@return NeoJJRepoState
+---@return NeojjRepoState
 local function empty_state()
   return {
     worktree_root = "",
@@ -118,9 +118,9 @@ local function empty_state()
   }
 end
 
----@class NeoJJRepo
+---@class NeojjRepo
 ---@field lib               table
----@field state             NeoJJRepoState
+---@field state             NeojjRepoState
 ---@field worktree_root     string Project root, or  worktree
 ---@field worktree_git_dir  string Dir to watch for changes in worktree
 ---@field git_dir           string '.git/' directory for repo
@@ -135,7 +135,7 @@ local instances = {}
 local lastDir = vim.uv.cwd()
 
 ---@param dir? string
----@return NeoJJRepo
+---@return NeojjRepo
 function Repo.instance(dir)
   if dir and dir ~= lastDir then
     lastDir = dir
@@ -154,7 +154,7 @@ end
 
 -- Use Repo.instance when calling directly to ensure it's registered
 ---@param dir string
----@return NeoJJRepo
+---@return NeojjRepo
 function Repo.new(dir)
   logger.debug("[REPO]: Initializing Repository")
 

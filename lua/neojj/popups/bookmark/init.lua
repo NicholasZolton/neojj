@@ -6,7 +6,7 @@ local M = {}
 function M.create(env)
   local p = popup
     .builder()
-    :name("NeoJJBookmarkPopup")
+    :name("NeojjBookmarkPopup")
     :switch("B", "allow-backwards", "Allow moving bookmark backwards")
     :group_heading("Create")
     :action("c", "Create", actions.create)

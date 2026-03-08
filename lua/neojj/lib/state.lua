@@ -2,7 +2,7 @@ local logger = require("neojj.logger")
 local config = require("neojj.config")
 local Path = require("plenary.path")
 
----@class NeoJJState
+---@class NeojjState
 ---@field loaded boolean
 ---@field _enabled boolean
 ---@field state table
@@ -28,7 +28,7 @@ function M.filepath(config)
 end
 
 ---Initializes state
----@param config NeoJJConfig
+---@param config NeojjConfig
 function M.setup(config)
   if M.loaded then
     return

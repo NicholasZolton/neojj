@@ -6,7 +6,7 @@ local M = {}
 function M.create()
   local p = popup
     .builder()
-    :name("NeoJJLogPopup")
+    :name("NeojjLogPopup")
     :arg_heading("Filtering")
     :option("n", "limit", "256", "Limit number of changes", { default = "256", key_prefix = "-" })
     :option("r", "revisions", "", "Revset filter")

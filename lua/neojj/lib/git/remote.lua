@@ -1,7 +1,7 @@
 local git = require("neojj.lib.git")
 local util = require("neojj.lib.util")
 
----@class NeoJJGitRemote
+---@class NeojjGitRemote
 local M = {}
 
 -- https://github.com/magit/magit/blob/main/lisp/magit-remote.el#LL141C32-L141C32

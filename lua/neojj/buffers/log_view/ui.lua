@@ -10,7 +10,7 @@ local row = Ui.row
 
 local M = {}
 
----@param commits NeoJJChangeLogEntry[]
+---@param commits NeojjChangeLogEntry[]
 ---@param remotes string[]
 ---@param args table
 ---@return table
@@ -35,9 +35,9 @@ function M.View(commits, remotes, args)
     graph,
     col {
       row {
-        text.highlight("NeoJJGraphBoldBlue")("Type"),
-        text.highlight("NeoJJGraphBoldCyan")(" + "),
-        text.highlight("NeoJJGraphBoldBlue")("to show more history"),
+        text.highlight("NeojjGraphBoldBlue")("Type"),
+        text.highlight("NeojjGraphBoldCyan")(" + "),
+        text.highlight("NeojjGraphBoldBlue")("to show more history"),
       },
     }
   )

@@ -28,7 +28,7 @@ Buffer.__index = Buffer
 ---@return Buffer
 function Buffer:new(handle, win_handle)
   local this = {
-    autocmd_group = api.nvim_create_augroup("NeoJJ-augroup-" .. handle, { clear = true }),
+    autocmd_group = api.nvim_create_augroup("Neojj-augroup-" .. handle, { clear = true }),
     handle = handle,
     win_handle = win_handle,
     border = nil,
@@ -355,7 +355,7 @@ function Buffer:show()
       api.nvim_win_set_cursor(content_window, { 1, 0 })
       win = content_window
     elseif self.kind == "popup" then
-      -- local title, _ = self.name:gsub("^NeoJJ", ""):gsub("Popup$", "")
+      -- local title, _ = self.name:gsub("^Neojj", ""):gsub("Popup$", "")
 
       local content_window = api.nvim_open_win(self.handle, true, {
         anchor = "SW",
@@ -617,7 +617,7 @@ function Buffer:set_header(text, scroll)
   -- Create a blank line at the top of the buffer so our floating window doesn't
   -- hide any content
   self:set_extmark(self:get_namespace_id("default"), 0, 0, {
-    virt_lines = { { { "", "NeoJJObjectId" } } },
+    virt_lines = { { { "", "NeojjObjectId" } } },
     virt_lines_above = true,
   })
 
@@ -642,9 +642,9 @@ function Buffer:set_header(text, scroll)
     border = "none",
   })
   vim.wo[winid].wrap = false
-  vim.wo[winid].winhl = "NormalFloat:NeoJJFloatHeader"
+  vim.wo[winid].winhl = "NormalFloat:NeojjFloatHeader"
 
-  fn.matchadd("NeoJJFloatHeaderHighlight", [[\v\<cr\>|\<esc\>]], 100, -1, { window = winid })
+  fn.matchadd("NeojjFloatHeaderHighlight", [[\v\<cr\>|\<esc\>]], 100, -1, { window = winid })
   self.header_win_handle = winid
 
   if scroll then
@@ -785,14 +785,14 @@ function Buffer.create(config)
     buffer:set_window_option("listchars", "")
     buffer:set_window_option("list", false)
     buffer:call(function()
-      vim.opt_local.winhl:append("Folded:NeoJJFold")
-      vim.opt_local.winhl:append("FoldColumn:NeoJJFoldColumn")
-      vim.opt_local.winhl:append("SignColumn:NeoJJSignColumn")
-      vim.opt_local.winhl:append("Normal:NeoJJNormal")
-      vim.opt_local.winhl:append("NormalFloat:NeoJJNormalFloat")
-      vim.opt_local.winhl:append("FloatBorder:NeoJJFloatBorder")
-      vim.opt_local.winhl:append("WinSeparator:NeoJJWinSeparator")
-      vim.opt_local.winhl:append("CursorLineNr:NeoJJCursorLineNr")
+      vim.opt_local.winhl:append("Folded:NeojjFold")
+      vim.opt_local.winhl:append("FoldColumn:NeojjFoldColumn")
+      vim.opt_local.winhl:append("SignColumn:NeojjSignColumn")
+      vim.opt_local.winhl:append("Normal:NeojjNormal")
+      vim.opt_local.winhl:append("NormalFloat:NeojjNormalFloat")
+      vim.opt_local.winhl:append("FloatBorder:NeojjFloatBorder")
+      vim.opt_local.winhl:append("WinSeparator:NeojjWinSeparator")
+      vim.opt_local.winhl:append("CursorLineNr:NeojjCursorLineNr")
       vim.opt_local.fillchars:append("fold: ")
     end)
 
@@ -888,7 +888,7 @@ function Buffer.create(config)
           local is_cursor = line == cursor
           if is_cursor or not disable_hl then
             local line_hl = ("%s%s"):format(
-              buffer.ui:get_line_highlight(line) or "NeoJJDiffContext",
+              buffer.ui:get_line_highlight(line) or "NeojjDiffContext",
               is_cursor and "Cursor" or "Highlight"
             )
 
@@ -916,7 +916,7 @@ function Buffer.create(config)
         local item = buffer.ui:find_component_by_oid(active_oid)
         if item and item.first and item.last then
           for line = item.first, item.last do
-            buffer:add_line_highlight(line - 1, "NeoJJActiveItem", {
+            buffer:add_line_highlight(line - 1, "NeojjActiveItem", {
               priority = 200,
               namespace = "ActiveItem",
             })
@@ -952,20 +952,20 @@ function Buffer.create(config)
             local fold
 
             if fn.foldclosed(line) == -1 then
-              fold = "NeoJJOpen"
+              fold = "NeojjOpen"
             else
-              fold = "NeoJJClosed"
+              fold = "NeojjClosed"
             end
 
             buffer:place_sign(line, fold .. string.lower(foldmarkers[line]), {
               namespace = "FoldSigns",
-              highlight = "NeoJJSubtleText",
-              cursor_hl = "NeoJJCursorLine",
+              highlight = "NeojjSubtleText",
+              cursor_hl = "NeojjCursorLine",
             })
           else
-            buffer:place_sign(line, "NeoJJBlank", {
+            buffer:place_sign(line, "NeojjBlank", {
               namespace = "FoldSigns",
-              cursor_hl = "NeoJJCursorLine",
+              cursor_hl = "NeojjCursorLine",
             })
           end
         end

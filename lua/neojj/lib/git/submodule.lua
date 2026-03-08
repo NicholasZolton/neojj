@@ -1,6 +1,6 @@
 local git = require("neojj.lib.git")
 
----@class NeoJJGitSubmodule
+---@class NeojjGitSubmodule
 local M = {}
 
 ---@return string[]

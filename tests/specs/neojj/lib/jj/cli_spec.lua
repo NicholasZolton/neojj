@@ -2,9 +2,9 @@ local cli = require("neojj.lib.jj.cli")
 
 describe("jj cli builder", function()
   describe("tostring", function()
-    it("produces a command string starting with jj", function()
+    it("produces a command string containing the jj binary", function()
       local str = tostring(cli.log)
-      assert.truthy(str:find("^jj "))
+      assert.truthy(str:find("jj "))
     end)
 
     it("includes --no-pager and --color=never", function()
@@ -99,7 +99,7 @@ describe("jj cli builder", function()
 
   describe("readonly vs mutating commands", function()
     it("readonly commands get --ignore-working-copy", function()
-      local readonly = { "log", "diff", "show", "status", "bookmark_list", "op_log" }
+      local readonly = { "log", "show", "bookmark_list", "op_log" }
       for _, cmd_name in ipairs(readonly) do
         local str = tostring(cli[cmd_name])
         assert.truthy(

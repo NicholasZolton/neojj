@@ -351,7 +351,7 @@ end
 
 ---@class GitCommandBisect: GitCommandBuilder
 
----@class NeoJJGitCLI
+---@class NeojjGitCLI
 ---@field absorb         GitCommandAbsorb
 ---@field add            GitCommandAdd
 ---@field apply          GitCommandApply

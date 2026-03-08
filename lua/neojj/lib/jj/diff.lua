@@ -187,7 +187,7 @@ end
 ---When item.diff is accessed, it runs `jj diff --git` for that file and parses the result.
 ---Uses --ignore-working-copy because the status refresh already triggered a snapshot.
 ---Supports both sync (vim.system:wait) and async (plenary.async) contexts.
----@param item NeoJJFileItem
+---@param item NeojjFileItem
 function M.build(item)
   local empty_diff = {
     kind = "modified",
@@ -297,7 +297,7 @@ function M.stat(revision)
 end
 
 ---Build diff for a specific file item (lazy loading)
----@param item NeoJJFileItem
+---@param item NeojjFileItem
 ---@param revision? string
 ---@return string[] Raw diff lines for this file
 function M.file_diff(item, revision)

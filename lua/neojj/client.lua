@@ -11,7 +11,7 @@ function M.get_nvim_remote_editor(show_diff)
   local neojj_path = debug.getinfo(1, "S").source:sub(2, -#"lua/neojj/client.lua" - 2)
   local nvim_path = fn.shellescape(vim.v.progpath)
 
-  logger.debug("[CLIENT] NeoJJ path: " .. neojj_path)
+  logger.debug("[CLIENT] Neojj path: " .. neojj_path)
   logger.debug("[CLIENT] Neovim path: " .. nvim_path)
   local runtimepath_cmd = fn.shellescape(fmt("set runtimepath^=%s", fn.fnameescape(tostring(neojj_path))))
   local lua_cmd =

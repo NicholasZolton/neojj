@@ -90,8 +90,8 @@ function M:open()
   local status_maps = config.get_reversed_status_maps()
 
   self.buffer = Buffer.create {
-    name = "NeoJJOpView",
-    filetype = "NeoJJOpView",
+    name = "NeojjOpView",
+    filetype = "NeojjOpView",
     kind = config.values.log_view and config.values.log_view.kind or "tab",
     context_highlight = false,
     status_column = not config.values.disable_signs and "" or nil,

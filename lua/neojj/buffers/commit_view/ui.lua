@@ -12,43 +12,43 @@ local map = util.map
 
 function M.OverviewFile(file)
   return row.tag("OverviewFile") {
-    text.highlight("NeoJJFilePath")(file.path),
+    text.highlight("NeojjFilePath")(file.path),
     text("  | "),
     text.highlight("Number")(util.pad_left(file.changes, 5)),
     text("  "),
-    text.highlight("NeoJJDiffAdditions")(file.insertions),
-    text.highlight("NeoJJDiffDeletions")(file.deletions),
+    text.highlight("NeojjDiffAdditions")(file.insertions),
+    text.highlight("NeojjDiffDeletions")(file.deletions),
   }
 end
 
 function M.CommitHeader(info)
   local header_items = {
-    text.line_hl("NeoJJCommitViewHeader")("Change " .. (info.change_id or info.commit_arg or "")),
+    text.line_hl("NeojjCommitViewHeader")("Change " .. (info.change_id or info.commit_arg or "")),
   }
 
   -- Show commit ID secondary
   if info.commit_id and info.commit_id ~= "" then
     table.insert(header_items, row {
-      text.highlight("NeoJJSubtleText")("Commit ID:  "),
-      text.highlight("NeoJJObjectId")(info.commit_id),
+      text.highlight("NeojjSubtleText")("Commit ID:  "),
+      text.highlight("NeojjObjectId")(info.commit_id),
     })
   end
 
   -- Author info
   table.insert(header_items, row {
-    text.highlight("NeoJJSubtleText")("Author:     "),
+    text.highlight("NeojjSubtleText")("Author:     "),
     text((info.author_name or "") .. " <" .. (info.author_email or "") .. ">"),
   })
   table.insert(header_items, row {
-    text.highlight("NeoJJSubtleText")("Date:       "),
+    text.highlight("NeojjSubtleText")("Date:       "),
     text(info.author_date or ""),
   })
 
   -- Bookmarks
   if info.bookmarks and #info.bookmarks > 0 then
     table.insert(header_items, row {
-      text.highlight("NeoJJSubtleText")("Bookmarks:  "),
-      text.highlight("NeoJJBranch")(table.concat(info.bookmarks, ", ")),
+      text.highlight("NeojjSubtleText")("Bookmarks:  "),
+      text.highlight("NeojjBranch")(table.concat(info.bookmarks, ", ")),
     })
   end
 
@@ -62,8 +62,8 @@ function M.CommitHeader(info)
   end
   if #status_parts > 0 then
     table.insert(header_items, row {
-      text.highlight("NeoJJSubtleText")("Status:     "),
-      text.highlight("NeoJJDiffDeletions")(table.concat(status_parts, ", ")),
+      text.highlight("NeojjSubtleText")("Status:     "),
+      text.highlight("NeojjDiffDeletions")(table.concat(status_parts, ", ")),
     })
   end
 
@@ -88,7 +88,7 @@ function M.CommitView(info, overview, item_filter)
   return {
     M.CommitHeader(info),
     text(""),
-    col(map(info.description, text), { highlight = "NeoJJCommitViewDescription", tag = "Description" }),
+    col(map(info.description, text), { highlight = "NeojjCommitViewDescription", tag = "Description" }),
     text(""),
     text(overview.summary),
     col(map(overview.files, M.OverviewFile), { tag = "OverviewFileList" }),

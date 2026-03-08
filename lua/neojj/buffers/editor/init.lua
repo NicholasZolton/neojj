@@ -196,7 +196,7 @@ function M:open(kind)
       if ok and repo and repo.state then
         for _, bm in ipairs(repo.state.head.bookmarks or {}) do
           if bm and bm ~= "" then
-            vim.fn.matchadd("NeoJJBranch", vim.pesc(bm), 100)
+            vim.fn.matchadd("NeojjBranch", vim.pesc(bm), 100)
           end
         end
       end

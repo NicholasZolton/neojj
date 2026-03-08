@@ -1,10 +1,10 @@
----@class NeoJJLib
----@field repo    NeoJJRepo
----@field cli     NeoJJCLI
----@field status  NeoJJStatus
----@field log     NeoJJLog
----@field diff    NeoJJDiff
----@field bookmark NeoJJBookmark
+---@class NeojjLib
+---@field repo    NeojjRepo
+---@field cli     NeojjCLI
+---@field status  NeojjStatus
+---@field log     NeojjLog
+---@field diff    NeojjDiff
+---@field bookmark NeojjBookmark
 local JJ = {}
 
 setmetatable(JJ, {

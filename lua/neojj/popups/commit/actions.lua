@@ -15,7 +15,7 @@ function M.commit(popup)
     builder = builder.args(unpack(args))
   end
   client.wrap(builder, {
-    autocmd = "NeoJJCommitComplete",
+    autocmd = "NeojjCommitComplete",
     msg = {
       success = "Committed",
       fail = "Commit aborted",
@@ -125,7 +125,7 @@ function M.commit_with_bookmark(popup)
     builder = builder.args(unpack(args))
   end
   local code = client.wrap(builder, {
-    autocmd = "NeoJJCommitComplete",
+    autocmd = "NeojjCommitComplete",
     msg = {
       success = "Committed",
       fail = "Commit aborted",
@@ -152,7 +152,7 @@ function M.describe(popup)
     builder = builder.args(unpack(args))
   end
   client.wrap(builder, {
-    autocmd = "NeoJJDescribeComplete",
+    autocmd = "NeojjDescribeComplete",
     msg = {
       success = "Description updated",
       fail = "Describe failed",
