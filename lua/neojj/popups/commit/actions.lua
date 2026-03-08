@@ -60,17 +60,32 @@ local function get_local_bookmarks_at(rev)
   return names
 end
 
---- Move local bookmarks from @- to @ after creating a new change
----@param bookmarks string[]
+--- Move bookmarks forward after jj new/commit.
+--- Before the operation: @ had some bookmarks, @- had some bookmarks.
+--- After the operation: old @ is now @-, old @- is now @~2.
+--- We move: old @ bookmarks (now on @-) → new @, old @- bookmarks (now on @~2) → new @-.
 ---@return string[] moved bookmark names
-local function move_bookmarks_forward(bookmarks)
+local function advance_bookmarks()
   local moved = {}
-  for _, name in ipairs(bookmarks) do
-    local set_result = jj.cli.bookmark_set.args(name).revision("@").call()
-    if set_result and set_result.code == 0 then
-      table.insert(moved, name)
+
+  -- Bookmarks from old @ (now on @-) → move to new @
+  local at_bookmarks = get_local_bookmarks_at("@-")
+  for _, name in ipairs(at_bookmarks) do
+    local r = jj.cli.bookmark_set.args(name).revision("@").call()
+    if r and r.code == 0 then
+      table.insert(moved, name .. " → @")
     end
   end
+
+  -- Bookmarks from old @- (now on @~2) → move to new @-
+  local parent_bookmarks = get_local_bookmarks_at("@~2")
+  for _, name in ipairs(parent_bookmarks) do
+    local r = jj.cli.bookmark_set.args(name).revision("@-").call()
+    if r and r.code == 0 then
+      table.insert(moved, name .. " → @-")
+    end
+  end
+
   return moved
 end
 
@@ -86,9 +101,7 @@ function M.new_change_with_bookmark(popup)
     return
   end
 
-  -- After jj new: old @ is now @-, new @ is empty working copy
-  local bookmarks = get_local_bookmarks_at("@-")
-  local moved = move_bookmarks_forward(bookmarks)
+  local moved = advance_bookmarks()
   picker_cache.invalidate_revisions()
   if #moved > 0 then
     notification.info("Created new change, moved: " .. table.concat(moved, ", "), { dismiss = true })
@@ -114,10 +127,7 @@ function M.commit_with_bookmark(popup)
   })
 
   if code == 0 then
-    -- After jj commit: old @ is now @-, new @ is empty working copy
-    -- Find bookmarks on @- and move them forward to @
-    local bookmarks = get_local_bookmarks_at("@-")
-    local moved = move_bookmarks_forward(bookmarks)
+    local moved = advance_bookmarks()
     picker_cache.invalidate_revisions()
     if #moved > 0 then
       notification.info("Moved bookmarks: " .. table.concat(moved, ", "), { dismiss = true })

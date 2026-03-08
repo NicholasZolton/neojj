@@ -3,38 +3,10 @@ local M = {}
 local jj = require("neojj.lib.jj")
 local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
-
-local function get_local_bookmarks()
-  local items = jj.repo.state.bookmarks.items
-  local names = {}
-  for _, item in ipairs(items) do
-    if not item.remote then
-      table.insert(names, item.name)
-    end
-  end
-  return names
-end
-
-local function get_recent_change_ids()
-  local items = jj.repo.state.recent.items
-  local ids = {}
-  for _, item in ipairs(items) do
-    local short = string.sub(item.change_id, 1, 12)
-    local desc = item.description ~= "" and item.description or "(no description)"
-    table.insert(ids, short .. " " .. desc)
-  end
-  return ids
-end
-
-local function extract_change_id(selection)
-  if not selection then
-    return nil
-  end
-  return selection:match("^(%S+)")
-end
+local picker_cache = require("neojj.lib.picker_cache")
 
 function M.push_bookmark(popup)
-  local bookmarks = get_local_bookmarks()
+  local bookmarks = picker_cache.get_local_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Push bookmark" }
   if not name then
     return
@@ -55,9 +27,9 @@ function M.push_bookmark(popup)
 end
 
 function M.push_change(popup)
-  local options = get_recent_change_ids()
+  local options = picker_cache.get_all_revisions()
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Push change" }
-  local rev = extract_change_id(selection)
+  local rev = picker_cache.parse_selection(selection)
   if not rev then
     return
   end

@@ -3,6 +3,7 @@ local jj = require("neojj.lib.jj")
 local input = require("neojj.lib.input")
 local LogViewBuffer = require("neojj.buffers.log_view")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
+local picker_cache = require("neojj.lib.picker_cache")
 
 local function get_changes(popup, revset)
   local jj_log = require("neojj.lib.jj.log")
@@ -43,12 +44,7 @@ function M.log_revset(popup)
 end
 
 function M.log_bookmark(popup)
-  local bookmarks = {}
-  for _, item in ipairs(jj.repo.state.bookmarks.items) do
-    if not item.remote then
-      table.insert(bookmarks, item.name)
-    end
-  end
+  local bookmarks = picker_cache.get_local_bookmark_names()
 
   local bm = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Log bookmark" }
   if not bm then return end
@@ -62,16 +58,11 @@ function M.op_log(_popup)
 end
 
 function M.obslog(_popup)
-  local options = {}
-  for _, item in ipairs(jj.repo.state.recent.items) do
-    local short = string.sub(item.change_id, 1, 12)
-    local desc = item.description ~= "" and item.description or "(no description)"
-    table.insert(options, short .. " " .. desc)
-  end
+  local options = picker_cache.get_all_revisions()
 
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Obslog for change" }
   if not selection then return end
-  local change_id = selection:match("^(%S+)")
+  local change_id = picker_cache.parse_selection(selection)
   if not change_id then return end
 
   local result = jj.cli.obslog.args("-r", change_id).call { hidden = true, trim = true }

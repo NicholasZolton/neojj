@@ -4,58 +4,7 @@ local jj = require("neojj.lib.jj")
 local input = require("neojj.lib.input")
 local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
-
-local function get_local_bookmarks()
-  local items = jj.repo.state.bookmarks.items
-  local names = {}
-  for _, item in ipairs(items) do
-    if not item.remote then
-      table.insert(names, item.name)
-    end
-  end
-  return names
-end
-
-local function get_remote_bookmarks()
-  local items = jj.repo.state.bookmarks.items
-  local names = {}
-  for _, item in ipairs(items) do
-    if item.remote then
-      table.insert(names, item.name .. "@" .. item.remote)
-    end
-  end
-  return names
-end
-
----Build a list of recent revisions for fuzzy finding
----Format: "change_id description" for display, returns change_id on selection
-local function get_recent_revisions()
-  local ok, repo = pcall(function() return jj.repo end)
-  if not ok or not repo or not repo.state or not repo.state.recent then
-    return {}
-  end
-  local entries = {}
-  for _, item in ipairs(repo.state.recent.items) do
-    local label = item.change_id
-    if item.description and item.description ~= "" then
-      local first_line = vim.split(item.description, "\n")[1]
-      label = label .. " " .. first_line
-    end
-    if item.bookmarks and #item.bookmarks > 0 then
-      label = label .. " [" .. table.concat(item.bookmarks, ", ") .. "]"
-    end
-    table.insert(entries, label)
-  end
-  return entries
-end
-
----Extract change_id from a revision picker entry
-local function parse_revision_selection(selection)
-  if not selection then
-    return nil
-  end
-  return selection:match("^(%S+)")
-end
+local picker_cache = require("neojj.lib.picker_cache")
 
 function M.create(_popup)
   local name = input.get_user_input("Bookmark name")
@@ -77,11 +26,11 @@ function M.set(popup)
     return
   end
 
-  local revisions = get_recent_revisions()
+  local revisions = picker_cache.get_all_revisions()
   local target = nil
   if #revisions > 0 then
     local selection = FuzzyFinderBuffer.new(revisions):open_async { prompt_prefix = "Set bookmark to revision (empty = @)" }
-    target = parse_revision_selection(selection)
+    target = picker_cache.parse_selection(selection)
   end
 
   local args = popup:get_arguments()
@@ -101,17 +50,17 @@ function M.set(popup)
 end
 
 function M.move(popup)
-  local bookmarks = get_local_bookmarks()
+  local bookmarks = picker_cache.get_local_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Move bookmark", refocus_status = false }
   if not name then
     return
   end
 
-  local revisions = get_recent_revisions()
+  local revisions = picker_cache.get_all_revisions()
   local target = nil
   if #revisions > 0 then
     local selection = FuzzyFinderBuffer.new(revisions):open_async { prompt_prefix = "Move '" .. name .. "' to revision (empty = @)" }
-    target = parse_revision_selection(selection)
+    target = picker_cache.parse_selection(selection)
   end
 
   local args = popup:get_arguments()
@@ -131,7 +80,7 @@ function M.move(popup)
 end
 
 function M.rename(_popup)
-  local bookmarks = get_local_bookmarks()
+  local bookmarks = picker_cache.get_local_bookmark_names()
   local old_name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rename bookmark (old name)", refocus_status = false }
   if not old_name then
     return
@@ -151,7 +100,7 @@ function M.rename(_popup)
 end
 
 function M.delete(_popup)
-  local bookmarks = get_local_bookmarks()
+  local bookmarks = picker_cache.get_local_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Delete bookmark" }
   if not name then
     return
@@ -170,7 +119,7 @@ function M.delete(_popup)
 end
 
 function M.forget(_popup)
-  local bookmarks = get_local_bookmarks()
+  local bookmarks = picker_cache.get_local_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Forget bookmark" }
   if not name then
     return
@@ -189,7 +138,7 @@ function M.forget(_popup)
 end
 
 function M.track(_popup)
-  local bookmarks = get_remote_bookmarks()
+  local bookmarks = picker_cache.get_remote_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Track bookmark" }
   if not name then
     return
@@ -204,7 +153,7 @@ function M.track(_popup)
 end
 
 function M.untrack(_popup)
-  local bookmarks = get_remote_bookmarks()
+  local bookmarks = picker_cache.get_remote_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Untrack bookmark" }
   if not name then
     return
@@ -219,11 +168,11 @@ function M.untrack(_popup)
 end
 
 function M.advance(_popup)
-  local revisions = get_recent_revisions()
+  local revisions = picker_cache.get_all_revisions()
   local target = nil
   if #revisions > 0 then
     local selection = FuzzyFinderBuffer.new(revisions):open_async { prompt_prefix = "Advance bookmarks to revision (empty = @)" }
-    target = parse_revision_selection(selection)
+    target = picker_cache.parse_selection(selection)
   end
 
   local builder = jj.cli.bookmark_advance

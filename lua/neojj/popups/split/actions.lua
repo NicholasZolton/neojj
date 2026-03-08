@@ -2,22 +2,7 @@ local M = {}
 local jj = require("neojj.lib.jj")
 local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
-
-local function get_recent_change_ids()
-  local items = jj.repo.state.recent.items
-  local ids = {}
-  for _, item in ipairs(items) do
-    local short = string.sub(item.change_id, 1, 12)
-    local desc = item.description ~= "" and item.description or "(no description)"
-    table.insert(ids, short .. " " .. desc)
-  end
-  return ids
-end
-
-local function extract_change_id(selection)
-  if not selection then return nil end
-  return selection:match("^(%S+)")
-end
+local picker_cache = require("neojj.lib.picker_cache")
 
 function M.split_current(popup)
   local args = popup:get_arguments()
@@ -32,9 +17,9 @@ function M.split_current(popup)
 end
 
 function M.split_revision(popup)
-  local options = get_recent_change_ids()
+  local options = picker_cache.get_all_revisions()
   local sel = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "Split revision" }
-  local rev = extract_change_id(sel)
+  local rev = picker_cache.parse_selection(sel)
   if not rev then return end
 
   local args = popup:get_arguments()

@@ -101,4 +101,43 @@ function M.invalidate_bookmarks()
   _cache.bookmarks = nil
 end
 
+--- Get local bookmark names (no change_id or description, just names)
+---@return string[]
+function M.get_local_bookmark_names()
+  local jj = require("neojj.lib.jj")
+  local items = jj.repo.state.bookmarks.items
+  local names = {}
+  for _, item in ipairs(items) do
+    if not item.remote or item.remote == "" then
+      table.insert(names, item.name)
+    end
+  end
+  return names
+end
+
+--- Get remote bookmark names formatted as "name@remote"
+---@return string[]
+function M.get_remote_bookmark_names()
+  local jj = require("neojj.lib.jj")
+  local items = jj.repo.state.bookmarks.items
+  local names = {}
+  for _, item in ipairs(items) do
+    if item.remote and item.remote ~= "" then
+      table.insert(names, item.name .. "@" .. item.remote)
+    end
+  end
+  return names
+end
+
+--- Extract the first whitespace-delimited token from a picker selection.
+--- Works for both revision entries ("change_id description") and bookmark entries ("name change_id desc").
+---@param selection string?
+---@return string?
+function M.parse_selection(selection)
+  if not selection then
+    return nil
+  end
+  return selection:match("^(%S+)")
+end
+
 return M
