@@ -227,7 +227,9 @@ function meta.update(state)
     local filtered = {}
     for _, item in ipairs(items) do
       local is_remote = item.remote and item.remote ~= ""
-      if item.deleted and not show_deleted then
+      if item.remote == "git" then
+        -- skip @git bookmarks (jj internal tracking refs)
+      elseif item.deleted and not show_deleted then
         -- skip
       elseif is_remote and not show_remote then
         -- skip
