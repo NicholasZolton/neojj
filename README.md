@@ -15,6 +15,8 @@
   [![MIT](https://img.shields.io/badge/MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 </div>
 
+![CleanShot 2026-03-08 at 17 10 07](https://github.com/user-attachments/assets/02ac2b11-41a2-48a1-8fe0-0eb013cfd6a1)
+
 Neojj is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit), adapted to work with [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) instead of git.
 
 **Maintainer:** [Nicholas Zolton](https://github.com/nicholaszolton)
