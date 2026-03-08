@@ -497,3 +497,4 @@ Neojj follows semantic versioning.
 ## Acknowledgements
 
 Neojj is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit). Thanks to the Neogit contributors for building the foundation this project is based on. This would not be possible without their work, and I personally use Neogit religiously for all things git.
+
