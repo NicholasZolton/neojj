@@ -78,9 +78,12 @@ local JJHead = Component.new(function(props)
   local short_change = change_id:sub(1, 8)
   local short_commit = commit_id:sub(1, 8)
 
-  local bookmark_text = ""
+  local bookmark_parts = {}
   if props.bookmarks and #props.bookmarks > 0 then
-    bookmark_text = " " .. table.concat(props.bookmarks, " ")
+    for _, bm in ipairs(props.bookmarks) do
+      table.insert(bookmark_parts, text(" "))
+      table.insert(bookmark_parts, text.highlight("NeoJJBranchHead")(bm))
+    end
   end
 
   local status_parts = {}
@@ -92,16 +95,18 @@ local JJHead = Component.new(function(props)
   end
   local status_text = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
+  local header_parts = {
+    text.highlight("NeoJJStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding or 10)),
+    text.highlight("NeoJJBranch")(props.symbol .. " "),
+    text.highlight("NeoJJChangeId")(short_change),
+    text(" "),
+    text.highlight("NeoJJObjectId")(short_commit),
+  }
+  vim.list_extend(header_parts, bookmark_parts)
+  table.insert(header_parts, text.highlight(props.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_text))
+
   return col({
-    row({
-      text.highlight("NeoJJStatusHEAD")(util.pad_right(props.name .. ": ", props.HEAD_padding or 10)),
-      text.highlight("NeoJJBranch")(props.symbol .. " "),
-      text.highlight("NeoJJChangeId")(short_change),
-      text(" "),
-      text.highlight("NeoJJObjectId")(short_commit),
-      text.highlight("NeoJJBranch")(bookmark_text),
-      text.highlight(props.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_text),
-    }),
+    row(header_parts),
     row {
       text("  "),
       text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
@@ -238,9 +243,12 @@ local SectionItemChange = Component.new(function(item)
   local change_id = (item.change_id or ""):sub(1, 8)
   local commit_id = (item.commit_id or ""):sub(1, 8)
 
-  local bookmark_text = ""
+  local bookmark_parts = {}
   if item.bookmarks and #item.bookmarks > 0 then
-    bookmark_text = " " .. table.concat(item.bookmarks, " ")
+    for _, bm in ipairs(item.bookmarks) do
+      table.insert(bookmark_parts, text(" "))
+      table.insert(bookmark_parts, text.highlight("NeoJJBranchHead")(bm))
+    end
   end
 
   local status_parts = {}
@@ -252,15 +260,17 @@ local SectionItemChange = Component.new(function(item)
   end
   local status_suffix = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
-  return row({
+  local parts = {
     text.highlight("NeoJJChangeId")(change_id),
     text(" "),
     text.highlight("NeoJJObjectId")(commit_id),
-    text.highlight("NeoJJBranch")(bookmark_text),
-    text(" "),
-    text(item.description and vim.split(item.description, "\n")[1] or "(no description)"),
-    text.highlight(item.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_suffix),
-  }, {
+  }
+  vim.list_extend(parts, bookmark_parts)
+  table.insert(parts, text(" "))
+  table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
+  table.insert(parts, text.highlight(item.conflict and "NeoJJConflict" or "NeoJJSubtleText")(status_suffix))
+
+  return row(parts, {
     yankable = item.change_id,
     item = item,
   })

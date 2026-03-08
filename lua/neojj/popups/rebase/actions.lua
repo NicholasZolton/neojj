@@ -4,6 +4,11 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 local function extract_change_id(selection)
   if not selection then return nil end
   return selection:match("^(%S+)")
@@ -27,7 +32,7 @@ function M.source_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased " .. source .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed", { dismiss = true })
+    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -51,7 +56,7 @@ function M.bookmark_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased bookmark " .. bm .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed", { dismiss = true })
+    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -73,7 +78,7 @@ function M.revision_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased " .. rev .. " onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed", { dismiss = true })
+    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -91,7 +96,7 @@ function M.here_onto(popup)
     picker_cache.invalidate_revisions()
     notification.info("Rebased @ onto " .. dest, { dismiss = true })
   else
-    notification.warn("Rebase failed", { dismiss = true })
+    notification.warn("Rebase failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -99,7 +104,7 @@ local function fetch_and_rebase(popup, mode_flag, mode_value, desc)
   notification.info("Fetching from remote...", { dismiss = true })
   local fetch_result = jj.cli.git_fetch.call()
   if not fetch_result or fetch_result.code ~= 0 then
-    notification.warn("Fetch failed", { dismiss = true })
+    notification.warn("Fetch failed: " .. error_msg(fetch_result), { dismiss = true })
     return
   end
 
@@ -138,7 +143,7 @@ function M.parallelize(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Parallelized changes", { dismiss = true })
   else
-    notification.warn("Parallelize failed", { dismiss = true })
+    notification.warn("Parallelize failed: " .. error_msg(result), { dismiss = true })
   end
 end
 

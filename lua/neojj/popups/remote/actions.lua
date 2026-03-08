@@ -3,6 +3,11 @@ local jj = require("neojj.lib.jj")
 local input = require("neojj.lib.input")
 local notification = require("neojj.lib.notification")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 function M.add(_popup)
   local name = input.get_user_input("Remote name")
   if not name or name == "" then return end
@@ -14,7 +19,7 @@ function M.add(_popup)
   if result and result.code == 0 then
     notification.info("Added remote " .. name, { dismiss = true })
   else
-    notification.warn("Failed to add remote", { dismiss = true })
+    notification.warn("Failed to add remote: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -29,7 +34,7 @@ function M.rename(_popup)
   if result and result.code == 0 then
     notification.info("Renamed '" .. old .. "' to '" .. new .. "'", { dismiss = true })
   else
-    notification.warn("Failed to rename remote", { dismiss = true })
+    notification.warn("Failed to rename remote: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -43,7 +48,7 @@ function M.remove(_popup)
   if result and result.code == 0 then
     notification.info("Removed remote " .. name, { dismiss = true })
   else
-    notification.warn("Failed to remove remote", { dismiss = true })
+    notification.warn("Failed to remove remote: " .. error_msg(result), { dismiss = true })
   end
 end
 

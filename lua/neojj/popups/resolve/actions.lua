@@ -3,6 +3,11 @@ local jj = require("neojj.lib.jj")
 local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 function M.resolve(popup)
   -- Select a conflicted file if there are multiple
   local conflicts = jj.repo.state.conflicts.items
@@ -30,7 +35,7 @@ function M.resolve(popup)
   if result and result.code == 0 then
     notification.info("Resolved " .. file, { dismiss = true })
   else
-    notification.warn("Resolve failed", { dismiss = true })
+    notification.warn("Resolve failed: " .. error_msg(result), { dismiss = true })
   end
 end
 

@@ -4,6 +4,11 @@ local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local jj = require("neojj.lib.jj")
 local picker_cache = require("neojj.lib.picker_cache")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 local function get_diff_integration()
   local viewer = config.get_diff_viewer()
   if viewer == "codediff" then
@@ -98,7 +103,7 @@ function M.diffedit(_popup)
   if result and result.code == 0 then
     notification.info("Diffedit complete", { dismiss = true })
   else
-    notification.warn("Diffedit failed", { dismiss = true })
+    notification.warn("Diffedit failed: " .. error_msg(result), { dismiss = true })
   end
 end
 

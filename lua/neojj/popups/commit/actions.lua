@@ -7,6 +7,14 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
+--- Extract a human-readable error message from a command result
+---@param result table?
+---@return string
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 function M.commit(popup)
   local args = popup:get_arguments()
   local builder = jj.cli.commit
@@ -35,7 +43,7 @@ function M.new_change(popup)
     picker_cache.invalidate_revisions()
     notification.info("Created new change", { dismiss = true })
   else
-    notification.warn("Failed to create new change", { dismiss = true })
+    notification.warn("Failed to create new change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -64,9 +72,10 @@ end
 --- Before the operation: @ had some bookmarks, @- had some bookmarks.
 --- After the operation: old @ is now @-, old @- is now @~2.
 --- We move: old @ bookmarks (now on @-) → new @, old @- bookmarks (now on @~2) → new @-.
----@return string[] moved bookmark names
+---@return string[] moved, string[] failed
 local function advance_bookmarks()
   local moved = {}
+  local failed = {}
 
   -- Bookmarks from old @ (now on @-) → move to new @
   local at_bookmarks = get_local_bookmarks_at("@-")
@@ -74,6 +83,8 @@ local function advance_bookmarks()
     local r = jj.cli.bookmark_set.args(name).revision("@").call()
     if r and r.code == 0 then
       table.insert(moved, name .. " → @")
+    else
+      table.insert(failed, name .. ": " .. error_msg(r))
     end
   end
 
@@ -83,10 +94,12 @@ local function advance_bookmarks()
     local r = jj.cli.bookmark_set.args(name).revision("@-").call()
     if r and r.code == 0 then
       table.insert(moved, name .. " → @-")
+    else
+      table.insert(failed, name .. ": " .. error_msg(r))
     end
   end
 
-  return moved
+  return moved, failed
 end
 
 function M.new_change_with_bookmark(popup)
@@ -97,13 +110,15 @@ function M.new_change_with_bookmark(popup)
   end
   local result = builder.call()
   if not result or result.code ~= 0 then
-    notification.warn("Failed to create new change", { dismiss = true })
+    notification.warn("Failed to create new change: " .. error_msg(result), { dismiss = true })
     return
   end
 
-  local moved = advance_bookmarks()
+  local moved, failed = advance_bookmarks()
   picker_cache.invalidate_revisions()
-  if #moved > 0 then
+  if #failed > 0 then
+    notification.warn("Failed to move bookmarks: " .. table.concat(failed, "; "), { dismiss = true })
+  elseif #moved > 0 then
     notification.info("Created new change, moved: " .. table.concat(moved, ", "), { dismiss = true })
   else
     notification.info("Created new change (no bookmarks to move)", { dismiss = true })
@@ -127,9 +142,11 @@ function M.commit_with_bookmark(popup)
   })
 
   if code == 0 then
-    local moved = advance_bookmarks()
+    local moved, failed = advance_bookmarks()
     picker_cache.invalidate_revisions()
-    if #moved > 0 then
+    if #failed > 0 then
+      notification.warn("Failed to move bookmarks: " .. table.concat(failed, "; "), { dismiss = true })
+    elseif #moved > 0 then
       notification.info("Moved bookmarks: " .. table.concat(moved, ", "), { dismiss = true })
     end
   end
@@ -193,7 +210,7 @@ function M.edit_change(_popup)
   if result and result.code == 0 then
     notification.info("Now editing " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to edit change", { dismiss = true })
+    notification.warn("Failed to edit change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -218,7 +235,7 @@ function M.edit_bookmark(_popup)
   if result and result.code == 0 then
     notification.info("Now editing " .. bookmark_name, { dismiss = true })
   else
-    notification.warn("Failed to edit bookmark", { dismiss = true })
+    notification.warn("Failed to edit bookmark: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -248,7 +265,7 @@ function M.abandon(_popup)
     picker_cache.remove_revision(change_id)
     notification.info("Abandoned " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to abandon change", { dismiss = true })
+    notification.warn("Failed to abandon change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -274,7 +291,7 @@ function M.duplicate(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Duplicated " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to duplicate change", { dismiss = true })
+    notification.warn("Failed to duplicate change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -300,7 +317,7 @@ function M.revert(_popup)
     picker_cache.invalidate_revisions()
     notification.info("Reverted " .. change_id, { dismiss = true })
   else
-    notification.warn("Failed to revert change", { dismiss = true })
+    notification.warn("Failed to revert change: " .. error_msg(result), { dismiss = true })
   end
 end
 

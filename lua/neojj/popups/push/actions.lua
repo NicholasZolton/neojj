@@ -5,6 +5,11 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 function M.push_bookmark(popup)
   local bookmarks = picker_cache.get_local_bookmark_names()
   local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Push bookmark" }
@@ -22,7 +27,7 @@ function M.push_bookmark(popup)
   if result and result.code == 0 then
     notification.info("Pushed " .. name, { dismiss = true })
   else
-    notification.warn("Push failed", { dismiss = true })
+    notification.warn("Push failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -44,7 +49,7 @@ function M.push_change(popup)
   if result and result.code == 0 then
     notification.info("Pushed change " .. rev, { dismiss = true })
   else
-    notification.warn("Push failed", { dismiss = true })
+    notification.warn("Push failed: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -59,7 +64,7 @@ function M.push_all(popup)
   if result and result.code == 0 then
     notification.info("Pushed all bookmarks", { dismiss = true })
   else
-    notification.warn("Push failed", { dismiss = true })
+    notification.warn("Push failed: " .. error_msg(result), { dismiss = true })
   end
 end
 

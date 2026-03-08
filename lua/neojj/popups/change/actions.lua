@@ -5,6 +5,11 @@ local notification = require("neojj.lib.notification")
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 local picker_cache = require("neojj.lib.picker_cache")
 
+local function error_msg(result)
+  local err = result and result.stderr or {}
+  return type(err) == "table" and table.concat(err, "\n") or tostring(err)
+end
+
 function M.new_change(popup)
   local args = popup:get_arguments()
   local builder = jj.cli.new
@@ -15,7 +20,7 @@ function M.new_change(popup)
   if result and result.code == 0 then
     notification.info("Created new change", { dismiss = true })
   else
-    notification.warn("Failed to create new change", { dismiss = true })
+    notification.warn("Failed to create new change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -36,7 +41,7 @@ function M.new_on_revisions(popup)
   if result and result.code == 0 then
     notification.info("Created new change on " .. rev, { dismiss = true })
   else
-    notification.warn("Failed to create change", { dismiss = true })
+    notification.warn("Failed to create change: " .. error_msg(result), { dismiss = true })
   end
 end
 
@@ -63,7 +68,7 @@ function M.merge(popup)
   if result and result.code == 0 then
     notification.info("Created merge change", { dismiss = true })
   else
-    notification.warn("Failed to create merge", { dismiss = true })
+    notification.warn("Failed to create merge: " .. error_msg(result), { dismiss = true })
   end
 end
 
