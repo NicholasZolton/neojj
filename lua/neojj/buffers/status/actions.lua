@@ -9,6 +9,39 @@ local jump = require("neojj.lib.jump")
 
 local fn = vim.fn
 
+---@class CursorContext
+---@field change_id string|nil The change ID under cursor (from item, yankable, or head fallback)
+---@field section string|nil Section name (e.g. "files", "recent", "bookmarks")
+---@field item table|nil The item under cursor (from get_selection)
+---@field yank string|nil Raw yankable value under cursor
+---@field immutable boolean Whether the change is immutable
+
+--- Resolve cursor context into a structured result.
+--- Extracts change_id from item > yankable (head/parent) > nil.
+---@param self StatusBuffer
+---@return CursorContext
+local function cursor_context(self)
+  local selection = self.buffer.ui:get_selection()
+  local item = selection.item
+  local section = selection.section and selection.section.name
+  local yank = self.buffer.ui:get_yankable_under_cursor()
+
+  local change_id
+  if item and item.change_id then
+    change_id = item.change_id
+  elseif yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
+    change_id = yank
+  end
+
+  return {
+    change_id = change_id,
+    section = section,
+    item = item,
+    yank = yank,
+    immutable = (item and item.immutable) or false,
+  }
+end
+
 ---@param self StatusBuffer
 ---@param item StatusItem
 ---@return integer[]|nil
@@ -334,17 +367,14 @@ end
 ---@return fun(): nil
 M.n_yank_selected = function(self)
   return function()
-    local item = self.buffer.ui:get_item_under_cursor()
-    if item and item.change_id then
-      local short = item.change_id:sub(1, 8)
+    local ctx = cursor_context(self)
+    if ctx.change_id then
+      local short = ctx.change_id:sub(1, 8)
       vim.fn.setreg("+", short)
       vim.cmd.echo(string.format("'%s'", short))
-      return
-    end
-    local yank = self.buffer.ui:get_yankable_under_cursor()
-    if yank then
-      vim.fn.setreg("+", yank)
-      vim.cmd.echo(string.format("'%s'", yank))
+    elseif ctx.yank then
+      vim.fn.setreg("+", ctx.yank)
+      vim.cmd.echo(string.format("'%s'", ctx.yank))
     else
       vim.cmd("echo ''")
     end
@@ -353,17 +383,14 @@ end
 
 M.n_yank_commit_hash = function(self)
   return function()
-    local item = self.buffer.ui:get_item_under_cursor()
-    if item and item.commit_id then
-      local short = item.commit_id:sub(1, 8)
+    local ctx = cursor_context(self)
+    if ctx.item and ctx.item.commit_id then
+      local short = ctx.item.commit_id:sub(1, 8)
       vim.fn.setreg("+", short)
       vim.cmd.echo(string.format("'%s'", short))
-      return
-    end
-    local yank = self.buffer.ui:get_yankable_under_cursor()
-    if yank then
-      vim.fn.setreg("+", yank)
-      vim.cmd.echo(string.format("'%s'", yank))
+    elseif ctx.yank then
+      vim.fn.setreg("+", ctx.yank)
+      vim.cmd.echo(string.format("'%s'", ctx.yank))
     else
       vim.cmd("echo ''")
     end
@@ -425,15 +452,14 @@ end
 ---@return fun(): nil
 M.n_context_delete = function(self)
   return a.void(function()
-    local selection = self.buffer.ui:get_selection()
-    if not selection.section then
+    local ctx = cursor_context(self)
+    if not ctx.section then
       return
     end
 
-    local section = selection.section.name
-    local item = selection.item
+    local item = ctx.item
 
-    if section == "files" then
+    if ctx.section == "files" then
       -- Delegate to discard logic for files
       local action, message
       if item and item.first == fn.line(".") then
@@ -447,7 +473,7 @@ M.n_context_delete = function(self)
           jj.cli.restore.files(item.escaped_path).call()
         end
       else
-        message = ("Discard all %s modified files?"):format(#selection.section.items)
+        message = "Discard all modified files?"
         action = function()
           jj.cli.restore.call()
         end
@@ -456,7 +482,7 @@ M.n_context_delete = function(self)
         action()
         self:dispatch_refresh(nil, "n_context_delete")
       end
-    elseif section == "recent" and item and item.change_id then
+    elseif ctx.section == "recent" and item and item.change_id then
       local short = item.change_id:sub(1, 8)
       if item.immutable then
         notification.warn("Cannot abandon immutable commit " .. short, { dismiss = true })
@@ -474,7 +500,7 @@ M.n_context_delete = function(self)
       else
         notification.warn("Failed to abandon " .. short, { dismiss = true })
       end
-    elseif section == "bookmarks" and item and item.name then
+    elseif ctx.section == "bookmarks" and item and item.name then
       if item.remote and item.remote ~= "" then
         notification.warn("Cannot delete remote bookmark " .. item.name .. "@" .. item.remote .. " — delete locally and push to remove", { dismiss = true })
         return
@@ -667,12 +693,63 @@ end
 ---@return fun(): nil
 M.n_describe = function(self)
   return a.void(function()
-    local msg = input.get_user_input("Describe change")
-    if not msg or msg == "" then
+    local config = require("neojj.config")
+    local ctx = cursor_context(self)
+
+    if ctx.immutable then
+      notification.warn("Cannot describe immutable commit", { dismiss = true })
       return
     end
 
-    jj.cli.describe.no_edit.message(msg).call()
+    local change_id = ctx.change_id
+
+    local use_editor = config.values.commit_editor.describe_editor ~= false
+
+    if use_editor then
+      -- Full editor mode (like "cd" in commit popup)
+      local client = require("neojj.client")
+      local builder = jj.cli.describe
+      if change_id then
+        builder = builder.args(change_id)
+      end
+      client.wrap(builder, {
+        autocmd = "NeojjDescribeComplete",
+        msg = {
+          success = "Description updated",
+          fail = "Describe failed",
+        },
+        show_diff = true,
+        interactive = true,
+      })
+    else
+      -- Inline input mode
+      local current_desc = ""
+      if change_id then
+        local result = jj.cli.log.no_graph
+          .template('"" ++ description ++ ""')
+          .revisions(change_id)
+          .limit(1)
+          .call { hidden = true, trim = true }
+        if result and result.code == 0 and result.stdout[1] then
+          current_desc = result.stdout[1]:gsub("\n+$", "")
+        end
+      else
+        current_desc = jj.repo.state.head.description or ""
+      end
+
+      local short = change_id and change_id:sub(1, 8) or "change"
+      local msg = input.get_user_input("Describe " .. short, { default = current_desc })
+      if msg == nil then
+        return
+      end
+
+      local builder = jj.cli.describe.no_edit.message(msg)
+      if change_id then
+        builder = builder.args("-r", change_id)
+      end
+      builder.call()
+    end
+
     self:dispatch_refresh(nil, "n_describe")
   end)
 end
@@ -870,7 +947,7 @@ end
 ---@return fun(): nil
 M.n_open_in_browser = function(self)
   return function()
-    local yank = self.buffer.ui:get_yankable_under_cursor()
+    local ctx = cursor_context(self)
 
     -- Helper to resolve remote URL
     local function get_remote_browser_url()
@@ -901,7 +978,7 @@ M.n_open_in_browser = function(self)
     end
 
     -- Project header: open repo URL directly
-    if yank == "__project__" then
+    if ctx.yank == "__project__" then
       local browser_url = get_remote_browser_url()
       if not browser_url then
         notification.warn("No remote found", { dismiss = true })
@@ -911,15 +988,7 @@ M.n_open_in_browser = function(self)
       return
     end
 
-    local item = self.buffer.ui:get_item_under_cursor()
-    local change_id
-    if item and item.change_id then
-      change_id = item.change_id
-    elseif yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
-      change_id = yank
-    else
-      change_id = jj.repo.state.head.change_id
-    end
+    local change_id = ctx.change_id or jj.repo.state.head.change_id
 
     if not change_id or change_id == "" then
       notification.warn("No change under cursor", { dismiss = true })

@@ -397,6 +397,7 @@ function M.get_default_values()
       show_diff = true,
       diff_split_kind = "split",
       spell_check = true,
+      describe_editor = true, -- Use full editor for "D" describe action (false = inline input)
     },
     commit_select_view = {
       kind = "tab",
