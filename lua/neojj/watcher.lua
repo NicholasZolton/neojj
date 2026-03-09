@@ -11,6 +11,8 @@ local a = require("plenary.async")
 ---@field buffers table<StatusBuffer>
 ---@field running boolean
 ---@field fs_event_handler uv_fs_event_t
+---@field poll_timer uv_timer_t|nil
+---@field last_op_id string|nil
 local Watcher = {}
 Watcher.__index = Watcher
 
@@ -22,6 +24,8 @@ function Watcher.new(root)
     jj_dir = root .. "/.jj",
     running = false,
     fs_event_handler = assert(vim.uv.new_fs_event()),
+    poll_timer = nil,
+    last_op_id = nil,
   }
 
   setmetatable(instance, Watcher)
@@ -85,6 +89,7 @@ function Watcher:start()
   logger.debug("[WATCHER] Watching jj dir: " .. self.jj_dir)
   self.running = true
   self.fs_event_handler:start(self.jj_dir, {}, self:fs_event_callback())
+  self:start_poll()
   return self
 end
 
@@ -101,7 +106,59 @@ function Watcher:stop()
   logger.debug("[WATCHER] Stopped watching jj dir: " .. self.jj_dir)
   self.running = false
   self.fs_event_handler:stop()
+  self:stop_poll()
   return self
+end
+
+function Watcher:start_poll()
+  local interval = config.values.filewatcher.poll_interval or 0
+  if interval <= 0 then
+    return
+  end
+
+  if self.poll_timer then
+    return
+  end
+
+  -- Capture initial op id
+  self.last_op_id = self:get_current_op_id()
+
+  self.poll_timer = vim.uv.new_timer()
+  self.poll_timer:start(interval, interval, vim.schedule_wrap(function()
+    if vim.tbl_isempty(self.buffers) then
+      return
+    end
+
+    local current_op = self:get_current_op_id()
+    if current_op and current_op ~= self.last_op_id then
+      logger.debug("[WATCHER] Poll detected op change: " .. (self.last_op_id or "nil") .. " -> " .. current_op)
+      self.last_op_id = current_op
+      self:dispatch_refresh()
+    end
+  end))
+
+  logger.debug("[WATCHER] Started polling every " .. interval .. "ms")
+end
+
+function Watcher:stop_poll()
+  if self.poll_timer then
+    self.poll_timer:stop()
+    self.poll_timer:close()
+    self.poll_timer = nil
+    logger.debug("[WATCHER] Stopped polling")
+  end
+end
+
+function Watcher:get_current_op_id()
+  local root = self.jj_dir:gsub("/.jj$", "")
+  local lines, code = require("neojj.lib.jj.shell").exec(
+    { "jj", "--no-pager", "--color=never", "--ignore-working-copy", "op", "log", "--no-graph", "-T", "self.id()", "-n", "1" },
+    root
+  )
+  if code == 0 and lines and lines[1] then
+    return lines[1]
+  end
+  return nil
 end
 
 local WATCH_IGNORE = {

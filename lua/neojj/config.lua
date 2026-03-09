@@ -154,6 +154,7 @@ end
 
 ---@class NeojjFilewatcherConfig
 ---@field enabled boolean
+---@field poll_interval? number Polling interval in ms (0 = disabled, default 1000)
 ---@field filewatcher NeojjFilewatcherConfig|nil
 
 ---@alias NeojjConfigMappingsFinder
@@ -336,6 +337,7 @@ function M.get_default_values()
     process_spinner = false,
     filewatcher = {
       enabled = true,
+      poll_interval = 0, -- Polling interval in ms (0 = disabled). Useful when external tools run jj commands.
     },
     telescope_sorter = function()
       return nil
