@@ -79,6 +79,31 @@ function M.move(popup)
   end
 end
 
+function M.move_to_bookmark(popup)
+  local bookmarks = picker_cache.get_local_bookmark_names()
+  local name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Move bookmark", refocus_status = false }
+  if not name then
+    return
+  end
+
+  local target = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Move '" .. name .. "' to bookmark" }
+  if not target then
+    return
+  end
+
+  local args = popup:get_arguments()
+  local builder = jj.cli.bookmark_move.args(name).to(target)
+  if #args > 0 then
+    builder = builder.args(unpack(args))
+  end
+  local result = builder.call()
+  if result and result.code == 0 then
+    notification.info("Moved bookmark " .. name .. " to " .. target, { dismiss = true })
+  else
+    notification.warn("Failed to move bookmark: " .. picker_cache.error_msg(result), { dismiss = true })
+  end
+end
+
 function M.rename(_popup)
   local bookmarks = picker_cache.get_local_bookmark_names()
   local old_name = FuzzyFinderBuffer.new(bookmarks):open_async { prompt_prefix = "Rename bookmark (old name)", refocus_status = false }

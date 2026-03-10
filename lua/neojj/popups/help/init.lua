@@ -16,9 +16,16 @@ function M.create(env)
     end
   end
 
-  p = p:new_action_group():new_action_group("Applying changes")
+  p = p:new_action_group():new_action_group("Context actions")
+  local ctx = actions.context()
   for _, cmd in ipairs(actions.actions()) do
+    table.insert(ctx, cmd)
+  end
+  for i, cmd in ipairs(ctx) do
     p = p:action(cmd.keys, cmd.name, cmd.fn)
+    if i == math.floor(#ctx / 2) then
+      p = p:new_action_group()
+    end
   end
 
   p = p:new_action_group():new_action_group("Essential commands")

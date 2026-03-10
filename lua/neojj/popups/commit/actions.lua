@@ -147,6 +147,58 @@ function M.new_change_on_with_bookmark(popup)
   end
 end
 
+function M.new_change_on_bookmark(popup)
+  local options = picker_cache.get_all_bookmarks()
+  local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "New change on bookmark" }
+  local bookmark = picker_cache.parse_selection(selection)
+  if not bookmark then
+    return
+  end
+
+  local args = popup:get_arguments()
+  local builder = jj.cli.new.revisions(bookmark)
+  if #args > 0 then
+    builder = builder.args(unpack(args))
+  end
+  local result = builder.call()
+  if result and result.code == 0 then
+    picker_cache.invalidate_revisions()
+    notification.info("Created new change on " .. bookmark, { dismiss = true })
+  else
+    notification.warn("Failed to create change: " .. picker_cache.error_msg(result), { dismiss = true })
+  end
+end
+
+function M.new_change_on_bookmark_with_bookmark(popup)
+  local options = picker_cache.get_all_bookmarks()
+  local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "New change on bookmark" }
+  local bookmark = picker_cache.parse_selection(selection)
+  if not bookmark then
+    return
+  end
+
+  local args = popup:get_arguments()
+  local builder = jj.cli.new.revisions(bookmark)
+  if #args > 0 then
+    builder = builder.args(unpack(args))
+  end
+  local result = builder.call()
+  if not result or result.code ~= 0 then
+    notification.warn("Failed to create change: " .. picker_cache.error_msg(result), { dismiss = true })
+    return
+  end
+
+  local moved, failed = advance_bookmarks()
+  picker_cache.invalidate_revisions()
+  if #failed > 0 then
+    notification.warn("Failed to move bookmarks: " .. table.concat(failed, "; "), { dismiss = true })
+  elseif #moved > 0 then
+    notification.info("Created new change on " .. bookmark .. ", moved: " .. table.concat(moved, ", "), { dismiss = true })
+  else
+    notification.info("Created new change on " .. bookmark .. " (no bookmarks to move)", { dismiss = true })
+  end
+end
+
 function M.new_change_before(popup)
   local options = picker_cache.get_all_revisions()
   local selection = FuzzyFinderBuffer.new(options):open_async { prompt_prefix = "New change before" }

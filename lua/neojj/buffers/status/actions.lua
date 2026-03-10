@@ -880,6 +880,54 @@ M.n_forget_bookmark = function(self)
   end)
 end
 
+---@param self StatusBuffer
+---@return fun(): nil
+M.n_new_change_on = function(self)
+  return a.void(function()
+    local ctx = cursor_context(self)
+    local change_id = ctx.change_id
+    if not change_id then
+      notification.warn("No change under cursor", { dismiss = true })
+      return
+    end
+
+    local short = change_id:sub(1, 8)
+    local result = jj.cli.new.revisions(change_id).call()
+    if result and result.code == 0 then
+      local picker_cache = require("neojj.lib.picker_cache")
+      picker_cache.invalidate_revisions()
+      notification.info("Created new change on " .. short, { dismiss = true })
+      self:dispatch_refresh(nil, "n_new_change_on")
+    else
+      notification.warn("Failed to create change on " .. short, { dismiss = true })
+    end
+  end)
+end
+
+---@param self StatusBuffer
+---@return fun(): nil
+M.n_new_change_before = function(self)
+  return a.void(function()
+    local ctx = cursor_context(self)
+    local change_id = ctx.change_id
+    if not change_id then
+      notification.warn("No change under cursor", { dismiss = true })
+      return
+    end
+
+    local short = change_id:sub(1, 8)
+    local result = jj.cli.new.insert_before.revisions(change_id).call()
+    if result and result.code == 0 then
+      local picker_cache = require("neojj.lib.picker_cache")
+      picker_cache.invalidate_revisions()
+      notification.info("Created new change before " .. short, { dismiss = true })
+      self:dispatch_refresh(nil, "n_new_change_before")
+    else
+      notification.warn("Failed to create change before " .. short, { dismiss = true })
+    end
+  end)
+end
+
 ---@param _self StatusBuffer
 ---@return fun(): nil
 M.n_undo_popup = function(_self)
