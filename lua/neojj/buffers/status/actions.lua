@@ -102,8 +102,9 @@ end
 M.v_diff_popup = function(self)
   return popups.open("diff", function(p)
     local section = self.buffer.ui:get_selection().section
-    local item = self.buffer.ui:get_yankable_under_cursor()
-    p { section = { name = section and section.name }, item = { name = item } }
+    local ref = self.buffer.ui:get_commit_under_cursor()
+      or self.buffer.ui:get_yankable_under_cursor()
+    p { section = { name = section and section.name }, item = { name = ref } }
   end)
 end
 
@@ -617,8 +618,9 @@ M.n_goto_file = function(self)
       return
     end
 
-    -- Goto CHANGE (by change_id)
-    local ref = self.buffer.ui:get_yankable_under_cursor()
+    -- Goto CHANGE (by change_id from oid, then yankable as fallback)
+    local ref = self.buffer.ui:get_commit_under_cursor()
+      or self.buffer.ui:get_yankable_under_cursor()
     if ref then
       require("neojj.buffers.commit_view").new(ref):open()
     end
@@ -1011,10 +1013,11 @@ end
 M.n_diff_popup = function(self)
   return popups.open("diff", function(p)
     local section = self.buffer.ui:get_selection().section
-    local yank = self.buffer.ui:get_yankable_under_cursor()
+    local ref = self.buffer.ui:get_commit_under_cursor()
+      or self.buffer.ui:get_yankable_under_cursor()
     p {
       section = { name = section and section.name },
-      item = { name = yank },
+      item = { name = ref },
     }
   end)
 end
@@ -1029,7 +1032,8 @@ M.n_help_popup = function(self)
       section_name = section.name
     end
 
-    local item = self.buffer.ui:get_yankable_under_cursor()
+    local ref = self.buffer.ui:get_commit_under_cursor()
+      or self.buffer.ui:get_yankable_under_cursor()
 
     p {
       bookmark = {},
@@ -1037,7 +1041,7 @@ M.n_help_popup = function(self)
       commit = {},
       diff = {
         section = { name = section_name },
-        item = { name = item },
+        item = { name = ref },
       },
       remote = {},
       fetch = {},

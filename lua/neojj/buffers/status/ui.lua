@@ -119,7 +119,7 @@ local JJHead = Component.new(function(props)
       text("  "),
       text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
     },
-  }, { yankable = change_id })
+  }, { yankable = change_id, oid = change_id })
 end)
 
 local SectionTitle = Component.new(function(props)
@@ -294,6 +294,7 @@ local SectionItemChange = Component.new(function(item)
 
   return row(parts, {
     yankable = item.change_id,
+    oid = item.change_id,
     item = item,
   })
 end)
@@ -330,6 +331,7 @@ local SectionItemBookmark = Component.new(function(item)
 
   return row(parts, {
     yankable = item.name,
+    oid = (item.change_id and item.change_id ~= "") and item.change_id or nil,
     item = item,
   })
 end)

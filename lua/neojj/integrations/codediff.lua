@@ -1,6 +1,25 @@
 local M = {}
 
 local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
+
+--- Resolve a jj change ID to a git commit hash (only if it looks like a jj ID)
+local function resolve_jj_to_git(ref)
+  if not ref or ref:match("%.%.") or ref:match("^[0-9a-f]+$") then
+    return ref
+  end
+
+  local result = jj.cli.log
+    .args("-r", ref, "--no-graph", "-T", "commit_id")
+    .call()
+  if result and result.code == 0 and result.stdout then
+    local hash = type(result.stdout) == "table"
+      and result.stdout[1]
+      or result.stdout
+    if hash then return vim.trim(hash) end
+  end
+  return ref
+end
 
 local function notify_error(message)
   vim.schedule(function()
@@ -301,6 +320,7 @@ function M.open(section_name, item_name, opts)
   elseif
     section_name == "recent"
     or section_name == "log"
+    or section_name == "bookmarks"
     or (section_name and section_name:match("unmerged$"))
   then
     local rev1, rev2
@@ -314,7 +334,8 @@ function M.open(section_name, item_name, opts)
         return
       end
     else
-      local commit = extract_commit(item_name)
+      local resolved = resolve_jj_to_git(item_name)
+      local commit = extract_commit(resolved)
       if not commit then
         notify_error("could not extract commit from selection")
         return
