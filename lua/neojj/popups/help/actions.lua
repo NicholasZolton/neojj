@@ -38,7 +38,7 @@ M.popups = function(env)
   local popups = require("neojj.popups")
   local items = {
     { "CommandHistory", "History", function()
-      require("neojj.buffers.git_command_history"):new():show()
+      require("neojj.buffers.command_history"):new():show()
     end },
     { "DiffPopup", "Diff", popups.open("diff", function(p) p(env.diff or {}) end) },
     { "RebasePopup", "Rebase", popups.open("rebase", function(p) p(env.rebase or {}) end) },

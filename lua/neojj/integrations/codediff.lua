@@ -1,6 +1,5 @@
 local M = {}
 
-local git = require("neojj.lib.git")
 local jj = require("neojj.lib.jj")
 
 --- Resolve a jj change ID to a git commit hash (only if it looks like a jj ID)
@@ -307,7 +306,7 @@ function M.open(section_name, item_name, opts)
 
   setup_on_close(opts)
 
-  local git_root = git.repo.worktree_root
+  local git_root = jj.repo.worktree_root
   if type(git_root) ~= "string" or git_root == "" then
     notify_error("git root is unavailable")
     return

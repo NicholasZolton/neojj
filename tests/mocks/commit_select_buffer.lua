@@ -1,5 +1,4 @@
 local CommitSelectViewBuffer = require("neojj.buffers.commit_select_view")
-local git = require("neojj.lib.git")
 
 local M = {
   values = {},
@@ -8,7 +7,7 @@ local M = {
 ---Add a rev name to the mocked list of commits the user selected.
 ---@param rev string the rev name of the commit which the user will select once `CommitSelectViewBuffer:open_async()` is called
 function M.add(rev)
-  table.insert(M.values, git.rev_parse.oid(rev))
+  table.insert(M.values, rev)
 end
 
 ---Clear the table

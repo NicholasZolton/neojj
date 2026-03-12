@@ -9,7 +9,8 @@ local Watcher = require("neojj.watcher")
 
 local FuzzyFinderBuffer = require("neojj.buffers.fuzzy_finder")
 
-local git = require("neojj.lib.git")
+local jj = require("neojj.lib.jj")
+local jj_config = require("neojj.lib.jj.config")
 
 local a = require("plenary.async")
 
@@ -264,7 +265,7 @@ function M:set_config(config)
 
     local index = options[config.value or ""] or math.huge
     config.value = options[(index + 1)] or options[1]
-    git.config.set(config.name, config.value)
+    jj_config.set(config.name, config.value)
   elseif config.fn then
     config.value = config.fn(self, config)
   else
@@ -272,12 +273,12 @@ function M:set_config(config)
 
     assert(result, "no input from user - what happened to the default?")
     config.value = result
-    git.config.set(config.name, config.value)
+    jj_config.set(config.name, config.value)
   end
 
   for _, var in ipairs(self.state.config) do
     if var.passive then
-      local c_value = git.config.get(var.name)
+      local c_value = jj_config.get(var.name)
       if c_value:is_set() then
         var.value = c_value.value
       end
@@ -427,7 +428,10 @@ function M:show()
           vim.fn.matchadd("NeojjPopupBranchName", self.state.env.highlight[i], 100)
         end
       else
-        vim.fn.matchadd("NeojjPopupBranchName", git.repo.state.head.branch, 100)
+        local bookmarks = jj.repo.state.head.bookmarks or {}
+        for _, bm in ipairs(bookmarks) do
+          vim.fn.matchadd("NeojjPopupBranchName", vim.pesc(bm), 100)
+        end
       end
 
       if self.state.env.bold then

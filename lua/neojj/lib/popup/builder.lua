@@ -1,4 +1,4 @@
-local git = require("neojj.lib.git")
+local jj_config = require("neojj.lib.jj.config")
 local state = require("neojj.lib.state")
 local util = require("neojj.lib.util")
 local notification = require("neojj.lib.notification")
@@ -393,7 +393,7 @@ end
 ---@param options PopupConfigOpts? Additional options
 ---@return self
 function M:config(key, name, options)
-  local entry = git.config.get(name)
+  local entry = jj_config.get(name)
 
   ---@type PopupConfig
   local variable = {

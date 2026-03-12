@@ -356,7 +356,7 @@ end
 ---@return fun(): nil
 M.n_command_history = function(_self)
   return a.void(function()
-    require("neojj.buffers.git_command_history"):new():show()
+    require("neojj.buffers.command_history"):new():show()
   end)
 end
 

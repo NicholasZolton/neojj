@@ -23,21 +23,6 @@ else
 end
 ```
 
-As an example let's say we want to add [`vim-fugitive`](https://github.com/tpope/vim-fugitive) to our test dependencies. Our new dependency section would look like this:
-
-```lua
-if os.getenv("CI") then
-  vim.opt.runtimepath:prepend(vim.fn.getcwd())
-  vim.cmd([[runtime! plugin/plenary.vim]])
-  vim.cmd([[runtime! plugin/neojj.lua]])
-  vim.cmd([[runtime! plugin/fugitive.vim]])
-else
-  ensure_installed("nvim-lua/plenary.nvim")
-  ensure_installed("nvim-telescope/telescope.nvim")
-  ensure_installed("tpope/vim-fugitive")
-end
-```
-
 ## Test Organization
 
 ### Where do tests go?
@@ -46,15 +31,13 @@ All tests are to be placed within the `tests/specs` directory, and placed mockin
 
 ### Where do utility functions go?
 
-If you have any utility code that has to do with git, it should be placed in `tests/util/git_harness.lua`.
+If you have any utility code that has to do with jj, it should be placed in `tests/util/jj_harness.lua`.
 
 If you have a generic utility function _only_ relevant for tests then it should go in `tests/util/util.lua`. If it is generic enough that it could be useful in the general Neojj code then a consideration should be made to place this utility code in `lua/neojj/lib/util.lua`.
 
 ### Where should raw content files go?
 
-Raw content files that you want to test against should go into `tests/fixtures`. If you have a raw file you'd like to use against in git, then you'll need to add it to the git repository within `tests/.repo`. This can be done by changing directory into `tests/.repo` and renaming `.git.orig` to `.git` then adding any relevant changes to that repository. Once you're done, make sure you rename `.git` back to `.git.org`.
-
-As a note the above is likely to become deprecated when a improved declarative lua git repository creation is made.
+Raw content files that you want to test against should go into `tests/fixtures`.
 
 ## Writing a test
 
@@ -78,28 +61,29 @@ end)
 
 Nothing too crazy there.
 
-Now let's take a look at a test for Neojj, specifically our `tests/specs/neojj/lib/git/cli_spec.lua` test.
+Now let's take a look at a test for Neojj, specifically our `tests/specs/neojj/lib/jj/cli_spec.lua` test.
 
 ```lua
 local eq = assert.are.same
-local git_cli = require("neojj.lib.git.cli")
-local git_harness = require("tests.util.git_harness")
-local in_prepared_repo = git_harness.in_prepared_repo
+local jj_harness = require("tests.util.jj_harness")
+local in_prepared_repo = jj_harness.in_prepared_repo
 
-describe("git cli", function()
-  describe("root detection", function()
+describe("jj cli", function()
+  describe("config", function()
     it(
-      "finds the correct git root for a non symlinked directory",
-      in_prepared_repo(function(root_dir)
-        local detected_root_dir = git_cli.git_root_of_cwd()
-        eq(detected_root_dir, root_dir)
+      "can set and retrieve a config value",
+      in_prepared_repo(function()
+        local config = require("neojj.lib.jj.config")
+        config.set("neojj.test-key", "test-value")
+        local entry = config.get("neojj.test-key")
+        eq("test-value", entry.value)
       end)
     )
   end)
 end)
 ```
 
-This test gets the root directory of a git repository. You'll notice something interesting we do in our `it` statement different from the prior example. We're passing `in_prepared_repo` to `it`. This function sets up a simple test bed repository (specifically the repository found with `tests/.repo`) to test Neojj against. If you ever need to test Neojj in a way that requires a git repository, you probably want to use `in_prepared_repo`.
+This test sets and retrieves a jj config value. You'll notice we're passing `in_prepared_repo` to `it`. This function sets up a simple test bed jj repository to test Neojj against. If you ever need to test Neojj in a way that requires a jj repository, you probably want to use `in_prepared_repo`.
 
 For more test examples take a look at the tests written within the `tests` directory or our test runner's testing guide: [plenary test guide](https://github.com/nvim-lua/plenary.nvim/blob/master/TESTS_README.md).
 

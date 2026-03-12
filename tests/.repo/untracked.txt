@@ -1,2 +1,0 @@
-This is an untracked text file.
-It is used to test the display of untracked files.

@@ -6,7 +6,7 @@ function M.close_topmost(closable)
   return function()
     local commit_view = require("neojj.buffers.commit_view")
     local popup = require("neojj.lib.popup")
-    local history = require("neojj.buffers.git_command_history")
+    local history = require("neojj.buffers.command_history")
 
     if popup.is_open() then
       popup.instance:close()

@@ -1,5 +1,5 @@
 local Buffer = require("neojj.lib.buffer")
-local Git = require("neojj.lib.git")
+local runner = require("neojj.runner")
 local Ui = require("neojj.lib.ui")
 local util = require("neojj.lib.util")
 local status_maps = require("neojj.config").get_reversed_status_maps()
@@ -11,16 +11,17 @@ local text = Ui.text
 local col = Ui.col
 local row = Ui.row
 
-local command_mask = vim.pesc(
-  " --no-pager --literal-pathspecs --no-optional-locks -c core.preloadindex=true -c color.ui=always -c diff.noprefix=false"
-)
+local command_masks = {
+  vim.pesc(" --no-pager --color=never --ignore-working-copy"),
+  vim.pesc(" --no-pager --color=never"),
+}
 
 local M = {}
 
 function M:new(state)
   local this = {
     buffer = nil,
-    state = state or Git.cli.history,
+    state = state or runner.history,
   }
 
   setmetatable(this, { __index = M })
@@ -52,8 +53,8 @@ function M:show()
 
   self.buffer = Buffer.create {
     kind = "popup",
-    name = "NeojjGitCommandHistory",
-    filetype = "NeojjGitCommandHistory",
+    name = "NeojjCommandHistory",
+    filetype = "NeojjCommandHistory",
     mappings = {
       n = {
         [status_maps["Close"]] = function()
@@ -96,14 +97,17 @@ function M:show()
       end
 
       return filter_map(self.state, function(item)
-        if item.hidden and not os.getenv("NEOJJ_DEBUG") then
-          return
-        end
-
         local is_err = item.code ~= 0
 
         local code = string.format("%3d", item.code)
-        local command, _ = item.cmd:gsub(command_mask, "")
+        local command = item.cmd
+        for _, mask in ipairs(command_masks) do
+          local stripped, count = command:gsub(mask, "")
+          if count > 0 then
+            command = stripped
+            break
+          end
+        end
         local time = string.format("(%3.3f ms)", item.time)
         local stdio = string.format("[%s %3d]", "stdout", #item.stdout)
 

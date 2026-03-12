@@ -5,7 +5,7 @@ local api = vim.api
 function M.setup()
   local a = require("plenary.async")
   local status_buffer = require("neojj.buffers.status")
-  local git = require("neojj.lib.git")
+  local jj = require("neojj.lib.jj")
   local group = require("neojj").autocmd_group
 
   api.nvim_create_autocmd({ "ColorScheme" }, {
@@ -26,7 +26,7 @@ function M.setup()
         and status_buffer.is_open()
         and not api.nvim_get_option_value("filetype", { buf = o.buf }):match("^Neojj")
       then
-        local path = git.files.relpath_from_repository(o.file)
+        local path = jj.repo:relpath(o.file)
         if path then
           status_buffer
             .instance()
