@@ -132,6 +132,7 @@ function M._build_cmd(tbl)
     ["op log"] = true,
     ["file list"] = true,
     ["file annotate"] = true,
+    ["file show"] = true,
     ["git remote list"] = true,
     ["workspace list"] = true,
     ["workspace root"] = true,
@@ -545,6 +546,32 @@ define_command("file untrack", {})
 
 -- jj file annotate
 define_command("file annotate", {})
+
+-- jj file show
+define_command("file show", {
+  options = {
+    revision = "-r",
+  },
+})
+
+-- jj config get
+define_command("config get", {})
+
+-- jj config set
+define_command("config set", {
+  flags = {
+    repo = "--repo",
+    user = "--user",
+  },
+})
+
+-- jj config unset
+define_command("config unset", {
+  flags = {
+    repo = "--repo",
+    user = "--user",
+  },
+})
 
 -- jj workspace add
 define_command("workspace add", {

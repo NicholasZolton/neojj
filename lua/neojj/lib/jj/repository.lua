@@ -164,6 +164,22 @@ function Repo:reset()
   self.state.worktree_root = self.worktree_root
 end
 
+---Compute a file path relative to the workspace root.
+---@param absolute_path string
+---@return string|nil relative path, or nil if path is outside the workspace
+function Repo:relpath(absolute_path)
+  if absolute_path == self.worktree_root then
+    return ""
+  end
+
+  local prefix = self.worktree_root .. "/"
+  if absolute_path:sub(1, #prefix) == prefix then
+    return absolute_path:sub(#prefix + 1)
+  end
+
+  return nil
+end
+
 ---Refresh all state from jj (synchronous).
 ---@param opts? { callback?: fun(), source?: string }
 function Repo:refresh(opts)
