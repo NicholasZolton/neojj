@@ -304,7 +304,7 @@ function M.describe_with_message(popup)
     picker_cache.invalidate_revisions()
     notification.info("Description updated", { dismiss = true })
   else
-    notification.warn("Describe failed", { dismiss = true })
+    notification.warn("Describe failed: " .. picker_cache.error_msg(result), { dismiss = true })
   end
 end
 

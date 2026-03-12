@@ -153,13 +153,21 @@ function M.wrap(cmd, opts)
     vim.api.nvim_exec_autocmds("User", { pattern = opts.autocmd, modeline = false })
   else
     if opts.msg.fail then
-      local stderr = result.stderr
-      if type(stderr) == "table" then
-        stderr = table.concat(stderr, "\n")
+      -- In PTY mode stderr is merged into stdout, so check both
+      local output = result.stderr
+      if type(output) == "table" then
+        output = table.concat(output, "\n")
       end
+      if (not output or output == "") and result.stdout then
+        output = result.stdout
+        if type(output) == "table" then
+          output = table.concat(output, "\n")
+        end
+      end
+
       local msg = opts.msg.fail
-      if stderr and stderr ~= "" then
-        msg = msg .. ": " .. stderr
+      if output and output ~= "" then
+        msg = msg .. ": " .. output
       end
       notification.warn(msg, { dismiss = true })
     end
