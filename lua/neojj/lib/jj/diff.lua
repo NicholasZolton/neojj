@@ -215,7 +215,7 @@ function M.build(item)
         local lines, exit_code = shell.exec({
           "jj", "--no-pager", "--color=never", "--ignore-working-copy",
           "-R", target_cwd,
-          "diff", "--git", "--", item.name,
+          "diff", "--git", "--", "file:" .. item.name,
         }, target_cwd)
         lines = lines or {}
 
@@ -306,7 +306,7 @@ function M.file_diff(item, revision)
   if revision then
     builder = builder.revision(revision)
   end
-  local result = builder.files(item.name).call { hidden = true, trim = true }
+  local result = builder.files("file:" .. item.name).call { hidden = true, trim = true }
   if result and result.code == 0 then
     return result.stdout
   end

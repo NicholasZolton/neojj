@@ -26,6 +26,7 @@ function M.parse_diff_summary(lines, root)
         mode = mode,
         absolute_path = root .. "/" .. name,
         escaped_path = vim.fn.fnameescape(name),
+        fileset_path = "file:" .. name,
         original_name = nil,
         diff = nil,
         folded = nil,
@@ -54,6 +55,7 @@ function M.parse_status_files(lines, root)
           mode = mode,
           absolute_path = root .. "/" .. name,
           escaped_path = vim.fn.fnameescape(name),
+          fileset_path = "file:" .. name,
           original_name = nil,
           diff = nil,
           folded = nil,
@@ -151,6 +153,7 @@ function M.parse_conflicts(lines, root)
           name = name,
           absolute_path = root .. "/" .. name,
           escaped_path = vim.fn.fnameescape(name),
+          fileset_path = "file:" .. name,
         })
       else
         in_conflicts = false

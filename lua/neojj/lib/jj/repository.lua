@@ -18,6 +18,7 @@ local logger = require("neojj.logger")
 ---@field name string File path
 ---@field absolute_path string Full file path
 ---@field escaped_path string Vim-escaped path
+---@field fileset_path string jj fileset-safe path (file: prefixed)
 ---@field mode string "M", "A", "D", "R"
 ---@field original_name string|nil For renames
 ---@field diff any|nil Lazy-loaded diff
@@ -27,6 +28,7 @@ local logger = require("neojj.logger")
 ---@field name string File path
 ---@field absolute_path string
 ---@field escaped_path string
+---@field fileset_path string jj fileset-safe path (file: prefixed)
 
 ---@class NeojjChangeLogEntry
 ---@field change_id string

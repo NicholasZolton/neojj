@@ -82,7 +82,7 @@ M.v_discard = function(self)
       if section.name == "files" then
         file_count = file_count + #section.items
         for _, item in ipairs(section.items) do
-          table.insert(files_to_restore, item.escaped_path)
+          table.insert(files_to_restore, item.fileset_path)
         end
       end
     end
@@ -419,7 +419,7 @@ M.n_discard = function(self)
       if section == "files" then
         message = ("Discard %q?"):format(selection.item.name)
         action = function()
-          jj.cli.restore.files(selection.item.escaped_path).call()
+          jj.cli.restore.files(selection.item.fileset_path).call()
         end
       end
     elseif selection.item then
@@ -428,7 +428,7 @@ M.n_discard = function(self)
       if section == "files" then
         message = ("Discard changes in %q?"):format(selection.item.name)
         action = function()
-          jj.cli.restore.files(selection.item.escaped_path).call()
+          jj.cli.restore.files(selection.item.fileset_path).call()
         end
       end
     else
@@ -466,12 +466,12 @@ M.n_context_delete = function(self)
       if item and item.first == fn.line(".") then
         message = ("Discard %q?"):format(item.name)
         action = function()
-          jj.cli.restore.files(item.escaped_path).call()
+          jj.cli.restore.files(item.fileset_path).call()
         end
       elseif item then
         message = ("Discard changes in %q?"):format(item.name)
         action = function()
-          jj.cli.restore.files(item.escaped_path).call()
+          jj.cli.restore.files(item.fileset_path).call()
         end
       else
         message = "Discard all modified files?"
