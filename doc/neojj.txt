@@ -344,6 +344,7 @@ DIFF POPUP ~
                                                       *neojj-diff-popup*
   `d`   Diff of current change
   `r`   Diff of a range of changes
+  `t`   Diff from trunk() to the working copy (@)
   `w`   Diff of working copy
   `c`   Diff of a specific change
 

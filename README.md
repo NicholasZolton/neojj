@@ -416,7 +416,7 @@ The following popup menus are available from the status buffer (press `?` for th
 | `?` | **Help** | Show available keybindings |
 | `b` | **Bookmark** | Create, move, delete, forget, rename, track/untrack bookmarks. Move bookmark to another bookmark. |
 | `c` | **Change** | Commit, new change, new on revision/bookmark, new before, describe, edit, abandon, duplicate, revert. Uppercase variants move bookmarks forward. |
-| `d` | **Diff** | View diffs (working copy, range, specific change, diffedit) |
+| `d` | **Diff** | View diffs (working copy, range, trunk to working copy, specific change, diffedit) |
 | `f` | **Fetch** | Fetch from remotes |
 | `l` | **Log** | View log with revset support |
 | `M` | **Remote** | Add, remove, rename remotes |

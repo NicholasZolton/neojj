@@ -72,6 +72,20 @@ function M.range(popup)
   get_diff_integration().open("range", from_hash .. ".." .. to_hash)
 end
 
+function M.trunk(popup)
+  local from_hash = resolve_to_git_hash("trunk()")
+  if not from_hash then
+    return
+  end
+  local to_hash = resolve_to_git_hash("@")
+  if not to_hash then
+    return
+  end
+
+  popup:close()
+  get_diff_integration().open("range", from_hash .. ".." .. to_hash)
+end
+
 function M.working_copy(popup)
   popup:close()
   get_diff_integration().open("worktree")
