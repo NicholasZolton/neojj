@@ -356,12 +356,12 @@ neojj.setup {
       ["d"] = "DiffPopup",
       ["f"] = "FetchPopup",
       ["l"] = "LogPopup",
-      ["M"] = "RemotePopup",
-      ["P"] = "PushPopup",
+      ["m"] = "RemotePopup",
+      ["p"] = "PushPopup",
       ["r"] = "RebasePopup",
-      ["S"] = "SquashPopup",
+      ["s"] = "SquashPopup",
       ["u"] = "UndoPopup",
-      ["W"] = "WorkspacePopup",
+      ["w"] = "WorkspacePopup",
     },
     status = {
       ["j"] = "MoveDown",
@@ -419,12 +419,12 @@ The following popup menus are available from the status buffer (press `?` for th
 | `d` | **Diff** | View diffs (working copy, range, trunk to working copy, specific change, diffedit) |
 | `f` | **Fetch** | Fetch from remotes |
 | `l` | **Log** | View log with revset support |
-| `M` | **Remote** | Add, remove, rename remotes |
-| `P` | **Push** | Push bookmarks to remotes |
+| `m` | **Remote** | Add, remove, rename remotes |
+| `p` | **Push** | Push bookmarks to remotes |
 | `r` | **Rebase** | Rebase changes (single, range, onto revision) |
-| `S` | **Squash** | Squash changes into parent |
+| `s` | **Squash** | Squash changes into parent |
 | `u` | **Undo** | Undo/redo jj operations |
-| `W` | **Workspace** | Add, delete, forget, rename, list workspaces. Quick-add to worktrees directory. |
+| `w` | **Workspace** | Add, delete, forget, rename, list workspaces. Quick-add to worktrees directory. |
 
 Many popups will use whatever is currently under the cursor or selected as input for an action. For example, to rebase a range of changes from the log view, a linewise visual selection can be made, and the rebase action will apply to that selection.
 
@@ -446,13 +446,21 @@ These keybindings work directly in the status buffer on whatever is under your c
 |-----|--------|-------------|
 | `D` | **Describe** | Edit the description of the change under cursor |
 | `E` | **Edit** | Switch your working copy to the change under cursor |
-| `N` | **New change** | Create a new empty change on top of the current working copy |
 | `O` | **New change on** | Create a new change on top of the revision under cursor |
 | `B` | **New change before** | Insert a new change before the revision under cursor |
-| `A` | **Abandon** | Abandon the current change |
 | `F` | **Forget bookmark** | Forget the bookmark under cursor (or track a remote bookmark) |
 | `o` | **Open in browser** | Open the commit under cursor on GitHub/GitLab |
-| `x` | **Discard** | Discard file changes, abandon a change, or delete a bookmark under cursor |
+| `x` | **Discard / Abandon** | Discard file changes, abandon the change (or divergent variant) under cursor, or delete a bookmark under cursor |
+
+> [!NOTE]
+> **Keybind convention:** lowercase keys open popups and pickers; capital letters are contextual
+> actions that act on whatever is under the cursor.
+>
+> **Migrating from older versions:** the Squash, Workspace, Push, and Remote popups moved from
+> `S`/`W`/`P`/`M` to `s`/`w`/`p`/`m`. The `A` (abandon current change) and `N` (new change)
+> bindings were removed — use `x` to abandon the change under the cursor, `c a` to abandon via
+> picker, and `c n` / `O` / `B` to create new changes. Custom `mappings.popup` configs are
+> unaffected.
 
 ## Common Workflows
 
@@ -483,7 +491,7 @@ In git you'd create a branch, commit, and push. In jj:
 1. Make your changes — they're automatically part of the current change (no staging needed)
 2. Press `c` then `c` to **commit** (opens an editor for the description), or `c` then `D` to describe inline
 3. Open the **Bookmark** popup with `b`, then `c` to **create** a bookmark on your change
-4. Press `P` to open the **Push** popup and push the bookmark
+4. Press `p` to open the **Push** popup and push the bookmark
 
 To keep working after committing, press `c` then `n` to create a **new change** on top.
 
@@ -596,7 +604,7 @@ The uppercase variants move any bookmarks that were on the old `@` to the new `@
 
 **Splitting**: Use `jj split` from the command line to break a change into two. Neojj will support this in a future release.
 
-**Squashing** (`S` popup): Merge changes together.
+**Squashing** (`s` popup): Merge changes together.
 - `s` — squash the current change into its parent
 - `S` — squash into a specific revision (picked from fuzzy finder)
 - `a` — absorb changes into prior commits automatically
@@ -621,7 +629,7 @@ Use `[c` and `]c` to scroll through a commit's diff in a side panel without leav
 
 ## Workspace Support
 
-Neojj includes full support for jj workspaces via the `W` popup:
+Neojj includes full support for jj workspaces via the `w` popup:
 
 - **Add** (`a`) / **Add at revision** (`A`) — create a new workspace at a chosen path (defaults to parent of repo root)
 - **Quick add** (`q`) / **Quick add at revision** (`Q`) — instantly create a workspace with a random name under a configurable worktrees directory (default `~/.worktrees`)
