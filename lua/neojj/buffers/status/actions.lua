@@ -813,36 +813,6 @@ end
 
 ---@param self StatusBuffer
 ---@return fun(): nil
-M.n_new_change = function(self)
-  return a.void(function()
-    local ctx = cursor_context(self)
-    if common.divergent_guard(ctx.item) then
-      return
-    end
-    jj.cli.new.call()
-    notification.info("Created new change")
-    self:dispatch_refresh(nil, "n_new_change")
-  end)
-end
-
----@param self StatusBuffer
----@return fun(): nil
-M.n_abandon = function(self)
-  return a.void(function()
-    local ctx = cursor_context(self)
-    if common.divergent_guard(ctx.item) then
-      return
-    end
-    if input.get_permission("Abandon current change?") then
-      jj.cli.abandon.call()
-      notification.info("Change abandoned")
-      self:dispatch_refresh(nil, "n_abandon")
-    end
-  end)
-end
-
----@param self StatusBuffer
----@return fun(): nil
 M.n_undo = function(self)
   return a.void(function()
     if input.get_permission("Undo last operation?") then

@@ -189,8 +189,6 @@ function M:open(kind)
         ["D"]                                   = self:_action("n_describe"),
         ["E"]                                   = self:_action("n_edit_change"),
         ["F"]                                   = self:_action("n_forget_bookmark"),
-        ["N"]                                   = self:_action("n_new_change"),
-        ["A"]                                   = self:_action("n_abandon"),
         ["o"]                                   = self:_action("n_open_in_browser"),
         ["O"]                                   = self:_action("n_new_change_on"),
         ["B"]                                   = self:_action("n_new_change_before"),

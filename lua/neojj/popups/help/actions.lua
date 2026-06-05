@@ -99,10 +99,8 @@ M.context = function()
   return {
     { name = "Describe", keys = { "D" }, fn = NONE },
     { name = "Edit change", keys = { "E" }, fn = NONE },
-    { name = "New change", keys = { "N" }, fn = NONE },
     { name = "New change on", keys = { "O" }, fn = NONE },
     { name = "New change before", keys = { "B" }, fn = NONE },
-    { name = "Abandon", keys = { "A" }, fn = NONE },
     { name = "Forget bookmark", keys = { "F" }, fn = NONE },
     { name = "Open in browser", keys = { "o" }, fn = NONE },
   }
