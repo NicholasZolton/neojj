@@ -487,6 +487,49 @@ function M.abandon_variant(item, refresh)
   end
 end
 
+---Abandon a normal (non-variant) change. Handles the immutable check,
+---confirmation prompt, abandon call, notification, and refresh. The refresh
+---callback is invoked only on successful abandon.
+---@param item StatusItem|NeojjChangeLogEntry the change entry (must have change_id)
+---@param refresh fun(): nil callback to refresh whatever buffer hosted the action
+function M.abandon_change(item, refresh)
+  local notification = require("neojj.lib.notification")
+  local input = require("neojj.lib.input")
+  local short = string.sub(item.change_id or "", 1, 8)
+  if item.immutable then
+    notification.warn("Cannot abandon immutable commit " .. short, { dismiss = true })
+    return
+  end
+  if not input.get_permission("Abandon " .. short .. "?") then
+    return
+  end
+  local result = jj.cli.abandon.args(item.change_id).call()
+  if result and result.code == 0 then
+    notification.info("Abandoned " .. short, { dismiss = true })
+    refresh()
+  else
+    notification.warn("Failed to abandon " .. short, { dismiss = true })
+  end
+end
+
+---Abandon whatever change-like entry is under the cursor: a divergent
+---variant (by commit_id, no prompt), a divergent parent (warns and does
+---nothing), or a normal change (by change_id, with confirmation prompt).
+---@param item StatusItem|NeojjChangeLogEntry|nil the entry under the cursor
+---@param refresh fun(): nil callback to refresh whatever buffer hosted the action
+function M.abandon_at_cursor(item, refresh)
+  if not item then
+    return
+  end
+  if item.change_offset ~= nil then
+    M.abandon_variant(item, refresh)
+  elseif M.divergent_guard(item) then
+    return
+  elseif item.change_id then
+    M.abandon_change(item, refresh)
+  end
+end
+
 ---Returns true and shows a notification if the item is a divergent parent.
 ---Callers should early-return when this returns true.
 ---@param item StatusItem|NeojjChangeLogEntry|nil
