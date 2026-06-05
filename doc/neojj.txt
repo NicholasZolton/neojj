@@ -259,7 +259,7 @@ STATUS BUFFER ~
   `<C-x>`          Open file in horizontal split
   `<C-t>`          Open file in new tab
   `o`              Open tree view
-  `x`              Discard changes under cursor
+  `x`              Discard / abandon the item under cursor
   `q`              Close the status buffer
   `Q`              Open command input
   `$`              Show command history
@@ -280,17 +280,15 @@ POPUP TRIGGERS (from status buffer) ~
   `?`       Help popup (keybinding reference)
   `b`       Bookmark popup
   `c`       Commit popup
-  `W`       Workspace popup
-  `Q`       Squash popup
   `d`       Diff popup
   `f`       Fetch popup
   `l`       Log popup
-  `P`       Push popup
+  `m`       Remote popup
+  `p`       Push popup
   `r`       Rebase popup
-  `M`       Remote popup
-  `S`       Split popup
-  `R`       Resolve popup
-  `y`       Yank popup
+  `s`       Squash popup
+  `u`       Undo popup
+  `w`       Workspace popup
 
 COMMIT EDITOR ~
                                                     *neojj-mappings-editor*
