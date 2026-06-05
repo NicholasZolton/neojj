@@ -165,10 +165,7 @@ function M:open()
         end,
         ["x"] = function()
           local item = self.buffer.ui:get_commit_item_under_cursor()
-          if not (item and item.change_offset ~= nil) then
-            return
-          end
-          common.abandon_variant(item, function()
+          common.abandon_at_cursor(item, function()
             a.run(function()
               local permit = self.refresh_lock:acquire()
               self.commits = self.fetch_func(0)
