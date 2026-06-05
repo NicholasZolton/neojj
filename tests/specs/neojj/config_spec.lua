@@ -624,6 +624,20 @@ describe("NeoJJ config", function()
     end)
   end)
 
+  describe("default popup mappings", function()
+    it("uses lowercase keys for all popup triggers", function()
+      local popup_maps = config.get_default_values().mappings.popup
+      assert.are.same("SquashPopup", popup_maps["s"])
+      assert.are.same("WorkspacePopup", popup_maps["w"])
+      assert.are.same("PushPopup", popup_maps["p"])
+      assert.are.same("RemotePopup", popup_maps["m"])
+      assert.Nil(popup_maps["S"])
+      assert.Nil(popup_maps["W"])
+      assert.Nil(popup_maps["P"])
+      assert.Nil(popup_maps["M"])
+    end)
+  end)
+
   describe("check_integration", function()
     it("should resolve mini_pick to mini.pick module", function()
       -- When mini.pick is available, check_integration("mini_pick") should find it
