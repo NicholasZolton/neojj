@@ -160,12 +160,7 @@ function M.refresh(root, opts, callback)
     return
   end
 
-  local remote = require("neojj.lib.jj.remote")
-  if force then
-    remote.invalidate(root)
-  end
-
-  local info = remote.get(root)
+  local info = require("neojj.lib.jj.remote").get(root)
   local provider = info and M.provider_for_host(info.host, forge_config.hosts)
   if not provider or vim.fn.executable(provider.executable) ~= 1 then
     cache[root] = { failed = true }
