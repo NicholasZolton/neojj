@@ -27,10 +27,14 @@ jobs:
         if: ${{ steps.release.outputs.pr }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+          # Parsed in the shell: the runner evaluates step env expressions even
+          # when `if` is false, so fromJSON() here would fail on every push
+          # that doesn't produce a release PR.
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
         # Auto-merge can only be enabled while something blocks the merge
         # (e.g. required checks still running); on an immediately-mergeable
         # PR it errors, so fall back to merging directly.
         run: |
+          PR_NUMBER=$(jq -r '.number' <<<"$RELEASE_PR")
           gh pr merge --squash --auto --repo "$GITHUB_REPOSITORY" "$PR_NUMBER" \
             || gh pr merge --squash --repo "$GITHUB_REPOSITORY" "$PR_NUMBER"
