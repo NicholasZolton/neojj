@@ -32,6 +32,7 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
 ```lua
 {
   "NicholasZolton/neojj",
+  version = "^1.0.0", -- recommended: track 1.x releases (see Versioning below)
   lazy = true,
   dependencies = {
     "nvim-lua/plenary.nvim",         -- required
@@ -52,6 +53,15 @@ Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you'r
   }
 }
 ```
+
+### Versioning
+
+NeoJJ follows [Semantic Versioning](https://semver.org): breaking changes only
+land in major releases. With `version = "^1.0.0"`, lazy.nvim installs the
+latest `1.x` tag — you get new features and fixes on `:Lazy update`, but a
+breaking `2.0` requires you to bump the pin yourself. Drop the `version` line
+to track `main` directly (bleeding edge, may break without warning). Each
+release is documented in [CHANGELOG.md](CHANGELOG.md).
 
 ## Usage
 
