@@ -212,6 +212,7 @@ function M.DivergentVariantRow(variant, opts)
   }
 
   local row_opts = {
+    kind = "change",
     yankable = variant.commit_id,
     oid = variant.commit_id,
     item = variant,
@@ -266,6 +267,7 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
     end
 
     return col.tag("divergent_parent")(vim.list_extend({ row(parent_children) }, variant_rows), {
+      kind = "change",
       item = commit,
       oid = commit.change_id,
       foldable = false,
@@ -366,6 +368,7 @@ M.CommitEntry = Component.new(function(commit, _remotes, args)
     ),
     details,
   }, {
+    kind = "change",
     item = commit,
     oid = commit.change_id,
     foldable = args.details == true,

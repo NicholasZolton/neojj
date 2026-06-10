@@ -16,6 +16,21 @@ local M = {}
 ---@class NeojjBookmarkMeta
 local meta = {}
 
+---Strip jj display decorations from a bookmark name: the unpushed marker
+---(`name*`), conflict markers (`name??`), and a remote qualifier
+---(`name@origin`). Git ref names cannot contain `*`, `?`, or `@`-qualifiers,
+---so the leading run of other characters is the bare name.
+---@param name string|nil
+---@return string|nil
+function M.normalize(name)
+  if type(name) ~= "string" then
+    return nil
+  end
+
+  local bare = name:match("^([^@*?]+)")
+  return bare
+end
+
 ---Parse `jj bookmark list --all` output
 ---Local format: "name: change_id commit_id [| ] description"
 ---Local deleted: "name (deleted)"

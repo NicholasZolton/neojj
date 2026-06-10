@@ -11,18 +11,22 @@ local common = require("neojj.buffers.common")
 local fn = vim.fn
 
 ---@class CursorContext
----@field change_id string|nil The change ID under cursor (from item, yankable, or head fallback)
+---@field kind UiContextKind|nil Semantic kind of the line under cursor
+---@field change_id string|nil The change ID under cursor (from item or the line's context node)
+---@field commit_id string|nil The commit ID under cursor (from item or the line's context node)
+---@field bookmarks string[] Bookmark names rendered on the line
 ---@field section string|nil Section name (e.g. "files", "recent", "bookmarks")
 ---@field item StatusItem|nil The item under cursor (from get_selection)
 ---@field yank string|nil Raw yankable value under cursor
 ---@field immutable boolean Whether the change is immutable
 
 --- Resolve cursor context into a structured result.
---- Extracts change_id from item > yankable (head/parent) > nil.
+--- Extracts change_id from item > the line's context node (head/parent headers) > nil.
 ---@param self StatusBuffer
 ---@return CursorContext
 local function cursor_context(self)
   local selection = self.buffer.ui:get_selection()
+  local ui_ctx = self.buffer.ui:context_under_cursor()
   local item = selection.item
   local section = selection.section and selection.section.name
   local yank = self.buffer.ui:get_yankable_under_cursor()
@@ -30,12 +34,22 @@ local function cursor_context(self)
   local change_id
   if item and item.change_id then
     change_id = item.change_id
-  elseif yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
-    change_id = yank
+  elseif ui_ctx then
+    change_id = ui_ctx.change_id
+  end
+
+  local commit_id
+  if item and item.commit_id and item.commit_id ~= "" then
+    commit_id = item.commit_id
+  elseif ui_ctx then
+    commit_id = ui_ctx.commit_id
   end
 
   return {
+    kind = ui_ctx and ui_ctx.kind or nil,
     change_id = change_id,
+    commit_id = commit_id,
+    bookmarks = ui_ctx and ui_ctx.bookmarks or {},
     section = section,
     item = item,
     yank = yank,
@@ -1080,27 +1094,6 @@ M.n_workspace_popup = function(_self)
   return popups.open("workspace")
 end
 
----Bookmark names rendered on the line under the cursor.
----@param ctx table
----@return string[]
-local function bookmarks_under_cursor(ctx)
-  if ctx.section == "bookmarks" and ctx.item and ctx.item.name then
-    return { ctx.item.name }
-  end
-
-  if ctx.item and ctx.item.bookmarks then
-    return ctx.item.bookmarks
-  end
-
-  for _, head in ipairs { jj.repo.state.head, jj.repo.state.parent } do
-    if ctx.change_id and ctx.change_id == head.change_id then
-      return head.bookmarks or {}
-    end
-  end
-
-  return {}
-end
-
 ---@param self StatusBuffer
 ---@return fun(): nil
 M.n_open_in_browser = function(self)
@@ -1114,7 +1107,7 @@ M.n_open_in_browser = function(self)
     local info = remote.get(jj.repo.state.worktree_root)
 
     -- Project header: open repo URL directly
-    if ctx.yank == "__project__" then
+    if ctx.kind == "project" then
       if not info then
         notification.warn("No remote found", { dismiss = true })
         return
@@ -1125,7 +1118,7 @@ M.n_open_in_browser = function(self)
 
     -- A line annotated with an open PR opens the PR
     local forge = require("neojj.lib.forge")
-    for _, bookmark in ipairs(bookmarks_under_cursor(ctx)) do
+    for _, bookmark in ipairs(ctx.bookmarks) do
       local pr = forge.pr_for_branch(jj.repo.state.worktree_root, bookmark)
       if pr then
         vim.ui.open(pr.url)
@@ -1135,8 +1128,7 @@ M.n_open_in_browser = function(self)
 
     -- Use commit_id directly: it's unambiguous (a divergent change_id like
     -- `kumtokwn` resolves to multiple commits and `jj log -r` errors).
-    local commit_hash = (ctx.item and ctx.item.commit_id ~= "" and ctx.item.commit_id)
-      or jj.repo.state.head.commit_id
+    local commit_hash = ctx.commit_id or jj.repo.state.head.commit_id
 
     if not commit_hash or commit_hash == "" then
       notification.warn("No change under cursor", { dismiss = true })

@@ -101,4 +101,28 @@ describe("jj bookmark parser", function()
       assert.are.equal(2, #items)
     end)
   end)
+
+  describe("normalize", function()
+    it("returns a plain name unchanged", function()
+      assert.are.equal("main", bookmark.normalize("main"))
+      assert.are.equal("nicholas/forge-pr", bookmark.normalize("nicholas/forge-pr"))
+    end)
+
+    it("strips the unpushed decoration", function()
+      assert.are.equal("main", bookmark.normalize("main*"))
+    end)
+
+    it("strips the conflict decoration", function()
+      assert.are.equal("main", bookmark.normalize("main??"))
+    end)
+
+    it("strips a remote qualifier", function()
+      assert.are.equal("main", bookmark.normalize("main@origin"))
+    end)
+
+    it("returns nil for nil or undecorated-empty input", function()
+      assert.is_nil(bookmark.normalize(nil))
+      assert.is_nil(bookmark.normalize(""))
+    end)
+  end)
 end)

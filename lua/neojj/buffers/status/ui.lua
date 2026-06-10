@@ -111,7 +111,7 @@ local ProjectHeader = Component.new(function(props)
   local project_name = vim.fn.fnamemodify(props.root, ":t")
   return row({
     text.highlight("NeojjSectionHeader")(project_name),
-  }, { yankable = "__project__" })
+  }, { kind = "project" })
 end)
 
 --- Head/Parent section showing current change and its parent
@@ -155,7 +155,13 @@ local JJHead = Component.new(function(props)
       text("  "),
       text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
     },
-  }, { yankable = change_id, oid = change_id })
+  }, {
+    kind = "change",
+    yankable = change_id,
+    oid = change_id,
+    commit_id = commit_id,
+    bookmarks = props.bookmarks,
+  })
 end)
 
 local SectionTitle = Component.new(function(props)
@@ -276,6 +282,7 @@ local SectionItemFile = function(section, config)
       on_open = load_diff(item),
       context = true,
       id = ("%s--%s"):format(section, item.name),
+      kind = "file",
       yankable = item.name,
       filename = item.name,
       item = item,
@@ -304,6 +311,7 @@ local SectionItemChange = Component.new(function(item)
 
     local children = {
       row(parent_parts, {
+        kind = "change",
         yankable = item.change_id,
         oid = item.change_id,
         item = item,
@@ -354,6 +362,7 @@ local SectionItemChange = Component.new(function(item)
   table.insert(parts, text.highlight(status_highlight)(status_suffix))
 
   return row(parts, {
+    kind = "change",
     yankable = item.change_id,
     oid = item.change_id,
     item = item,
@@ -395,6 +404,7 @@ local SectionItemBookmark = Component.new(function(item)
   end
 
   return row(parts, {
+    kind = "bookmark",
     yankable = item.name,
     oid = (item.change_id and item.change_id ~= "") and item.change_id or nil,
     item = item,
@@ -406,6 +416,7 @@ local SectionItemConflict = Component.new(function(item)
     text.highlight("NeojjGraphRed")("C "),
     text(item.name),
   }, {
+    kind = "conflict",
     yankable = item.name,
     item = item,
   })

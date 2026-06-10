@@ -65,5 +65,13 @@ describe("forge", function()
       assert.are.equal(pr, forge.pr_for_branch("/some/root", "my-feature"))
       assert.is_nil(forge.pr_for_branch("/other/root", "my-feature"))
     end)
+
+    it("matches bookmark names carrying jj status decorations", function()
+      local pr = { number = 22, title = "t", url = "u", branch = "my-feature", draft = false }
+      forge._set_index("/some/root", forge.build_index { pr })
+      assert.are.equal(pr, forge.pr_for_branch("/some/root", "my-feature*"))
+      assert.are.equal(pr, forge.pr_for_branch("/some/root", "my-feature??"))
+      assert.are.equal(pr, forge.pr_for_branch("/some/root", "my-feature@origin"))
+    end)
   end)
 end)

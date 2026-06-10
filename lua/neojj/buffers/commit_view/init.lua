@@ -251,6 +251,11 @@ end
 local function diff_visit_file(self, component, worktree)
   local hunk_component = component.parent.parent
   local hunk = hunk_component.options.hunk
+  if not hunk then
+    notification.warn("Unable to determine hunk for diff line")
+    return
+  end
+
   local path = vim.trim(hunk.file)
   if path == "" then
     notification.warn("Unable to determine file path for diff line")

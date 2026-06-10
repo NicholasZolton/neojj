@@ -70,11 +70,15 @@ function M.build_index(prs)
   return index
 end
 
+---Look up the open PR for a bookmark. The name may carry jj display
+---decorations (`name*`, `name??`, `name@origin`); matching is on the bare
+---branch name.
 ---@param root string
----@param branch string|nil
+---@param bookmark string|nil
 ---@return neojj.ForgePR|nil
-function M.pr_for_branch(root, branch)
+function M.pr_for_branch(root, bookmark)
   local entry = cache[root]
+  local branch = require("neojj.lib.jj.bookmark").normalize(bookmark)
   if not (entry and entry.index and branch) then
     return nil
   end
