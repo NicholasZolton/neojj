@@ -225,6 +225,14 @@ the available options with their defaults: >lua
       -- Which diff viewer to use (nil = auto-detect)
       diff_viewer = nil,
 
+      -- Forge (GitHub, ...) integration: annotate bookmarks with open PRs
+      -- and let "o" open the PR in the browser. Requires the forge CLI
+      -- (`gh`) to be installed; disabled silently otherwise.
+      forge = {
+        pr_integration = true,
+        hosts = {},  -- e.g. { github = { "git.yourcompany.com" } }
+      },
+
       -- Section visibility and fold state
       sections = {
         modified = {

@@ -109,6 +109,10 @@ end
 ---@field spell_check? boolean Enable/Disable spell checking
 ---@field describe_editor? boolean Use full editor for `dd` describe action (false = inline input)
 
+---@class NeojjForgeConfig
+---@field pr_integration boolean Match bookmarks to open PRs and let "o" open them in the browser
+---@field hosts table<string, string[]> Extra remote hosts per provider name, e.g. { github = { "git.corp.com" } }
+
 ---@alias NeojjConfigSignsIcon { [1]: string, [2]: string }
 
 ---@class NeojjConfigSigns
@@ -309,6 +313,7 @@ end
 ---@field popup? NeojjConfigPopup Set the default way of opening popups
 ---@field signs? NeojjConfigSigns Signs used for toggled regions
 ---@field integrations? { diffview: boolean, codediff: boolean, telescope: boolean, fzf_lua: boolean, mini_pick: boolean, snacks: boolean } Which integrations to enable
+---@field forge? NeojjForgeConfig Forge (GitHub, ...) integration options
 ---@field diff_viewer? "diffview"|"codediff"|nil Which diff viewer to use (nil = auto-detect)
 ---@field sections? NeojjConfigSections
 ---@field ignored_settings? string[] Settings to never persist, format: "Filetype--cli-value", i.e. "NeojjCommitPopup--author"
@@ -432,6 +437,10 @@ function M.get_default_values()
       fzf_lua = nil,
       mini_pick = nil,
       snacks = nil,
+    },
+    forge = {
+      pr_integration = true,
+      hosts = {},
     },
     diff_viewer = nil,
     sections = {
@@ -714,6 +723,25 @@ function M.validate_config()
             table.concat(valid_integrations, ", ")
           )
         )
+      end
+    end
+  end
+
+  local function validate_forge()
+    if not validate_type(config.forge, "forge", "table") then
+      return
+    end
+
+    validate_type(config.forge.pr_integration, "forge.pr_integration", "boolean")
+
+    if validate_type(config.forge.hosts, "forge.hosts", "table") then
+      for provider_name, hosts in pairs(config.forge.hosts) do
+        local name = string.format("forge.hosts.%s", provider_name)
+        if validate_type(hosts, name, "table") then
+          for i, host in ipairs(hosts) do
+            validate_type(host, string.format("%s[%d]", name, i), "string")
+          end
+        end
       end
     end
   end
@@ -1031,6 +1059,7 @@ function M.validate_config()
 
     validate_integrations()
     validate_diff_viewer()
+    validate_forge()
     validate_sections()
     validate_ignored_settings()
     validate_mappings()

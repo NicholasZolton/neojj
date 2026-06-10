@@ -164,6 +164,74 @@ function Ui:get_cursor_context(line)
   end)
 end
 
+---@alias UiContextKind "change"|"file"|"bookmark"|"conflict"|"project"
+
+---@class UiContext
+---@field kind UiContextKind
+---@field item StatusItem|nil
+---@field oid string|nil
+---@field yank string|nil
+---@field change_id string|nil
+---@field commit_id string|nil
+---@field bookmarks string[] Bookmark names rendered on the line
+
+---Resolve a context node's options into a UiContext. Pure: this is the one
+---place that knows how each line kind exposes its change_id and bookmarks,
+---so consumers branch on `kind` instead of duck-typing items or matching
+---section names.
+---@param options ComponentOptions|nil Component options of the nearest node with a `kind`
+---@return UiContext|nil
+function Ui.resolve_context(options)
+  if not options or not options.kind then
+    return nil
+  end
+
+  local ctx = {
+    kind = options.kind,
+    item = options.item,
+    oid = options.oid,
+    yank = options.yankable,
+    bookmarks = {},
+  }
+
+  if options.item and options.item.change_id and options.item.change_id ~= "" then
+    ctx.change_id = options.item.change_id
+  elseif options.kind == "change" then
+    -- Change lines set oid to their change_id (variant rows set a commit_id,
+    -- but those always carry an item, handled above).
+    ctx.change_id = options.oid
+  end
+
+  if options.item and options.item.commit_id and options.item.commit_id ~= "" then
+    ctx.commit_id = options.item.commit_id
+  else
+    -- Head/parent header lines carry no item; they set commit_id directly
+    ctx.commit_id = options.commit_id
+  end
+
+  if options.kind == "bookmark" and options.item and options.item.name then
+    ctx.bookmarks = { options.item.name }
+  elseif options.bookmarks then
+    ctx.bookmarks = options.bookmarks
+  elseif options.item and options.item.bookmarks then
+    ctx.bookmarks = options.item.bookmarks
+  end
+
+  return ctx
+end
+
+---The semantic context of the line under the cursor: nearest ancestor
+---component tagged with a `kind`, resolved into a UiContext.
+---@return UiContext|nil
+function Ui:context_under_cursor()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local node = self:_find_component_by_index(cursor[1], function(n)
+    return n.options.kind ~= nil
+  end)
+
+  return node and Ui.resolve_context(node.options) or nil
+end
+
 ---@return string|nil
 function Ui:get_line_highlight(line)
   local component = self:_find_component_by_index(line, function(node)

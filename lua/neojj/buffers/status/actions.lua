@@ -11,18 +11,22 @@ local common = require("neojj.buffers.common")
 local fn = vim.fn
 
 ---@class CursorContext
----@field change_id string|nil The change ID under cursor (from item, yankable, or head fallback)
+---@field kind UiContextKind|nil Semantic kind of the line under cursor
+---@field change_id string|nil The change ID under cursor (from item or the line's context node)
+---@field commit_id string|nil The commit ID under cursor (from item or the line's context node)
+---@field bookmarks string[] Bookmark names rendered on the line
 ---@field section string|nil Section name (e.g. "files", "recent", "bookmarks")
 ---@field item StatusItem|nil The item under cursor (from get_selection)
 ---@field yank string|nil Raw yankable value under cursor
 ---@field immutable boolean Whether the change is immutable
 
 --- Resolve cursor context into a structured result.
---- Extracts change_id from item > yankable (head/parent) > nil.
+--- Extracts change_id from item > the line's context node (head/parent headers) > nil.
 ---@param self StatusBuffer
 ---@return CursorContext
 local function cursor_context(self)
   local selection = self.buffer.ui:get_selection()
+  local ui_ctx = self.buffer.ui:context_under_cursor()
   local item = selection.item
   local section = selection.section and selection.section.name
   local yank = self.buffer.ui:get_yankable_under_cursor()
@@ -30,12 +34,22 @@ local function cursor_context(self)
   local change_id
   if item and item.change_id then
     change_id = item.change_id
-  elseif yank and (yank == jj.repo.state.head.change_id or yank == jj.repo.state.parent.change_id) then
-    change_id = yank
+  elseif ui_ctx then
+    change_id = ui_ctx.change_id
+  end
+
+  local commit_id
+  if item and item.commit_id and item.commit_id ~= "" then
+    commit_id = item.commit_id
+  elseif ui_ctx then
+    commit_id = ui_ctx.commit_id
   end
 
   return {
+    kind = ui_ctx and ui_ctx.kind or nil,
     change_id = change_id,
+    commit_id = commit_id,
+    bookmarks = ui_ctx and ui_ctx.bookmarks or {},
     section = section,
     item = item,
     yank = yank,
@@ -1089,67 +1103,45 @@ M.n_open_in_browser = function(self)
       return
     end
 
-    -- Helper to resolve remote URL
-    local function get_remote_browser_url()
-      local shell = require("neojj.lib.jj.shell")
-      local remote_lines, code = shell.exec(
-        { "jj", "--no-pager", "--color=never", "git", "remote", "list" },
-        jj.repo.state.worktree_root
-      )
-      if code ~= 0 or not remote_lines or #remote_lines == 0 then
-        return nil
-      end
-
-      local remote_url
-      for _, line in ipairs(remote_lines) do
-        local url = line:match("^%S+%s+(%S+)")
-        if url then
-          remote_url = url
-          break
-        end
-      end
-
-      if not remote_url then
-        return nil
-      end
-
-      return remote_url
-        :gsub("%.git$", "")
-        :gsub("^git@([^:]+):", "https://%1/")
-        :gsub("^ssh://git@([^/]+)/", "https://%1/")
-    end
+    local remote = require("neojj.lib.jj.remote")
+    local info = remote.get(jj.repo.state.worktree_root)
 
     -- Project header: open repo URL directly
-    if ctx.yank == "__project__" then
-      local browser_url = get_remote_browser_url()
-      if not browser_url then
+    if ctx.kind == "project" then
+      if not info then
         notification.warn("No remote found", { dismiss = true })
         return
       end
-      vim.ui.open(browser_url)
+      vim.ui.open(info.browser_url)
       return
+    end
+
+    -- A line annotated with an open PR opens the PR
+    local forge = require("neojj.lib.forge")
+    for _, bookmark in ipairs(ctx.bookmarks) do
+      local pr = forge.pr_for_branch(jj.repo.state.worktree_root, bookmark)
+      if pr then
+        vim.ui.open(pr.url)
+        return
+      end
     end
 
     -- Use commit_id directly: it's unambiguous (a divergent change_id like
     -- `kumtokwn` resolves to multiple commits and `jj log -r` errors).
-    local commit_hash = (ctx.item and ctx.item.commit_id ~= "" and ctx.item.commit_id)
-      or jj.repo.state.head.commit_id
+    local commit_hash = ctx.commit_id or jj.repo.state.head.commit_id
 
     if not commit_hash or commit_hash == "" then
       notification.warn("No change under cursor", { dismiss = true })
       return
     end
 
-    local browser_url = get_remote_browser_url()
-    if not browser_url then
+    if not info then
       notification.warn("No remote found", { dismiss = true })
       return
     end
 
     -- Construct commit URL (works for GitHub, GitLab, etc.)
-    browser_url = browser_url .. "/commit/" .. commit_hash
-
-    vim.ui.open(browser_url)
+    vim.ui.open(info.browser_url .. "/commit/" .. commit_hash)
   end
 end
 

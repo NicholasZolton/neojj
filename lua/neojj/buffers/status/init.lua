@@ -285,6 +285,18 @@ function M:refresh(partial, reason)
     view = self.buffer:save_view()
   end
 
+  -- Runs concurrently with the jj refresh; redraws only if the PR data
+  -- changed so bookmark annotations appear without blocking the UI.
+  -- A manual refresh busts the forge TTL cache.
+  require("neojj.lib.forge").refresh(self.root, { force = reason == "n_refresh_buffer" }, function()
+    local pr_cursor, pr_view
+    if self.buffer and self.buffer:is_focused() then
+      pr_cursor = self.buffer.ui:get_cursor_location()
+      pr_view = self.buffer:save_view()
+    end
+    self:redraw(pr_cursor, pr_view)
+  end)
+
   jj.repo:dispatch_refresh {
     source = "status",
     partial = partial,

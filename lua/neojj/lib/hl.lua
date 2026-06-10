@@ -226,6 +226,7 @@ function M.setup(config)
     NeojjBranch                   = { fg = palette.blue, bold = palette.bold, ctermfg = 4 },
     NeojjBranchHead               = { fg = palette.blue, bold = palette.bold, underline = palette.underline, ctermfg = 4 },
     NeojjRemote                   = { fg = palette.green, bold = palette.bold, ctermfg = 2 },
+    NeojjForgePR                  = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },
     NeojjObjectId                 = { fg = palette.bg_cyan, ctermfg = 7 },
     NeojjChangeId                 = { fg = palette.bg_purple, ctermfg = 6 },
     NeojjChangeIdPrefix           = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },

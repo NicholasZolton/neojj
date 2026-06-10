@@ -11,26 +11,31 @@ local default_component_options = {
 ---@field col_start integer
 ---@field col_end integer
 
+---Every field is optional: components declare only the options relevant to
+---their line, and defaults are merged in at construction time.
 ---@class ComponentOptions
----@field line_hl string
----@field highlight string
+---@field line_hl string|nil
+---@field highlight string|nil
 ---@field align_right integer|nil
----@field padding_left integer
----@field tag string
----@field foldable boolean
----@field folded boolean
----@field context boolean
----@field interactive boolean
----@field virtual_text string
+---@field padding_left integer|nil
+---@field tag string|nil
+---@field foldable boolean|nil
+---@field folded boolean|nil
+---@field context boolean|nil
+---@field interactive boolean|nil
+---@field virtual_text string|nil
 ---@field section string|nil
 ---@field item table|nil
 ---@field id string|nil
 ---@field oid string|nil
----@field ref ParsedRef
----@field yankable string?
----@field on_open fun(fold, Ui)
----@field hunk Hunk
----@field filename string?
+---@field ref ParsedRef|nil
+---@field yankable string|nil
+---@field kind UiContextKind|nil Semantic kind of the line, resolved by Ui.resolve_context
+---@field bookmarks string[]|nil Bookmark names on lines without an item (head/parent headers)
+---@field commit_id string|nil Commit id on lines without an item (head/parent headers)
+---@field on_open fun(fold, Ui)|nil
+---@field hunk Hunk|nil
+---@field filename string|nil
 ---@field value any
 
 ---@class Component

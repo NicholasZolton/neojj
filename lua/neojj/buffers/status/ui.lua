@@ -17,6 +17,41 @@ local DiffHunks = common.DiffHunks
 
 local M = {}
 
+---PR annotation for a bookmark with a matching open PR on the forge.
+---@param bookmark string
+---@return table[]
+local function pr_annotation_parts(bookmark)
+  local forge = require("neojj.lib.forge")
+  local root = require("neojj.lib.jj").repo.state.worktree_root
+
+  local pr = forge.pr_for_branch(root, bookmark)
+  if not pr then
+    return {}
+  end
+
+  return { text(" "), text.highlight("NeojjForgePR")("#" .. pr.number) }
+end
+
+---Render bookmark labels for a change line, annotating local bookmarks that
+---have a matching open PR on the forge.
+---@param bookmarks string[]|nil
+---@param remote_bookmarks string[]|nil
+---@return table[]
+local function bookmark_parts(bookmarks, remote_bookmarks)
+  local parts = {}
+  for _, bm in ipairs(bookmarks or {}) do
+    table.insert(parts, text(" "))
+    table.insert(parts, text.highlight("NeojjBranchHead")(bm))
+    vim.list_extend(parts, pr_annotation_parts(bm))
+  end
+  for _, bm in ipairs(remote_bookmarks or {}) do
+    table.insert(parts, text(" "))
+    table.insert(parts, text.highlight("NeojjRemote")(bm))
+  end
+
+  return parts
+end
+
 local HINT = Component.new(function(props)
   ---@return table<string, string[]>
   local function reversed_lookup(tbl)
@@ -76,7 +111,7 @@ local ProjectHeader = Component.new(function(props)
   local project_name = vim.fn.fnamemodify(props.root, ":t")
   return row({
     text.highlight("NeojjSectionHeader")(project_name),
-  }, { yankable = "__project__" })
+  }, { kind = "project" })
 end)
 
 --- Head/Parent section showing current change and its parent
@@ -90,14 +125,6 @@ local JJHead = Component.new(function(props)
   local prefix_len = props.shortest_prefix and #props.shortest_prefix or #short_change
   local change_prefix = short_change:sub(1, prefix_len)
   local change_rest = short_change:sub(prefix_len + 1)
-
-  local bookmark_parts = {}
-  if props.bookmarks and #props.bookmarks > 0 then
-    for _, bm in ipairs(props.bookmarks) do
-      table.insert(bookmark_parts, text(" "))
-      table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
-    end
-  end
 
   local status_parts = {}
   if props.empty then
@@ -116,7 +143,7 @@ local JJHead = Component.new(function(props)
     text(" "),
     text.highlight("NeojjObjectId")(short_commit),
   }
-  vim.list_extend(header_parts, bookmark_parts)
+  vim.list_extend(header_parts, bookmark_parts(props.bookmarks))
   table.insert(
     header_parts,
     text.highlight(props.conflict and "NeojjConflict" or "NeojjSubtleText")(status_text)
@@ -128,7 +155,13 @@ local JJHead = Component.new(function(props)
       text("  "),
       text(props.description ~= "" and vim.split(props.description, "\n")[1] or "(no description)"),
     },
-  }, { yankable = change_id, oid = change_id })
+  }, {
+    kind = "change",
+    yankable = change_id,
+    oid = change_id,
+    commit_id = commit_id,
+    bookmarks = props.bookmarks,
+  })
 end)
 
 local SectionTitle = Component.new(function(props)
@@ -249,6 +282,7 @@ local SectionItemFile = function(section, config)
       on_open = load_diff(item),
       context = true,
       id = ("%s--%s"):format(section, item.name),
+      kind = "file",
       yankable = item.name,
       filename = item.name,
       item = item,
@@ -264,33 +298,20 @@ local SectionItemChange = Component.new(function(item)
     local change_prefix = change_id:sub(1, prefix_len)
     local change_rest = change_id:sub(prefix_len + 1)
 
-    local bookmark_parts = {}
-    if item.bookmarks and #item.bookmarks > 0 then
-      for _, bm in ipairs(item.bookmarks) do
-        table.insert(bookmark_parts, text(" "))
-        table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
-      end
-    end
-    if item.remote_bookmarks and #item.remote_bookmarks > 0 then
-      for _, bm in ipairs(item.remote_bookmarks) do
-        table.insert(bookmark_parts, text(" "))
-        table.insert(bookmark_parts, text.highlight("NeojjRemote")(bm))
-      end
-    end
-
     local parent_parts = {
       text.highlight("NeojjChangeIdPrefix")(change_prefix),
       text.highlight("NeojjChangeIdRest")(change_rest),
       text(" "),
       text.highlight("NeojjDivergent")("<divergent>"),
     }
-    vim.list_extend(parent_parts, bookmark_parts)
+    vim.list_extend(parent_parts, bookmark_parts(item.bookmarks, item.remote_bookmarks))
     if item.immutable then
       table.insert(parent_parts, text.highlight("NeojjSubtleText")(" (immutable)"))
     end
 
     local children = {
       row(parent_parts, {
+        kind = "change",
         yankable = item.change_id,
         oid = item.change_id,
         item = item,
@@ -311,20 +332,6 @@ local SectionItemChange = Component.new(function(item)
   local prefix_len = item.shortest_prefix and #item.shortest_prefix or #change_id
   local change_prefix = change_id:sub(1, prefix_len)
   local change_rest = change_id:sub(prefix_len + 1)
-
-  local bookmark_parts = {}
-  if item.bookmarks and #item.bookmarks > 0 then
-    for _, bm in ipairs(item.bookmarks) do
-      table.insert(bookmark_parts, text(" "))
-      table.insert(bookmark_parts, text.highlight("NeojjBranchHead")(bm))
-    end
-  end
-  if item.remote_bookmarks and #item.remote_bookmarks > 0 then
-    for _, bm in ipairs(item.remote_bookmarks) do
-      table.insert(bookmark_parts, text(" "))
-      table.insert(bookmark_parts, text.highlight("NeojjRemote")(bm))
-    end
-  end
 
   local status_parts = {}
   if item.immutable then
@@ -349,12 +356,13 @@ local SectionItemChange = Component.new(function(item)
     text(" "),
     text.highlight("NeojjObjectId")(commit_id),
   }
-  vim.list_extend(parts, bookmark_parts)
+  vim.list_extend(parts, bookmark_parts(item.bookmarks, item.remote_bookmarks))
   table.insert(parts, text(" "))
   table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
   table.insert(parts, text.highlight(status_highlight)(status_suffix))
 
   return row(parts, {
+    kind = "change",
     yankable = item.change_id,
     oid = item.change_id,
     item = item,
@@ -380,6 +388,10 @@ local SectionItemBookmark = Component.new(function(item)
     text.highlight(highlight)(label),
   }
 
+  if not item.deleted and (not item.remote or item.remote == "") then
+    vim.list_extend(parts, pr_annotation_parts(item.name))
+  end
+
   if item.deleted then
     table.insert(parts, text.highlight("NeojjSubtleText")(" (deleted)"))
   elseif item.conflict then
@@ -392,6 +404,7 @@ local SectionItemBookmark = Component.new(function(item)
   end
 
   return row(parts, {
+    kind = "bookmark",
     yankable = item.name,
     oid = (item.change_id and item.change_id ~= "") and item.change_id or nil,
     item = item,
@@ -403,6 +416,7 @@ local SectionItemConflict = Component.new(function(item)
     text.highlight("NeojjGraphRed")("C "),
     text(item.name),
   }, {
+    kind = "conflict",
     yankable = item.name,
     item = item,
   })
