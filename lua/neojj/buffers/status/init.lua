@@ -285,6 +285,17 @@ function M:refresh(partial, reason)
     view = self.buffer:save_view()
   end
 
+  -- Runs concurrently with the jj refresh; redraws once (and only if) fresh
+  -- PR data arrives so bookmark annotations appear without blocking the UI.
+  require("neojj.lib.forge").refresh(self.root, function()
+    local pr_cursor, pr_view
+    if self.buffer and self.buffer:is_focused() then
+      pr_cursor = self.buffer.ui:get_cursor_location()
+      pr_view = self.buffer:save_view()
+    end
+    self:redraw(pr_cursor, pr_view)
+  end)
+
   jj.repo:dispatch_refresh {
     source = "status",
     partial = partial,

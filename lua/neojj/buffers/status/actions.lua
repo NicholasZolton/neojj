@@ -1080,6 +1080,27 @@ M.n_workspace_popup = function(_self)
   return popups.open("workspace")
 end
 
+---Bookmark names rendered on the line under the cursor.
+---@param ctx table
+---@return string[]
+local function bookmarks_under_cursor(ctx)
+  if ctx.section == "bookmarks" and ctx.item and ctx.item.name then
+    return { ctx.item.name }
+  end
+
+  if ctx.item and ctx.item.bookmarks then
+    return ctx.item.bookmarks
+  end
+
+  for _, head in ipairs { jj.repo.state.head, jj.repo.state.parent } do
+    if ctx.change_id and ctx.change_id == head.change_id then
+      return head.bookmarks or {}
+    end
+  end
+
+  return {}
+end
+
 ---@param self StatusBuffer
 ---@return fun(): nil
 M.n_open_in_browser = function(self)
@@ -1089,45 +1110,27 @@ M.n_open_in_browser = function(self)
       return
     end
 
-    -- Helper to resolve remote URL
-    local function get_remote_browser_url()
-      local shell = require("neojj.lib.jj.shell")
-      local remote_lines, code = shell.exec(
-        { "jj", "--no-pager", "--color=never", "git", "remote", "list" },
-        jj.repo.state.worktree_root
-      )
-      if code ~= 0 or not remote_lines or #remote_lines == 0 then
-        return nil
-      end
-
-      local remote_url
-      for _, line in ipairs(remote_lines) do
-        local url = line:match("^%S+%s+(%S+)")
-        if url then
-          remote_url = url
-          break
-        end
-      end
-
-      if not remote_url then
-        return nil
-      end
-
-      return remote_url
-        :gsub("%.git$", "")
-        :gsub("^git@([^:]+):", "https://%1/")
-        :gsub("^ssh://git@([^/]+)/", "https://%1/")
-    end
+    local remote = require("neojj.lib.jj.remote")
+    local info = remote.get(jj.repo.state.worktree_root)
 
     -- Project header: open repo URL directly
     if ctx.yank == "__project__" then
-      local browser_url = get_remote_browser_url()
-      if not browser_url then
+      if not info then
         notification.warn("No remote found", { dismiss = true })
         return
       end
-      vim.ui.open(browser_url)
+      vim.ui.open(info.browser_url)
       return
+    end
+
+    -- A line annotated with an open PR opens the PR
+    local forge = require("neojj.lib.forge")
+    for _, bookmark in ipairs(bookmarks_under_cursor(ctx)) do
+      local pr = forge.pr_for_branch(jj.repo.state.worktree_root, bookmark)
+      if pr then
+        vim.ui.open(pr.url)
+        return
+      end
     end
 
     -- Use commit_id directly: it's unambiguous (a divergent change_id like
@@ -1140,16 +1143,13 @@ M.n_open_in_browser = function(self)
       return
     end
 
-    local browser_url = get_remote_browser_url()
-    if not browser_url then
+    if not info then
       notification.warn("No remote found", { dismiss = true })
       return
     end
 
     -- Construct commit URL (works for GitHub, GitLab, etc.)
-    browser_url = browser_url .. "/commit/" .. commit_hash
-
-    vim.ui.open(browser_url)
+    vim.ui.open(info.browser_url .. "/commit/" .. commit_hash)
   end
 end
 

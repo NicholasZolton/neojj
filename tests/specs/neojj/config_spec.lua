@@ -470,10 +470,39 @@ describe("NeoJJ config", function()
           assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
         end)
       end)
+
+      describe("forge", function()
+        it("should return invalid when forge isn't a table", function()
+          config.values.forge = "not a table"
+          assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+        end)
+
+        it("should return invalid when forge.pr_integration isn't a boolean", function()
+          config.values.forge.pr_integration = "not a boolean"
+          assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+        end)
+
+        it("should return invalid when forge.hosts isn't a table of string lists", function()
+          config.values.forge.hosts = "not a table"
+          assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+
+          config.values = config.get_default_values()
+          config.values.forge.hosts = { github = "not a list" }
+          assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+        end)
+      end)
     end)
 
     describe("for good configs", function()
       it("should return valid for the default config", function()
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
+      end)
+
+      it("should return valid for a forge config with extra hosts", function()
+        config.values.forge = {
+          pr_integration = false,
+          hosts = { github = { "git.corp.com" } },
+        }
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
       end)
 

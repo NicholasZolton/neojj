@@ -301,6 +301,15 @@ neojj.setup {
   -- Which diff viewer to use. nil = auto-detect (tries diffview first, then codediff).
   -- Can be "diffview" or "codediff".
   diff_viewer = nil,
+  -- Forge (GitHub, ...) integration. When enabled and the forge CLI (`gh`) is
+  -- installed, bookmarks with a matching open PR are annotated with the PR
+  -- number, and "o" on such a line opens the PR instead of the commit.
+  forge = {
+    pr_integration = true,
+    -- Extra remote hosts per provider, e.g. for GitHub Enterprise:
+    -- hosts = { github = { "git.yourcompany.com" } },
+    hosts = {},
+  },
   sections = {
     files = {
       folded = false,
@@ -459,7 +468,7 @@ These keybindings work directly in the status buffer on whatever is under your c
 | `O` | **New change on** | Create a new change on top of the revision under cursor |
 | `B` | **New change before** | Insert a new change before the revision under cursor |
 | `F` | **Forget bookmark** | Forget the bookmark under cursor (or track a remote bookmark) |
-| `o` | **Open in browser** | Open the commit under cursor on GitHub/GitLab |
+| `o` | **Open in browser** | Open the line under cursor on GitHub/GitLab: the repo on the project header, the open PR on a line annotated with one, otherwise the commit |
 | `x` | **Discard / Abandon** | Discard file changes, abandon the change (or divergent variant) under cursor, or delete a bookmark under cursor |
 
 > [!NOTE]
