@@ -3,6 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "changelog-type": "github",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false,
       "extra-files": [
