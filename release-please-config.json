@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "lua/neojj/version.lua"
+        }
+      ]
+    }
+  }
+}
