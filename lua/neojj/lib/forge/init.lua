@@ -30,11 +30,15 @@ local providers = {
 
 ---@class neojj.ForgeCacheEntry
 ---@field index table<string, neojj.ForgePR>|nil
+---@field fetched_at number|nil Monotonic ms timestamp of the last successful fetch
 ---@field failed boolean|nil Fetch failed once; don't retry this session
 ---@field in_flight boolean|nil
 
 ---@type table<string, neojj.ForgeCacheEntry>
 local cache = {}
+
+---Successful fetches are reused for this long; a manual refresh busts it.
+local TTL_MS = 30000
 
 ---Resolve the provider responsible for a remote host.
 ---@param host string|nil
@@ -102,24 +106,66 @@ function M._set_index(root, index)
   cache[root] = { index = index }
 end
 
+---Whether a fetch should be spawned given the cache entry's state.
+---@param entry neojj.ForgeCacheEntry|nil
+---@param now number Monotonic ms timestamp
+---@param force boolean|nil Bypass the TTL (manual refresh)
+---@return boolean
+function M.should_fetch(entry, now, force)
+  if not entry then
+    return true
+  end
+  if entry.failed or entry.in_flight then
+    return false
+  end
+  if force or not entry.fetched_at then
+    return true
+  end
+
+  return (now - entry.fetched_at) > TTL_MS
+end
+
+---Store fetched PRs for a root and report whether the data changed,
+---so callers can skip redrawing when nothing did.
+---@param root string
+---@param prs neojj.ForgePR[]
+---@param now number Monotonic ms timestamp
+---@return boolean changed
+function M._apply_result(root, prs, now)
+  local old_index = cache[root] and cache[root].index
+  local index = M.build_index(prs)
+  cache[root] = { index = index, fetched_at = now }
+
+  return not vim.deep_equal(old_index, index)
+end
+
 ---Fetch open PRs for a worktree root if the integration is enabled, the
 ---provider CLI is installed, and the remote host matches a provider.
----Failures are silent and remembered: this never retries within a session,
----and `callback` runs (on the main loop) only when fresh data arrives.
+---Successful results are cached for TTL_MS; opts.force (manual refresh)
+---busts the cache. Failures are silent and remembered: this never retries
+---within a session, and `callback` runs (on the main loop) only when the
+---PR data actually changed.
 ---@param root string
+---@param opts { force: boolean|nil }|nil
 ---@param callback fun()|nil
-function M.refresh(root, callback)
+function M.refresh(root, opts, callback)
   local forge_config = require("neojj.config").values.forge
   if not (forge_config and forge_config.pr_integration) then
     return
   end
 
+  local force = opts and opts.force or false
   local entry = cache[root]
-  if entry and (entry.failed or entry.in_flight) then
+  if not M.should_fetch(entry, vim.uv.now(), force) then
     return
   end
 
-  local info = require("neojj.lib.jj.remote").get(root)
+  local remote = require("neojj.lib.jj.remote")
+  if force then
+    remote.invalidate(root)
+  end
+
+  local info = remote.get(root)
   local provider = info and M.provider_for_host(info.host, forge_config.hosts)
   if not provider or vim.fn.executable(provider.executable) ~= 1 then
     cache[root] = { failed = true }
@@ -142,8 +188,8 @@ function M.refresh(root, callback)
         return
       end
 
-      cache[root] = { index = M.build_index(prs) }
-      if callback then
+      local changed = M._apply_result(root, prs, vim.uv.now())
+      if changed and callback then
         callback()
       end
     end)
