@@ -6,6 +6,9 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test
@@ -25,12 +28,17 @@ jobs:
           version: ${{ matrix.release }}
 
       - name: Install jj
+        env:
+          # jj on crates.io is a stub redirecting to jj-cli; use a released
+          # binary directly to avoid a 60s+ cargo build. Pinned + checksummed:
+          # jj publishes no checksum file, so the hash was computed from the
+          # release artifact when this pin was set. Update both together.
+          JJ_VERSION: v0.42.0
+          JJ_SHA256: 2d91e81d649e617a81608e7401ad1106029c15ece01ac928c4a351abef42be6a
         run: |
-          # jj on crates.io is a stub redirecting to jj-cli; use the latest
-          # released binary directly to avoid a 60s+ cargo build.
-          JJ_VERSION=$(curl -sSL https://api.github.com/repos/jj-vcs/jj/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')
-          curl -sSL "https://github.com/jj-vcs/jj/releases/download/${JJ_VERSION}/jj-${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin --strip-components=0 ./jj
+          curl -sSL -o /tmp/jj.tar.gz "https://github.com/jj-vcs/jj/releases/download/${JJ_VERSION}/jj-${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          echo "${JJ_SHA256}  /tmp/jj.tar.gz" | sha256sum --check
+          sudo tar -xz -C /usr/local/bin --strip-components=0 -f /tmp/jj.tar.gz ./jj
           jj --version
 
       - name: Install Dependencies

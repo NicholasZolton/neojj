@@ -6,6 +6,9 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   code_quality:
     name: Code Quality
@@ -35,7 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Homebrew/actions/setup-homebrew@master
+      # Pinned to a commit SHA: @master is a mutable ref and a supply-chain risk.
+      - uses: Homebrew/actions/setup-homebrew@2ebcf16054461267868620b1414507f3ccc765c1
       - run: brew install lua-language-server
       - uses: luarocks/gh-actions-lua@v10
         with:
