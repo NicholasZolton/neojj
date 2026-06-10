@@ -1,0 +1,36 @@
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # The default GITHUB_TOKEN cannot trigger downstream workflow runs, which
+      # would leave the release PR merged but never tagged. The App token can.
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Merge the release PR
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+        # Auto-merge can only be enabled while something blocks the merge
+        # (e.g. required checks still running); on an immediately-mergeable
+        # PR it errors, so fall back to merging directly.
+        run: |
+          gh pr merge --squash --auto --repo "$GITHUB_REPOSITORY" "$PR_NUMBER" \
+            || gh pr merge --squash --repo "$GITHUB_REPOSITORY" "$PR_NUMBER"
