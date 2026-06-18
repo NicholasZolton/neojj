@@ -16,7 +16,7 @@
 ---@field name string
 ---@field executable string CLI binary the provider shells out to
 ---@field default_hosts string[]
----@field pr_list_cmd string[] Command listing open PRs as JSON on stdout
+---@field pr_list_cmd fun(info: neojj.RemoteInfo): string[] Command listing open PRs as JSON on stdout
 ---@field parse_prs fun(stdout: string|nil): neojj.ForgePR[]|nil
 
 local logger = require("neojj.logger")
@@ -115,8 +115,11 @@ function M.should_fetch(entry, now, force)
   if not entry then
     return true
   end
-  if entry.failed or entry.in_flight then
+  if entry.in_flight then
     return false
+  end
+  if entry.failed then
+    return force == true
   end
   if force or not entry.fetched_at then
     return true
@@ -142,9 +145,9 @@ end
 ---Fetch open PRs for a worktree root if the integration is enabled, the
 ---provider CLI is installed, and the remote host matches a provider.
 ---Successful results are cached for TTL_MS; opts.force (manual refresh)
----busts the cache. Failures are silent and remembered: this never retries
----within a session, and `callback` runs (on the main loop) only when the
----PR data actually changed.
+---busts the cache. Failures are silent and remembered: automatic refreshes
+---never retry after a failure, but a manual refresh (force) does. `callback`
+---runs (on the main loop) only when the PR data actually changed.
 ---@param root string
 ---@param opts { force: boolean|nil }|nil
 ---@param callback fun()|nil
@@ -161,14 +164,19 @@ function M.refresh(root, opts, callback)
   end
 
   local info = require("neojj.lib.jj.remote").get(root)
-  local provider = info and M.provider_for_host(info.host, forge_config.hosts)
+  if not info then
+    cache[root] = { failed = true }
+    return
+  end
+
+  local provider = M.provider_for_host(info.host, forge_config.hosts)
   if not provider or vim.fn.executable(provider.executable) ~= 1 then
     cache[root] = { failed = true }
     return
   end
 
   cache[root] = { in_flight = true, index = entry and entry.index }
-  vim.system(provider.pr_list_cmd, { cwd = root, text = true }, function(result)
+  vim.system(provider.pr_list_cmd(info), { cwd = root, text = true }, function(result)
     vim.schedule(function()
       if result.code ~= 0 then
         logger.debug("[FORGE] " .. provider.name .. " pr list failed: " .. (result.stderr or ""))

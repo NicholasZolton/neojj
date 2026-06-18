@@ -80,10 +80,14 @@ describe("forge", function()
       assert.is_true(forge.should_fetch(nil, 1000, false))
     end)
 
-    it("never fetches after a failure or while in flight", function()
+    it("does not retry a failure automatically, but a manual refresh does", function()
       assert.is_false(forge.should_fetch({ failed = true }, 1000, false))
-      assert.is_false(forge.should_fetch({ failed = true }, 1000, true))
+      assert.is_true(forge.should_fetch({ failed = true }, 1000, true))
+    end)
+
+    it("never fetches while a fetch is in flight", function()
       assert.is_false(forge.should_fetch({ in_flight = true }, 1000, false))
+      assert.is_false(forge.should_fetch({ in_flight = true }, 1000, true))
     end)
 
     it("skips fetching within the TTL", function()

@@ -1,6 +1,7 @@
 ---@class neojj.RemoteInfo
 ---@field host string
 ---@field browser_url string
+---@field slug string Repo path on the host, e.g. "owner/repo"
 
 local M = {}
 
@@ -15,12 +16,12 @@ function M.parse(url)
   local https =
     url:gsub("%.git$", ""):gsub("^git@([^:]+):", "https://%1/"):gsub("^ssh://git@([^/]+)/", "https://%1/")
 
-  local host = https:match("^https?://([^/]+)/.")
+  local host, slug = https:match("^https?://([^/]+)/(.+)$")
   if not host then
     return nil
   end
 
-  return { host = host, browser_url = https }
+  return { host = host, browser_url = https, slug = slug }
 end
 
 ---Resolve the first git remote for a worktree root.

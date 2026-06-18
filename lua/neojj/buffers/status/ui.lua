@@ -19,8 +19,9 @@ local M = {}
 
 ---PR annotation for a bookmark with a matching open PR on the forge.
 ---@param bookmark string
+---@param seen_prs table<integer, boolean>|nil PR numbers already annotated on this line; a PR is annotated at most once
 ---@return table[]
-local function pr_annotation_parts(bookmark)
+local function pr_annotation_parts(bookmark, seen_prs)
   local forge = require("neojj.lib.forge")
   local root = require("neojj.lib.jj").repo.state.worktree_root
 
@@ -29,24 +30,35 @@ local function pr_annotation_parts(bookmark)
     return {}
   end
 
+  if seen_prs then
+    if seen_prs[pr.number] then
+      return {}
+    end
+    seen_prs[pr.number] = true
+  end
+
   return { text(" "), text.highlight("NeojjForgePR")("#" .. pr.number) }
 end
 
----Render bookmark labels for a change line, annotating local bookmarks that
----have a matching open PR on the forge.
+---Render bookmark labels for a change line, annotating local and remote
+---bookmarks that have a matching open PR on the forge. When several
+---bookmarks on the line resolve to the same PR (e.g. `name` and
+---`name@origin`), only the first carries the annotation.
 ---@param bookmarks string[]|nil
 ---@param remote_bookmarks string[]|nil
 ---@return table[]
 local function bookmark_parts(bookmarks, remote_bookmarks)
   local parts = {}
+  local seen_prs = {}
   for _, bm in ipairs(bookmarks or {}) do
     table.insert(parts, text(" "))
     table.insert(parts, text.highlight("NeojjBranchHead")(bm))
-    vim.list_extend(parts, pr_annotation_parts(bm))
+    vim.list_extend(parts, pr_annotation_parts(bm, seen_prs))
   end
   for _, bm in ipairs(remote_bookmarks or {}) do
     table.insert(parts, text(" "))
     table.insert(parts, text.highlight("NeojjRemote")(bm))
+    vim.list_extend(parts, pr_annotation_parts(bm, seen_prs))
   end
 
   return parts
@@ -388,7 +400,7 @@ local SectionItemBookmark = Component.new(function(item)
     text.highlight(highlight)(label),
   }
 
-  if not item.deleted and (not item.remote or item.remote == "") then
+  if not item.deleted then
     vim.list_extend(parts, pr_annotation_parts(item.name))
   end
 
