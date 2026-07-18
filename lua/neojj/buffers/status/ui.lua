@@ -198,6 +198,24 @@ local Section = Component.new(function(props)
   })
 end)
 
+local file_mode_highlights = {
+  M = "NeojjChangeModified",
+  A = "NeojjChangeAdded",
+  N = "NeojjChangeNewFile",
+  D = "NeojjChangeDeleted",
+  R = "NeojjChangeRenamed",
+  C = "NeojjChangeCopied",
+  U = "NeojjChangeUpdated",
+  T = "NeojjChangeUpdated",
+  DD = "NeojjChangeUnmerged",
+  AU = "NeojjChangeUnmerged",
+  UD = "NeojjChangeUnmerged",
+  UA = "NeojjChangeUnmerged",
+  DU = "NeojjChangeUnmerged",
+  AA = "NeojjChangeUnmerged",
+  UU = "NeojjChangeUnmerged",
+}
+
 local SectionItemFile = function(section, config)
   return Component.new(function(item)
     local load_diff = function(item)
@@ -281,7 +299,7 @@ local SectionItemFile = function(section, config)
     end
 
     local name = item.original_name and ("%s -> %s"):format(item.original_name, item.name) or item.name
-    local highlight = "NeojjFileMode"
+    local highlight = file_mode_highlights[item.mode] or "NeojjFileMode"
 
     return col.tag("Item")({
       row {
