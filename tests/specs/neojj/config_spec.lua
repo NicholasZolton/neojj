@@ -427,6 +427,13 @@ describe("NeoJJ config", function()
           }
           assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
         end)
+
+        it("should return valid when a command mapping uses Track", function()
+          config.values.mappings.status = {
+            ["T"] = "Track",
+          }
+          assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
+        end)
       end)
 
       describe("popup mappings", function()
@@ -618,6 +625,11 @@ describe("NeoJJ config", function()
           print("custom function")
         end
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
+      end)
+
+      it("should default Track and Untrack to T and K", function()
+        assert.are.equal("Track", config.values.mappings.status["T"])
+        assert.are.equal("Untrack", config.values.mappings.status["K"])
       end)
 
       it("should return valid when a command mappings.finder is a boolean", function()

@@ -193,6 +193,8 @@ function M:open(kind)
         ["O"]                                   = self:_action("n_new_change_on"),
         ["B"]                                   = self:_action("n_new_change_before"),
         ["dd"]                                  = self:_action("n_open_variant_diff"),
+        [mappings["Track"]]                     = self:_action("n_file_track"),
+        [mappings["Untrack"]]                   = self:_action("n_file_untrack"),
         -- jj popup bindings
         [popups.mapping_for("CommitPopup")]     = self:_action("n_commit_popup"),
         [popups.mapping_for("DiffPopup")]       = self:_action("n_diff_popup"),

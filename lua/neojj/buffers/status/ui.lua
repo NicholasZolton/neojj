@@ -453,10 +453,21 @@ local SectionItemConflict = Component.new(function(item)
 end)
 
 function M.Status(state, config)
+  local is_tracked = function(item)
+    return item.mode ~= "?"
+  end
+  
   -- stylua: ignore start
   local show_hint = not config.disable_hint
 
-  local show_files = state.files and #state.files.items > 0
+  local tracked_files = state.files and vim.tbl_filter(is_tracked, state.files.items)
+  local show_files = tracked_files and #tracked_files > 0
+
+  local untracked_files = state.files and vim.tbl_filter(function (item)
+    return not is_tracked(item)
+  end, state.files.items)
+  local untracked_hidden = config.sections and config.sections.untracked and config.sections.untracked.hidden
+  local show_untracked = untracked_files and #untracked_files > 0  and not untracked_hidden
 
   local show_conflicts = state.conflicts and #state.conflicts.items > 0
 
@@ -514,9 +525,17 @@ function M.Status(state, config)
           title = SectionTitle { title = "Modified files", highlight = "NeojjSectionFiles" },
           count = true,
           render = SectionItemFile("files", config),
-          items = state.files.items,
+          items = tracked_files,
           folded = false,
           name = "files",
+        },
+        show_untracked and Section {
+          title = SectionTitle { title = "Untracked files", highlight = "NeojjSectionFiles" },
+          count = true,
+          render = SectionItemFile("untracked", config),
+          items = untracked_files,
+          folded = config.sections and config.sections.untracked and config.sections.untracked.folded,
+          name = "untracked",
         },
         show_recent and Section {
           title = SectionTitle { title = "Recent Changes", highlight = "NeojjSectionRecent" },

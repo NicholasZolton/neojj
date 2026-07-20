@@ -4,6 +4,7 @@ local util = require("tests.util.util")
 ---@class JjPrepareOpts
 ---@field colocated boolean|nil  Create a colocated jj+git repo (default: false)
 ---@field cd boolean|nil         chdir into the workspace (default: true)
+---@field auto_track boolean|nil Configure repo snapshot.auto-track (default: true)
 
 ---Create a fresh jj workspace with some committed history.
 ---@param opts JjPrepareOpts|nil
@@ -40,6 +41,19 @@ function M.prepare_repository(opts)
     "test@neojj-test.test",
   }
   util.system { "jj", "--repository", working_dir, "config", "set", "--repo", "user.name", "NeoJJ Test" }
+  local auto_track = opts.auto_track ~= false and "all()" or "none()"
+  -- Keep file tracking deterministic even when the user's global jj config
+  -- would otherwise override the repository's snapshot behavior.
+  util.system {
+    "jj",
+    "--repository",
+    working_dir,
+    "config",
+    "set",
+    "--repo",
+    "snapshot.auto-track",
+    auto_track,
+  }
 
   vim.fn.writefile({ "line 1", "line 2", "line 3" }, working_dir .. "/a.txt")
   vim.fn.writefile({ "hello world" }, working_dir .. "/b.txt")

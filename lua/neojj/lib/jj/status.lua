@@ -50,10 +50,10 @@ function M.parse_status_files(lines, root)
   local in_changes = false
 
   for _, line in ipairs(lines) do
-    if line:match("^Working copy changes:") then
+    if line:match("^Working copy changes:") or line:match("^Untracked paths:") then
       in_changes = true
     elseif in_changes then
-      local mode, name = line:match("^(%a)%s+(.+)$")
+      local mode, name = line:match("^([%a?])%s+(.+)$")
       if mode and name then
         table.insert(items, {
           name = name,

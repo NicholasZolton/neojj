@@ -468,6 +468,46 @@ end
 
 ---@param self StatusBuffer
 ---@return fun(): nil
+M.n_file_track = function(self)
+  return a.void(function()
+    local selection = self.buffer.ui:get_selection()
+    if not selection.section then
+      return
+    end
+
+    local section = selection.section.name
+    if section ~= "untracked" then
+      return
+    end
+
+    if selection.item and selection.item.first == fn.line(".") then
+      -- track single file
+      jj.cli.file_track.files(selection.item.fileset_path).call()
+    else
+      -- track all untracked files
+      jj.cli.file_track.files("./").call()
+    end
+    self:dispatch_refresh(nil, "n_file_track")
+  end)
+end
+
+---@param self StatusBuffer
+---@return fun(): nil
+M.n_file_untrack = function(self)
+  return a.void(function()
+    local ctx = cursor_context(self)
+    if not ctx.section then
+      return
+    end
+    if ctx.section == "files" and ctx.item then
+      jj.cli.file_untrack.files(ctx.item.fileset_path).call()
+      self:dispatch_refresh(nil, "n_file_untrack")
+    end
+  end)
+end
+
+---@param self StatusBuffer
+---@return fun(): nil
 M.n_context_delete = function(self)
   return a.void(function()
     local ctx = cursor_context(self)

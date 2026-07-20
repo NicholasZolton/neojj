@@ -19,7 +19,7 @@
 ---@field absolute_path string Full file path
 ---@field escaped_path string Vim-escaped path
 ---@field fileset_path string jj fileset-safe path (file: prefixed)
----@field mode string "M", "A", "D", "R"
+---@field mode string "M", "A", "D", "R", "?" (untracked)
 ---@field original_name string|nil For renames
 ---@field diff any|nil Lazy-loaded diff
 ---@field folded boolean|nil

@@ -104,6 +104,7 @@ local runner = require("neojj.runner")
 ---@field revert NeojjCliBuilder
 ---@field diffedit NeojjCliBuilder
 ---@field file_list NeojjCliBuilder
+---@field file_track NeojjCliBuilder
 ---@field file_untrack NeojjCliBuilder
 ---@field file_annotate NeojjCliBuilder
 ---@field file_show NeojjCliBuilder
@@ -668,6 +669,9 @@ define_command("file list", {
 
 -- jj file untrack
 define_command("file untrack", {})
+
+-- jj file track
+define_command("file track", {})
 
 -- jj file annotate
 define_command("file annotate", {})
