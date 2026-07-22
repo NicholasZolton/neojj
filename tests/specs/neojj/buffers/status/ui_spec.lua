@@ -12,6 +12,63 @@ local function find_file_items(component, result)
   return result
 end
 
+local function find_component_by_kind(component, kind)
+  if component.options and component.options.kind == kind then
+    return component
+  end
+  for _, child in ipairs(component.children or {}) do
+    local match = find_component_by_kind(child, kind)
+    if match then
+      return match
+    end
+  end
+end
+
+local function minimal_state()
+  return {
+    worktree_root = "/workspace/project-name",
+    head = {
+      change_id = "abcdefgh",
+      commit_id = "12345678",
+      description = "working copy",
+      bookmarks = {},
+      empty = false,
+      conflict = false,
+    },
+    parent = {
+      change_id = "ijklmnop",
+      commit_id = "87654321",
+      description = "parent",
+      bookmarks = {},
+    },
+    files = { items = {} },
+    conflicts = { items = {} },
+    recent = { items = {} },
+    bookmarks = { items = {} },
+  }
+end
+
+describe("status project header", function()
+  it("shows the project name by default", function()
+    local layout = status_ui.Status(minimal_state(), config.get_default_values())
+    local project = find_component_by_kind(layout[1], "project")
+
+    assert.is_not_nil(project)
+    assert.are.equal("project-name", project.children[1].value)
+  end)
+
+  it("hides the project name when disabled", function()
+    local values = config.get_default_values()
+    values.disable_hint = true
+    values.show_project_header = false
+
+    local layout = status_ui.Status(minimal_state(), values)
+
+    assert.is_nil(find_component_by_kind(layout[1], "project"))
+    assert.are.equal(2, #layout[1].children)
+  end)
+end)
+
 describe("status file highlights", function()
   it("colors mode labels by file state without coloring filenames", function()
     local values = config.get_default_values()

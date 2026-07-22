@@ -287,6 +287,7 @@ end
 ---@field commit_date_format? string Commit date format
 ---@field log_date_format? string Log date format
 ---@field disable_hint? boolean Remove the top hint in the Status buffer
+---@field show_project_header? boolean Show the project name at the top of the Status buffer
 ---@field disable_context_highlighting? boolean Disable context highlights based on cursor position
 ---@field disable_signs? boolean Special signs to draw for sections etc. in Neojj
 ---@field prompt_amend_commit? boolean Request confirmation when amending already published commits
@@ -333,6 +334,7 @@ function M.get_default_values()
     jj_binary = "auto",
     use_default_keymaps = true,
     disable_hint = false,
+    show_project_header = true,
     disable_context_highlighting = false,
     disable_signs = false,
     prompt_amend_commit = true,
@@ -991,6 +993,7 @@ function M.validate_config()
 
   if validate_type(config, "base config", "table") then
     validate_type(config.disable_hint, "disable_hint", "boolean")
+    validate_type(config.show_project_header, "show_project_header", "boolean")
     validate_type(config.disable_context_highlighting, "disable_context_highlighting", "boolean")
     validate_type(config.disable_signs, "disable_signs", "boolean")
     validate_type(config.telescope_sorter, "telescope_sorter", "function")
