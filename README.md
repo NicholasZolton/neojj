@@ -151,6 +151,8 @@ neojj.setup {
   jj_binary = "auto",
   -- Hides the hints at the top of the status buffer
   disable_hint = false,
+  -- Shows the project name at the top of the status buffer
+  show_project_header = true,
   -- Disables changing the buffer highlights based on where the cursor is.
   disable_context_highlighting = false,
   -- Disables signs for sections/items/hunks

@@ -456,6 +456,8 @@ function M.Status(state, config)
   -- stylua: ignore start
   local show_hint = not config.disable_hint
 
+  local show_project_header = config.show_project_header
+
   local show_files = state.files and #state.files.items > 0
 
   local show_conflicts = state.conflicts and #state.conflicts.items > 0
@@ -472,8 +474,8 @@ function M.Status(state, config)
       items = {
         show_hint and HINT { config = config },
         show_hint and EmptyLine(),
-        ProjectHeader { root = state.worktree_root },
-        EmptyLine(),
+        show_project_header and ProjectHeader { root = state.worktree_root },
+        show_project_header and EmptyLine(),
         col.tag("Section")({
           JJHead {
             name = "Change",

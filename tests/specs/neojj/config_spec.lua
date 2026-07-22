@@ -17,6 +17,11 @@ describe("NeoJJ config", function()
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
       end)
 
+      it("should return invalid when show_project_header isn't a boolean", function()
+        config.values.show_project_header = "not a boolean"
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+      end)
+
       it("should return invalid when disable_context_highlighting isn't a boolean", function()
         config.values.disable_context_highlighting = "not a boolean"
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
