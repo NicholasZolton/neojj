@@ -140,10 +140,10 @@ function M.open(opts)
   opts = construct_opts(opts)
 
   if not opts._workspace_root then
-    local failed_path = vim.fn.expand(opts.cwd or ".")
-    M.notification.error(("The directory `%s` is not a jj workspace"):format(failed_path))
-
-    return
+    opts._workspace_root = require("neojj.lib.jj.workspace").prompt_init(opts.cwd)
+    if not opts._workspace_root then
+      return
+    end
   end
 
   if opts[1] ~= nil then
