@@ -147,6 +147,15 @@ describe("jj cli builder", function()
     end)
   end)
 
+  describe("git init command", function()
+    it("builds a colocated init command", function()
+      local str = tostring(cli.git_init.colocate.args("/tmp/project"))
+      assert.truthy(str:find("git init"))
+      assert.truthy(str:find("%-%-colocate"))
+      assert.truthy(str:find("/tmp/project"))
+    end)
+  end)
+
   describe("git push command", function()
     it("includes --bookmark option", function()
       local str = tostring(cli.git_push.bookmark("main"))
@@ -241,6 +250,29 @@ describe("jj cli builder", function()
       local str = tostring(cli.config_unset.repo.args("key"))
       assert.truthy(str:find("%-%-repo"))
       assert.truthy(str:find("config unset"))
+    end)
+  end)
+
+  describe("workspace root discovery", function()
+    local directory
+
+    before_each(function()
+      directory = vim.fn.tempname()
+      vim.fn.mkdir(directory, "p")
+      cli.clear_cache()
+    end)
+
+    after_each(function()
+      vim.fn.delete(directory, "rf")
+      cli.clear_cache()
+    end)
+
+    it("discovers a workspace initialized after an earlier miss", function()
+      assert.is_nil(cli.find_workspace_root(directory))
+
+      vim.fn.mkdir(directory .. "/.jj", "p")
+
+      assert.are.equal(directory, cli.find_workspace_root(directory))
     end)
   end)
 end)

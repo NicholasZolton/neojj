@@ -35,6 +35,7 @@ local runner = require("neojj.runner")
 ---@field simplify_parents NeojjCliBuilder
 ---@field list NeojjCliBuilder
 ---@field all_remotes NeojjCliBuilder
+---@field colocate NeojjCliBuilder
 ---@field allow_backwards NeojjCliBuilder
 ---@field overwrite_existing NeojjCliBuilder
 ---@field all NeojjCliBuilder
@@ -91,6 +92,7 @@ local runner = require("neojj.runner")
 ---@field bookmark_rename NeojjCliBuilder
 ---@field bookmark_set NeojjCliBuilder
 ---@field bookmark_advance NeojjCliBuilder
+---@field git_init NeojjCliBuilder
 ---@field git_push NeojjCliBuilder
 ---@field git_fetch NeojjCliBuilder
 ---@field git_remote_add NeojjCliBuilder
@@ -577,6 +579,13 @@ define_command("bookmark advance", {
   },
 })
 
+-- jj git init
+define_command("git init", {
+  flags = {
+    colocate = "--colocate",
+  },
+})
+
 -- jj git push
 define_command("git push", {
   flags = {
@@ -789,7 +798,7 @@ setmetatable(M, {
 -- Utility functions
 -- ============================================================
 
----@type table<string, string|false>
+---@type table<string, string>
 local workspace_root_cache = {}
 
 ---Find workspace root by walking up looking for .jj directory (no subprocess needed)
@@ -817,9 +826,8 @@ function M.find_workspace_root(dir)
   dir = dir or vim.fn.getcwd()
   local key = vim.fn.fnamemodify(dir, ":p")
 
-  if workspace_root_cache[key] ~= nil then
-    local cached = workspace_root_cache[key]
-    return cached ~= false and cached or nil
+  if workspace_root_cache[key] then
+    return workspace_root_cache[key]
   end
 
   local root = find_jj_root(dir)
@@ -833,7 +841,8 @@ function M.find_workspace_root(dir)
     return root
   end
 
-  workspace_root_cache[key] = false
+  -- Do not cache misses: a workspace can be initialized while Neovim is
+  -- running, and the next :Neojj invocation must discover it.
   return nil
 end
 
