@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.0 (2026-07-24)
+
+## What's Changed
+* feat: prompt to initialize jj repositories by @NicholasZolton in https://github.com/NicholasZolton/neojj/pull/38
+
+
+**Full Changelog**: https://github.com/NicholasZolton/neojj/compare/v1.5.0...v1.6.0
+
 ## 1.5.0 (2026-07-22)
 
 ## What's Changed
