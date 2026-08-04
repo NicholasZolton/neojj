@@ -93,6 +93,9 @@ The full configuration is passed to `require("neojj").setup()`. Below are
 the available options with their defaults: >lua
 
     require("neojj").setup({
+      -- Highlight changed words inside paired deleted/added lines
+      word_diff_highlight = true,
+
       -- Hides the hints at the top of the status buffer
       disable_hint = false,
 
@@ -497,7 +500,7 @@ You can provide a custom color palette via `config.highlight`: >lua
         -- bg0, bg1, bg2, bg3, grey, white, red, bg_red, line_red,
         -- orange, bg_orange, yellow, bg_yellow, green, bg_green,
         -- line_green, cyan, bg_cyan, blue, bg_blue, purple, bg_purple,
-        -- md_purple
+        -- md_purple, inline_green, inline_red
       },
     })
 <
@@ -523,6 +526,8 @@ DIFF HIGHLIGHTS ~
   `NeojjDiffHeader`          Diff header lines
   `NeojjHunkHeader`          Hunk header lines
   `NeojjHunkMergeHeader`     Merge hunk header lines
+  `NeojjDiffAddInline`       Changed text within an added line
+  `NeojjDiffDeleteInline`    Changed text within a deleted line
 
 Context-aware variants (applied when cursor is within the region):
 

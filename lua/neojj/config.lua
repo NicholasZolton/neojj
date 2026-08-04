@@ -325,6 +325,7 @@ end
 ---@field notification_icon? string
 ---@field use_default_keymaps? boolean
 ---@field highlight? HighlightOptions
+---@field word_diff_highlight? boolean Apply word-level highlighting to diff hunks
 ---@field builders? { [string]: fun(builder: PopupBuilder) }
 
 ---Returns the default Neojj configuration
@@ -337,6 +338,7 @@ function M.get_default_values()
     show_project_header = true,
     disable_context_highlighting = false,
     disable_signs = false,
+    word_diff_highlight = true,
     prompt_amend_commit = true,
     graph_style = "ascii",
     commit_date_format = nil,
