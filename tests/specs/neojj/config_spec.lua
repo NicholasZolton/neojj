@@ -32,6 +32,11 @@ describe("NeoJJ config", function()
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
       end)
 
+      it("should return invalid when codediff_tab_position is unknown", function()
+        config.values.codediff_tab_position = "unknown"
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+      end)
+
       it("should return invalid when telescope_sorter isn't a function", function()
         config.values.telescope_sorter = "not a function"
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
@@ -605,6 +610,11 @@ describe("NeoJJ config", function()
 
       it("should return valid when diff_viewer is 'codediff'", function()
         config.values.diff_viewer = "codediff"
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
+      end)
+
+      it("should return valid when codediff_tab_position is 'before'", function()
+        config.values.codediff_tab_position = "before"
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) == 0)
       end)
 
