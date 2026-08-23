@@ -303,6 +303,8 @@ neojj.setup {
   -- Which diff viewer to use. nil = auto-detect (tries diffview first, then codediff).
   -- Can be "diffview" or "codediff".
   diff_viewer = nil,
+  -- Place new CodeDiff tabs before or after the current tab.
+  codediff_tab_position = "after",
   -- Forge (GitHub, ...) integration. When enabled and the forge CLI (`gh`) is
   -- installed, bookmarks with a matching open PR are annotated with the PR
   -- number, and "o" on such a line opens the PR instead of the commit.

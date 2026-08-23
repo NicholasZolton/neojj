@@ -26,7 +26,7 @@ function M.parse_commit_overview(raw)
   local start_idx = nil
 
   for i = end_idx, 1, -1 do
-    if raw[i]:match("%s*|%s+%d") or raw[i]:match("%s*|%s+Bin ") then
+    if raw[i]:match("%s*|%s+%d") or raw[i]:match("%s*|%s+Bin ") or raw[i]:match("%s*|%s+%(binary%)") then
       start_idx = i
     else
       if start_idx then
@@ -50,6 +50,11 @@ function M.parse_commit_overview(raw)
       if vim.tbl_isempty(file) then
         -- matches: .../db/b8571c4f873daff059c04443077b43a703338a      | Bin 0 -> 192 bytes
         file.path, file.changes = raw[i]:match("^(.-)%s+|%s+(Bin .*)$")
+      end
+
+      if vim.tbl_isempty(file) then
+        -- matches modern jj output: image.png | (binary) +10 bytes
+        file.path, file.changes = raw[i]:match("^(.-)%s+|%s+(%(binary%).*)$")
       end
 
       if not vim.tbl_isempty(file) then

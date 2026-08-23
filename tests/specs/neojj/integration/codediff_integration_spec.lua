@@ -1,12 +1,13 @@
--- Tests the codediff integration's non-colocated jj workaround. The codediff
--- plugin is not installed in the test environment, so we verify two things:
+-- Tests the codediff integration without requiring codediff.nvim. We verify:
 --   1. The env-wrapping proxy sets `GIT_DIR`/`GIT_WORK_TREE` during the call
 --      and restores them afterwards, preserving prior values.
 --   2. Running real `git` with those env vars against jj's backing store
 --      actually succeeds in a non-colocated workspace.
+--   3. Configured CodeDiff tab placement preserves the status tab.
 
 local harness = require("tests.util.jj_harness")
 local jj_backend = require("neojj.integrations.jj_backend")
+local config = require("neojj.config")
 
 local function skip_if_no_jj()
   if not harness.jj_available() then
@@ -125,6 +126,97 @@ describe("codediff integration — env wrapper", function()
     assert.is_false(ok)
     assert.are.equal("/before", vim.env.GIT_DIR)
     vim.env.GIT_DIR = nil
+  end)
+end)
+
+describe("codediff integration — tab position", function()
+  local original_tab
+  local status_tab
+  local created_tab
+  local loaded_jj
+  local loaded_codediff
+  local loaded_codediff_git
+  local loaded_codediff_view
+
+  local function tab_index(tabpage)
+    for index, tab in ipairs(vim.api.nvim_list_tabpages()) do
+      if tab == tabpage then
+        return index
+      end
+    end
+  end
+
+  before_each(function()
+    created_tab = nil
+    original_tab = vim.api.nvim_get_current_tabpage()
+    vim.cmd("tabnew")
+    status_tab = vim.api.nvim_get_current_tabpage()
+
+    loaded_jj = package.loaded["neojj.lib.jj"]
+    loaded_codediff = package.loaded["neojj.integrations.codediff"]
+    loaded_codediff_git = package.loaded["codediff.core.git"]
+    loaded_codediff_view = package.loaded["codediff.ui.view"]
+
+    package.loaded["neojj.lib.jj"] = {
+      repo = { worktree_root = vim.fn.getcwd() },
+    }
+    package.loaded["codediff.core.git"] = {
+      get_status = function(_, callback)
+        callback(nil, {})
+      end,
+      get_diff_revisions = function() end,
+      resolve_revision = function() end,
+      get_relative_path = function(path)
+        return path
+      end,
+    }
+    package.loaded["codediff.ui.view"] = {
+      create = function()
+        vim.cmd("tabnew")
+        created_tab = vim.api.nvim_get_current_tabpage()
+      end,
+    }
+    package.loaded["neojj.integrations.codediff"] = nil
+  end)
+
+  after_each(function()
+    for _, tab in ipairs { created_tab, status_tab } do
+      if tab and vim.api.nvim_tabpage_is_valid(tab) then
+        vim.api.nvim_set_current_tabpage(tab)
+        vim.cmd("tabclose!")
+      end
+    end
+    if vim.api.nvim_tabpage_is_valid(original_tab) then
+      vim.api.nvim_set_current_tabpage(original_tab)
+    end
+
+    package.loaded["neojj.lib.jj"] = loaded_jj
+    package.loaded["neojj.integrations.codediff"] = loaded_codediff
+    package.loaded["codediff.core.git"] = loaded_codediff_git
+    package.loaded["codediff.ui.view"] = loaded_codediff_view
+    config.values.codediff_tab_position = "after"
+  end)
+
+  local function open_codediff(position)
+    config.values.codediff_tab_position = position
+    require("neojj.integrations.codediff").open("worktree")
+    assert.is_true(vim.wait(500, function()
+      return created_tab ~= nil
+    end))
+  end
+
+  it("leaves the new tab after the status tab by default", function()
+    open_codediff("after")
+
+    assert.are.equal(2, tab_index(status_tab))
+    assert.are.equal(3, tab_index(created_tab))
+  end)
+
+  it("can place the new tab before the status tab", function()
+    open_codediff("before")
+
+    assert.are.equal(2, tab_index(created_tab))
+    assert.are.equal(3, tab_index(status_tab))
   end)
 end)
 
