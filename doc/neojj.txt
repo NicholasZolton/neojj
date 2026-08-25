@@ -231,6 +231,9 @@ the available options with their defaults: >lua
       -- Which diff viewer to use (nil = auto-detect)
       diff_viewer = nil,
 
+      -- Place new CodeDiff tabs before or after the current tab
+      codediff_tab_position = "after",
+
       -- Forge (GitHub, ...) integration: annotate bookmarks with open PRs
       -- and let "o" open the PR in the browser. Requires the forge CLI
       -- (`gh`) to be installed; disabled silently otherwise.

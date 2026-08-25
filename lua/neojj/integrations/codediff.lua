@@ -2,6 +2,7 @@ local M = {}
 
 local jj = require("neojj.lib.jj")
 local jj_backend = require("neojj.integrations.jj_backend")
+local config = require("neojj.config")
 
 -- Non-colocated jj workspaces have no `.git`, so codediff's git subprocess
 -- calls (which use cwd=<workspace>) fail. Wrap each codediff git function so
@@ -130,6 +131,19 @@ local function make_explorer_data(status_result, focus_file)
   return explorer_data
 end
 
+---@param view table
+---@param session_config table
+---@param filetype string
+local function create_view(view, session_config, filetype)
+  local current_tab = vim.api.nvim_get_current_tabpage()
+  view.create(session_config, filetype)
+  if
+    config.values.codediff_tab_position == "before" and vim.api.nvim_get_current_tabpage() ~= current_tab
+  then
+    vim.cmd("tabmove -1")
+  end
+end
+
 local function open_explorer(view, git_root, status_result, original_revision, modified_revision, focus_file)
   ---@type table
   local session_config = {
@@ -142,7 +156,7 @@ local function open_explorer(view, git_root, status_result, original_revision, m
     explorer_data = make_explorer_data(status_result, focus_file),
   }
 
-  view.create(session_config, "")
+  create_view(view, session_config, "")
 end
 
 local function open_status_explorer(codediff_git, view, git_root, focus_file)
@@ -422,7 +436,7 @@ function M.open(section_name, item_name, opts)
         modified_revision = modified_revision,
         conflict = true,
       }
-      view.create(session_config, filetype)
+      create_view(view, session_config, filetype)
     else
       open_status_explorer(codediff_git, view, git_root)
     end

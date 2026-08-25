@@ -316,6 +316,7 @@ end
 ---@field integrations? { diffview: boolean, codediff: boolean, telescope: boolean, fzf_lua: boolean, mini_pick: boolean, snacks: boolean } Which integrations to enable
 ---@field forge? NeojjForgeConfig Forge (GitHub, ...) integration options
 ---@field diff_viewer? "diffview"|"codediff"|nil Which diff viewer to use (nil = auto-detect)
+---@field codediff_tab_position? "after"|"before" Position new CodeDiff tabs relative to the current tab
 ---@field sections? NeojjConfigSections
 ---@field ignored_settings? string[] Settings to never persist, format: "Filetype--cli-value", i.e. "NeojjCommitPopup--author"
 ---@field mappings? NeojjConfigMappings
@@ -447,6 +448,7 @@ function M.get_default_values()
       hosts = {},
     },
     diff_viewer = nil,
+    codediff_tab_position = "after",
     sections = {
       sequencer = {
         folded = false,
@@ -707,6 +709,20 @@ function M.validate_config()
           "Expected diff_viewer to be one of %s or nil, got '%s'",
           table.concat(valid_viewers, ", "),
           tostring(config.diff_viewer)
+        )
+      )
+    end
+  end
+
+  local function validate_codediff_tab_position()
+    local valid_positions = { "after", "before" }
+    if not vim.tbl_contains(valid_positions, config.codediff_tab_position) then
+      err(
+        "codediff_tab_position",
+        string.format(
+          "Expected codediff_tab_position to be one of %s, got '%s'",
+          table.concat(valid_positions, ", "),
+          tostring(config.codediff_tab_position)
         )
       )
     end
@@ -1016,6 +1032,7 @@ function M.validate_config()
     validate_type(config.auto_show_console, "auto_show_console", "boolean")
     validate_type(config.auto_show_console_on, "auto_show_console_on", "string")
     validate_type(config.auto_close_console, "auto_close_console", "boolean")
+    validate_codediff_tab_position()
     validate_type(config.workspace_open_command, "workspace_open_command", { "string", "function", "nil" })
     validate_type(
       config.workspace_initialize_command,
