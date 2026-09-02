@@ -141,9 +141,9 @@ function M.parse_graph(lines)
   return entries
 end
 
--- Template that appends immutable/empty/conflict/bookmarks as tab-separated fields after json
+-- Template that appends display state as tab-separated fields after json
 local LIST_TEMPLATE =
-  'json(self) ++ if(immutable, "\\t1", "\\t0") ++ if(empty, "\\t1", "\\t0") ++ if(conflict, "\\t1", "\\t0") ++ if(divergent, "\\t1", "\\t0") ++ "\\t" ++ local_bookmarks.map(|b| b.name()).join(",") ++ "\\t" ++ remote_bookmarks.filter(|b| b.remote() != "git").map(|b| b.name() ++ "@" ++ b.remote()).join(",") ++ "\\t" ++ change_id.shortest(8).prefix() ++ "\\t" ++ self.change_offset() ++ "\\n"'
+  'json(self) ++ if(immutable, "\\t1", "\\t0") ++ if(empty, "\\t1", "\\t0") ++ if(conflict, "\\t1", "\\t0") ++ if(divergent, "\\t1", "\\t0") ++ "\\t" ++ local_bookmarks.map(|b| b.name()).join(",") ++ "\\t" ++ remote_bookmarks.filter(|b| b.remote() != "git").map(|b| b.name() ++ "@" ++ b.remote()).join(",") ++ "\\t" ++ change_id.shortest(8).prefix() ++ "\\t" ++ self.change_offset() ++ if(current_working_copy, "\\t1", "\\t0") ++ "\\n"'
 
 --- Parse lines produced by LIST_TEMPLATE into entries
 ---@param lines string[]
@@ -177,6 +177,7 @@ local function parse_enriched_lines(lines)
           if entry.divergent and parts[8] and parts[8] ~= "" then
             entry.change_offset = tonumber(parts[8])
           end
+          entry.current_working_copy = parts[9] == "1"
           table.insert(entries, entry)
         end
       end

@@ -89,12 +89,18 @@ end
 local function make_palette(config)
   local bg        = Color.from_hex(get_bg("Normal") or (vim.o.bg == "dark" and "#22252A" or "#eeeeee"))
   local fg        = Color.from_hex((vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
-  local red       = Color.from_hex(config.highlight.red    or get_fg("ErrorMsg")    or "#E06C75")
+  local red_hex   = config.highlight.red or get_fg("ErrorMsg") or "#E06C75"
+  local blue_hex  = config.highlight.blue or get_fg("Macro") or "#82AAFF"
+  if not config.highlight.blue and blue_hex == red_hex then
+    local identifier = get_fg("Identifier")
+    blue_hex = identifier ~= red_hex and identifier or "#82AAFF"
+  end
+  local red       = Color.from_hex(red_hex)
   local orange    = Color.from_hex(config.highlight.orange or get_fg("SpecialChar") or "#ffcb6b")
   local yellow    = Color.from_hex(config.highlight.yellow or get_fg("PreProc")     or "#FFE082")
   local green     = Color.from_hex(config.highlight.green  or get_fg("String")      or "#C3E88D")
   local cyan      = Color.from_hex(config.highlight.cyan   or get_fg("Operator")    or "#89ddff")
-  local blue      = Color.from_hex(config.highlight.blue   or get_fg("Macro")       or "#82AAFF")
+  local blue      = Color.from_hex(blue_hex)
   local purple    = Color.from_hex(config.highlight.purple or get_fg("Include")     or "#C792EA")
 
   local bg_factor = vim.o.bg == "dark" and 1 or -1
@@ -227,7 +233,7 @@ function M.setup(config)
     NeojjBranchHead               = { fg = palette.blue, bold = palette.bold, underline = palette.underline, ctermfg = 4 },
     NeojjRemote                   = { fg = palette.green, bold = palette.bold, ctermfg = 2 },
     NeojjForgePR                  = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },
-    NeojjObjectId                 = { fg = palette.bg_cyan, ctermfg = 7 },
+    NeojjObjectId                 = { link = "NeojjChangeIdRest" },
     NeojjChangeId                 = { fg = palette.bg_purple, ctermfg = 6 },
     NeojjChangeIdPrefix           = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },
     NeojjChangeIdRest             = { fg = palette.bg_purple, ctermfg = 6 },

@@ -199,7 +199,7 @@ function M.advance(to)
 end
 
 ---Parse structured bookmark template output (tab-separated)
----Format: name\tremote\tchange_id\tcommit_id\ttimestamp\tdescription
+---Format: name\tremote\tchange_id\tcommit_id\ttimestamp\tdescription\tpresent\tconflict\tshortest_prefix
 ---@param lines string[]
 ---@return NeojjBookmarkItem[]
 function M.parse_template_list(lines)
@@ -216,6 +216,7 @@ function M.parse_template_list(lines)
         local description = parts[6]
         local present = parts[7] == "1"
         local conflict = parts[8] == "1"
+        local shortest_prefix = parts[9] ~= "" and parts[9] or nil
         local deleted = not present
 
         if conflict then
@@ -233,6 +234,7 @@ function M.parse_template_list(lines)
           timestamp = timestamp,
           deleted = deleted,
           conflict = conflict,
+          shortest_prefix = shortest_prefix,
         })
       end
     end
@@ -242,7 +244,7 @@ end
 
 -- Template for structured bookmark output with timestamps
 local BOOKMARK_TEMPLATE =
-  'self.name() ++ "\\t" ++ if(self.remote(), self.remote(), "") ++ "\\t" ++ if(self.normal_target(), self.normal_target().change_id() ++ "\\t" ++ self.normal_target().commit_id() ++ "\\t" ++ self.normal_target().committer().timestamp() ++ "\\t" ++ self.normal_target().description().first_line(), "\\t\\t\\t") ++ "\\t" ++ if(self.present(), "1", "0") ++ "\\t" ++ if(self.conflict(), "1", "0") ++ "\\n"'
+  'self.name() ++ "\\t" ++ if(self.remote(), self.remote(), "") ++ "\\t" ++ if(self.normal_target(), self.normal_target().change_id() ++ "\\t" ++ self.normal_target().commit_id() ++ "\\t" ++ self.normal_target().committer().timestamp() ++ "\\t" ++ self.normal_target().description().first_line(), "\\t\\t\\t") ++ "\\t" ++ if(self.present(), "1", "0") ++ "\\t" ++ if(self.conflict(), "1", "0") ++ "\\t" ++ if(self.normal_target(), self.normal_target().change_id().shortest(8).prefix(), "") ++ "\\n"'
 
 ---Update repository state with bookmark data
 ---@param state NeojjRepoState

@@ -46,13 +46,14 @@ end
 ---`name@origin`), only the first carries the annotation.
 ---@param bookmarks string[]|nil
 ---@param remote_bookmarks string[]|nil
+---@param current boolean|nil
 ---@return table[]
-local function bookmark_parts(bookmarks, remote_bookmarks)
+local function bookmark_parts(bookmarks, remote_bookmarks, current)
   local parts = {}
   local seen_prs = {}
   for _, bm in ipairs(bookmarks or {}) do
     table.insert(parts, text(" "))
-    table.insert(parts, text.highlight("NeojjBranchHead")(bm))
+    table.insert(parts, text.highlight(current and "NeojjBranchHead" or "NeojjBranch")(bm))
     vim.list_extend(parts, pr_annotation_parts(bm, seen_prs))
   end
   for _, bm in ipairs(remote_bookmarks or {}) do
@@ -155,7 +156,7 @@ local JJHead = Component.new(function(props)
     text(" "),
     text.highlight("NeojjObjectId")(short_commit),
   }
-  vim.list_extend(header_parts, bookmark_parts(props.bookmarks))
+  vim.list_extend(header_parts, bookmark_parts(props.bookmarks, nil, props.current))
   table.insert(
     header_parts,
     text.highlight(props.conflict and "NeojjConflict" or "NeojjSubtleText")(status_text)
@@ -328,15 +329,19 @@ local SectionItemChange = Component.new(function(item)
     local change_prefix = change_id:sub(1, prefix_len)
     local change_rest = change_id:sub(prefix_len + 1)
 
+    local prefix_highlight = item.current_working_copy and "NeojjWorkingCopy" or "NeojjChangeIdPrefix"
     local parent_parts = {
-      text.highlight("NeojjChangeIdPrefix")(change_prefix),
-      text.highlight("NeojjChangeIdRest")(change_rest),
+      text.highlight(prefix_highlight)(change_prefix),
+      text.highlight("NeojjObjectId")(change_rest),
       text(" "),
       text.highlight("NeojjDivergent")("<divergent>"),
     }
-    vim.list_extend(parent_parts, bookmark_parts(item.bookmarks, item.remote_bookmarks))
+    vim.list_extend(
+      parent_parts,
+      bookmark_parts(item.bookmarks, item.remote_bookmarks, item.current_working_copy)
+    )
     if item.immutable then
-      table.insert(parent_parts, text.highlight("NeojjSubtleText")(" (immutable)"))
+      table.insert(parent_parts, text.highlight("NeojjImmutable")(" (immutable)"))
     end
 
     local children = {
@@ -377,16 +382,19 @@ local SectionItemChange = Component.new(function(item)
   local status_highlight = "NeojjSubtleText"
   if item.conflict then
     status_highlight = "NeojjConflict"
+  elseif item.immutable then
+    status_highlight = "NeojjImmutable"
   end
   local status_suffix = #status_parts > 0 and " (" .. table.concat(status_parts, ", ") .. ")" or ""
 
+  local prefix_highlight = item.current_working_copy and "NeojjWorkingCopy" or "NeojjChangeIdPrefix"
   local parts = {
-    text.highlight("NeojjChangeIdPrefix")(change_prefix),
-    text.highlight("NeojjChangeIdRest")(change_rest),
+    text.highlight(prefix_highlight)(change_prefix),
+    text.highlight("NeojjObjectId")(change_rest),
     text(" "),
     text.highlight("NeojjObjectId")(commit_id),
   }
-  vim.list_extend(parts, bookmark_parts(item.bookmarks, item.remote_bookmarks))
+  vim.list_extend(parts, bookmark_parts(item.bookmarks, item.remote_bookmarks, item.current_working_copy))
   table.insert(parts, text(" "))
   table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
   table.insert(parts, text.highlight(status_highlight)(status_suffix))
@@ -404,7 +412,7 @@ local SectionItemBookmark = Component.new(function(item)
   if item.unpushed then
     label = label .. "*"
   end
-  local highlight = "NeojjBranch"
+  local highlight = "NeojjBookmark"
   if item.deleted then
     highlight = "NeojjSubtleText"
   elseif item.conflict then
@@ -427,8 +435,11 @@ local SectionItemBookmark = Component.new(function(item)
   elseif item.conflict then
     table.insert(parts, text.highlight("NeojjConflict")(" (conflicted)"))
   else
+    local change_id = (item.change_id or ""):sub(1, 8)
+    local prefix_len = item.shortest_prefix and #item.shortest_prefix or #change_id
     table.insert(parts, text(" "))
-    table.insert(parts, text.highlight("NeojjChangeId")((item.change_id or ""):sub(1, 8)))
+    table.insert(parts, text.highlight("NeojjChangeIdPrefix")(change_id:sub(1, prefix_len)))
+    table.insert(parts, text.highlight("NeojjObjectId")(change_id:sub(prefix_len + 1)))
     table.insert(parts, text(" "))
     table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
   end
@@ -484,6 +495,7 @@ function M.Status(state, config)
             commit_id = state.head.commit_id,
             description = state.head.description,
             bookmarks = state.head.bookmarks,
+            current = true,
             empty = state.head.empty,
             conflict = state.head.conflict,
             shortest_prefix = state.head.shortest_prefix,
@@ -497,6 +509,7 @@ function M.Status(state, config)
             commit_id = state.parent.commit_id,
             description = state.parent.description,
             bookmarks = state.parent.bookmarks,
+            current = false,
             empty = false,
             conflict = false,
             shortest_prefix = state.parent.shortest_prefix,
