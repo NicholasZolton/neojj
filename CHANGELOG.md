@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.2 (2026-09-03)
+
+## What's Changed
+* fix(status): distinguish references and file states by @NicholasZolton in https://github.com/NicholasZolton/neojj/pull/46
+
+
+**Full Changelog**: https://github.com/NicholasZolton/neojj/compare/v1.6.1...v1.6.2
+
 ## 1.6.1 (2026-08-23)
 
 ## What's Changed
