@@ -332,7 +332,7 @@ local SectionItemChange = Component.new(function(item)
     local prefix_highlight = item.current_working_copy and "NeojjWorkingCopy" or "NeojjChangeIdPrefix"
     local parent_parts = {
       text.highlight(prefix_highlight)(change_prefix),
-      text.highlight("NeojjObjectId")(change_rest),
+      text.highlight("NeojjChangeIdRest")(change_rest),
       text(" "),
       text.highlight("NeojjDivergent")("<divergent>"),
     }
@@ -390,7 +390,7 @@ local SectionItemChange = Component.new(function(item)
   local prefix_highlight = item.current_working_copy and "NeojjWorkingCopy" or "NeojjChangeIdPrefix"
   local parts = {
     text.highlight(prefix_highlight)(change_prefix),
-    text.highlight("NeojjObjectId")(change_rest),
+    text.highlight("NeojjChangeIdRest")(change_rest),
     text(" "),
     text.highlight("NeojjObjectId")(commit_id),
   }
@@ -439,7 +439,7 @@ local SectionItemBookmark = Component.new(function(item)
     local prefix_len = item.shortest_prefix and #item.shortest_prefix or #change_id
     table.insert(parts, text(" "))
     table.insert(parts, text.highlight("NeojjChangeIdPrefix")(change_id:sub(1, prefix_len)))
-    table.insert(parts, text.highlight("NeojjObjectId")(change_id:sub(prefix_len + 1)))
+    table.insert(parts, text.highlight("NeojjChangeIdRest")(change_id:sub(prefix_len + 1)))
     table.insert(parts, text(" "))
     table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
   end

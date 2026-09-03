@@ -89,18 +89,12 @@ end
 local function make_palette(config)
   local bg        = Color.from_hex(get_bg("Normal") or (vim.o.bg == "dark" and "#22252A" or "#eeeeee"))
   local fg        = Color.from_hex((vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
-  local red_hex   = config.highlight.red or get_fg("ErrorMsg") or "#E06C75"
-  local blue_hex  = config.highlight.blue or get_fg("Macro") or "#82AAFF"
-  if not config.highlight.blue and blue_hex == red_hex then
-    local identifier = get_fg("Identifier")
-    blue_hex = identifier ~= red_hex and identifier or "#82AAFF"
-  end
-  local red       = Color.from_hex(red_hex)
+  local red       = Color.from_hex(config.highlight.red    or get_fg("ErrorMsg")    or "#E06C75")
   local orange    = Color.from_hex(config.highlight.orange or get_fg("SpecialChar") or "#ffcb6b")
   local yellow    = Color.from_hex(config.highlight.yellow or get_fg("PreProc")     or "#FFE082")
   local green     = Color.from_hex(config.highlight.green  or get_fg("String")      or "#C3E88D")
   local cyan      = Color.from_hex(config.highlight.cyan   or get_fg("Operator")    or "#89ddff")
-  local blue      = Color.from_hex(blue_hex)
+  local blue      = Color.from_hex(config.highlight.blue   or get_fg("Macro")       or "#82AAFF")
   local purple    = Color.from_hex(config.highlight.purple or get_fg("Include")     or "#C792EA")
 
   local bg_factor = vim.o.bg == "dark" and 1 or -1
@@ -152,6 +146,16 @@ end
 ---@param config NeojjConfig
 function M.setup(config)
   local palette = make_palette(config)
+  local status_blue = palette.blue
+  local status_bg_blue = palette.bg_blue
+  if not config.highlight.blue and not config.highlight.bg_blue and status_bg_blue == palette.bg_red then
+    status_blue = get_fg("Identifier") or "#82AAFF"
+    if status_blue == palette.red then
+      status_blue = "#82AAFF"
+    end
+    local bg_factor = vim.o.bg == "dark" and 1 or -1
+    status_bg_blue = Color.from_hex(status_blue):shade(bg_factor * -0.18):to_css()
+  end
 
   -- stylua: ignore
   hl_store = {
@@ -233,7 +237,7 @@ function M.setup(config)
     NeojjBranchHead               = { fg = palette.blue, bold = palette.bold, underline = palette.underline, ctermfg = 4 },
     NeojjRemote                   = { fg = palette.green, bold = palette.bold, ctermfg = 2 },
     NeojjForgePR                  = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },
-    NeojjObjectId                 = { link = "NeojjChangeIdRest" },
+    NeojjObjectId                 = { fg = palette.bg_cyan, ctermfg = 7 },
     NeojjChangeId                 = { fg = palette.bg_purple, ctermfg = 6 },
     NeojjChangeIdPrefix           = { fg = palette.purple, bold = palette.bold, ctermfg = 5 },
     NeojjChangeIdRest             = { fg = palette.bg_purple, ctermfg = 6 },
@@ -245,7 +249,7 @@ function M.setup(config)
     NeojjFold                     = { fg = "None", bg = "None" },
     NeojjFoldColumn               = { fg = "None", bg = "None" },
     NeojjWinSeparator             = { link = "WinSeparator" },
-    NeojjChangeModified           = { fg = palette.bg_blue, bold = palette.bold, italic = palette.italic, ctermfg = 4 },
+    NeojjChangeModified           = { fg = status_bg_blue, bold = palette.bold, italic = palette.italic, ctermfg = 4 },
     NeojjChangeAdded              = { fg = palette.bg_green, bold = palette.bold, italic = palette.italic, ctermfg = 2 },
     NeojjChangeDeleted            = { fg = palette.bg_red, bold = palette.bold, italic = palette.italic, ctermfg = 1 },
     NeojjChangeRenamed            = { fg = palette.bg_purple, bold = palette.bold, italic = palette.italic, ctermfg = 5 },
