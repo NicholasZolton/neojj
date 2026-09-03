@@ -146,6 +146,16 @@ end
 ---@param config NeojjConfig
 function M.setup(config)
   local palette = make_palette(config)
+  local status_blue = palette.blue
+  local status_bg_blue = palette.bg_blue
+  if not config.highlight.blue and not config.highlight.bg_blue and status_bg_blue == palette.bg_red then
+    status_blue = get_fg("Identifier") or "#82AAFF"
+    if status_blue == palette.red then
+      status_blue = "#82AAFF"
+    end
+    local bg_factor = vim.o.bg == "dark" and 1 or -1
+    status_bg_blue = Color.from_hex(status_blue):shade(bg_factor * -0.18):to_css()
+  end
 
   -- stylua: ignore
   hl_store = {
@@ -239,7 +249,7 @@ function M.setup(config)
     NeojjFold                     = { fg = "None", bg = "None" },
     NeojjFoldColumn               = { fg = "None", bg = "None" },
     NeojjWinSeparator             = { link = "WinSeparator" },
-    NeojjChangeModified           = { fg = palette.bg_blue, bold = palette.bold, italic = palette.italic, ctermfg = 4 },
+    NeojjChangeModified           = { fg = status_bg_blue, bold = palette.bold, italic = palette.italic, ctermfg = 4 },
     NeojjChangeAdded              = { fg = palette.bg_green, bold = palette.bold, italic = palette.italic, ctermfg = 2 },
     NeojjChangeDeleted            = { fg = palette.bg_red, bold = palette.bold, italic = palette.italic, ctermfg = 1 },
     NeojjChangeRenamed            = { fg = palette.bg_purple, bold = palette.bold, italic = palette.italic, ctermfg = 5 },

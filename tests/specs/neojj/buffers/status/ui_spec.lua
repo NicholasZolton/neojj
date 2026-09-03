@@ -24,6 +24,18 @@ local function find_component_by_kind(component, kind)
   end
 end
 
+local function highlight_for_text(component, value)
+  if component.value == value then
+    return component.options.highlight
+  end
+  for _, child in ipairs(component.children or {}) do
+    local highlight = highlight_for_text(child, value)
+    if highlight then
+      return highlight
+    end
+  end
+end
+
 local function minimal_state()
   return {
     worktree_root = "/workspace/project-name",
@@ -146,5 +158,74 @@ describe("status file highlights", function()
       assert.are.equal(expected[mode], mode_label.options.highlight)
       assert.is_nil(filename.options.highlight)
     end
+  end)
+end)
+
+describe("status reference highlights", function()
+  local jj = require("neojj.lib.jj")
+  local original_repo
+
+  before_each(function()
+    original_repo = rawget(jj, "repo")
+    rawset(jj, "repo", { state = { worktree_root = "/workspace" } })
+  end)
+
+  after_each(function()
+    rawset(jj, "repo", original_repo)
+  end)
+
+  it("de-emphasizes ordinary references while preserving bookmark state colors", function()
+    local values = config.get_default_values()
+    values.disable_hint = true
+
+    local state = minimal_state()
+    state.recent.items = {
+      {
+        change_id = "current1",
+        commit_id = "current2",
+        description = "current change",
+        shortest_prefix = "cur",
+        current_working_copy = true,
+        bookmarks = { "current-bookmark" },
+      },
+      {
+        change_id = "recentid",
+        commit_id = "recent01",
+        description = "recent change",
+        shortest_prefix = "rec",
+        bookmarks = { "other-bookmark" },
+        remote_bookmarks = { "other@origin" },
+        immutable = true,
+      },
+      { change_id = "diverge1", shortest_prefix = "div", variants = {}, immutable = true },
+    }
+    state.bookmarks.items = {
+      { name = "local", change_id = "local-id", shortest_prefix = "loc", description = "local bookmark" },
+      { name = "remote", remote = "origin", change_id = "remote-id", description = "remote bookmark" },
+      { name = "conflicted", conflict = true },
+      { name = "deleted", deleted = true },
+    }
+
+    local layout = status_ui.Status(state, values)
+
+    assert.are.equal("NeojjWorkingCopy", highlight_for_text(layout[1], "cur"))
+    assert.are.equal("NeojjChangeIdRest", highlight_for_text(layout[1], "rent1"))
+    assert.are.equal("NeojjObjectId", highlight_for_text(layout[1], "current2"))
+    assert.are.equal("NeojjBranchHead", highlight_for_text(layout[1], "current-bookmark"))
+    assert.are.equal("NeojjChangeIdPrefix", highlight_for_text(layout[1], "rec"))
+    assert.are.equal("NeojjChangeIdRest", highlight_for_text(layout[1], "entid"))
+    assert.are.equal("NeojjObjectId", highlight_for_text(layout[1], "recent01"))
+    assert.are.equal("NeojjBranch", highlight_for_text(layout[1], "other-bookmark"))
+    assert.are.equal("NeojjRemote", highlight_for_text(layout[1], "other@origin"))
+    assert.are.equal("NeojjChangeIdPrefix", highlight_for_text(layout[1], "div"))
+    assert.are.equal("NeojjChangeIdRest", highlight_for_text(layout[1], "erge1"))
+    assert.are.equal("NeojjImmutable", highlight_for_text(layout[1], " (immutable)"))
+    assert.are.equal("NeojjBookmark", highlight_for_text(layout[1], "local"))
+    assert.are.equal("NeojjChangeIdPrefix", highlight_for_text(layout[1], "loc"))
+    assert.are.equal("NeojjChangeIdRest", highlight_for_text(layout[1], "al-id"))
+    assert.is_nil(highlight_for_text(layout[1], "local bookmark"))
+    assert.are.equal("NeojjRemote", highlight_for_text(layout[1], "remote@origin"))
+    assert.are.equal("NeojjConflict", highlight_for_text(layout[1], "conflicted"))
+    assert.are.equal("NeojjSubtleText", highlight_for_text(layout[1], "deleted"))
   end)
 end)
