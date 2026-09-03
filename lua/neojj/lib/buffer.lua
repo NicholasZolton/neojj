@@ -6,6 +6,7 @@ local util = require("neojj.lib.util")
 local signs = require("neojj.lib.signs")
 local Ui = require("neojj.lib.ui")
 local config = require("neojj.config")
+local diff_highlights = require("neojj.lib.diff_highlights")
 
 local Path = require("plenary.path")
 
@@ -150,6 +151,14 @@ function Buffer:set_line_highlights(highlights)
   for _, hl in ipairs(highlights) do
     self:add_line_highlight(unpack(hl))
   end
+end
+
+function Buffer:set_diff_highlights(regions)
+  if vim.b[self.handle] and vim.b[self.handle].neojj_disable_hunk_highlight == true then
+    return
+  end
+
+  diff_highlights.apply(self, regions)
 end
 
 function Buffer:set_folds(folds)
@@ -489,13 +498,13 @@ function Buffer:add_line_highlight(line, hl_group, opts)
 
   local ns_id = self:get_namespace_id(opts.namespace)
   if ns_id then
-    api.nvim_buf_set_extmark(
-      self.handle,
-      ns_id,
-      line,
-      0,
-      { line_hl_group = hl_group, priority = opts.priority or 190 }
-    )
+    api.nvim_buf_set_extmark(self.handle, ns_id, line, 0, {
+      hl_group = hl_group,
+      end_row = line + 1,
+      end_col = 0,
+      hl_eol = true,
+      priority = opts.priority or 190,
+    })
   end
 end
 

@@ -149,6 +149,8 @@ local neojj = require("neojj")
 neojj.setup {
   -- Path to jj binary. "auto" = auto-detect (resolves shims for performance).
   jj_binary = "auto",
+  -- Highlight changed words inside paired deleted/added lines.
+  word_diff_highlight = true,
   -- Hides the hints at the top of the status buffer
   disable_hint = false,
   -- Shows the project name at the top of the status buffer
