@@ -222,10 +222,11 @@ function Renderer:_render_child(child)
     })
   end
 
-  if child.options.hunk then
+  if child.options.filepath then
     table.insert(self.buffer.diff_highlight, {
       first_line = #self.buffer.line - (child.position.row_end - child.position.row_start),
       last_line = #self.buffer.line,
+      filepath = child.options.filepath,
     })
   end
 

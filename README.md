@@ -157,6 +157,10 @@ neojj.setup {
   show_project_header = true,
   -- Disables changing the buffer highlights based on where the cursor is.
   disable_context_highlighting = false,
+  -- Uses Tree-sitter parsers to apply syntax highlighting inside diff hunks.
+  treesitter_diff_highlight = false,
+  -- Highlights changed words within paired deletion and addition lines.
+  word_diff_highlight = true,
   -- Disables signs for sections/items/hunks
   disable_signs = false,
   -- Changes what mode the Commit Editor starts in. `true` will leave nvim in normal mode, `false` will change nvim to

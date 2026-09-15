@@ -65,6 +65,7 @@ end
 ---@field red        string  Foreground red
 ---@field bg_red     string  Background red
 ---@field line_red   string  Cursor line highlight for red regions, like deleted hunks
+---@field inline_red string  Background for inline delete word-diff highlights
 ---@field orange     string  Foreground orange
 ---@field bg_orange  string  background orange
 ---@field yellow     string  Foreground yellow
@@ -72,6 +73,7 @@ end
 ---@field green      string  Foreground green
 ---@field bg_green   string  Background green
 ---@field line_green string  Cursor line highlight for green regions, like added hunks
+---@field inline_green string Background for inline add word-diff highlights
 ---@field cyan       string  Foreground cyan
 ---@field bg_cyan    string  Background cyan
 ---@field blue       string  Foreground blue
@@ -79,8 +81,6 @@ end
 ---@field purple     string  Foreground purple
 ---@field bg_purple  string  Background purple
 ---@field md_purple  string  Background _medium_ purple. Lighter than bg_purple.
----@field inline_green string Background for inline added text
----@field inline_red string Background for inline deleted text
 ---@field italic     boolean enable italics?
 ---@field bold       boolean enable bold?
 ---@field underline  boolean enable underline?
@@ -127,9 +127,9 @@ local function make_palette(config)
     md_purple  = purple:shade(0.18):to_css(),
     inline_green = green:shade(bg_factor * -0.2):set_saturation(0.65):to_css(),
     inline_red   = red:shade(bg_factor * 0.3):set_saturation(0.65):to_css(),
-    italic     = true,
-    bold       = true,
-    underline  = true,
+    italic       = true,
+    bold         = true,
+    underline    = true,
   }
 
   return vim.tbl_extend("keep", config.highlight or {}, default)

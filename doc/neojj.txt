@@ -105,6 +105,12 @@ the available options with their defaults: >lua
       -- Disables changing the buffer highlights based on cursor position
       disable_context_highlighting = false,
 
+      -- Uses Tree-sitter parsers to apply syntax highlighting inside diff hunks
+      treesitter_diff_highlight = false,
+
+      -- Highlights changed words within paired deletion and addition lines
+      word_diff_highlight = true,
+
       -- Disables signs for sections/items/hunks
       disable_signs = false,
 

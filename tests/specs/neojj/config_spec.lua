@@ -32,6 +32,15 @@ describe("NeoJJ config", function()
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
       end)
 
+      it("should return invalid when diff highlight options aren't booleans", function()
+        config.values.treesitter_diff_highlight = "not a boolean"
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+
+        config.values = config.get_default_values()
+        config.values.word_diff_highlight = "not a boolean"
+        assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
+      end)
+
       it("should return invalid when codediff_tab_position is unknown", function()
         config.values.codediff_tab_position = "unknown"
         assert.True(vim.tbl_count(require("neojj.config").validate_config()) ~= 0)
