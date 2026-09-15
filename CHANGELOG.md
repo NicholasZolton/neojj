@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.3 (2026-09-15)
+
+## What's Changed
+* fix(diff): preserve patch hunk markers as content by @NicholasZolton in https://github.com/NicholasZolton/neojj/pull/49
+
+
+**Full Changelog**: https://github.com/NicholasZolton/neojj/compare/v1.6.2...v1.6.3
+
 ## 1.6.2 (2026-09-03)
 
 ## What's Changed
