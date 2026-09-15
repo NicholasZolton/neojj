@@ -2,7 +2,6 @@ local Buffer = require("neojj.lib.buffer")
 local runner = require("neojj.runner")
 local Ui = require("neojj.lib.ui")
 local util = require("neojj.lib.util")
-local status_maps = require("neojj.config").get_reversed_status_maps()
 
 local map = util.map
 local filter_map = util.filter_map
@@ -50,6 +49,7 @@ function M:show()
   end
 
   M.instance = self
+  local status_maps = require("neojj.config").get_reversed_status_maps()
 
   self.buffer = Buffer.create {
     kind = "popup",

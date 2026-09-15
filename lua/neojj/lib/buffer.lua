@@ -147,6 +147,10 @@ function Buffer:set_extmarks(extmarks)
 end
 
 function Buffer:set_line_highlights(highlights)
+  if vim.b[self.handle] and vim.b[self.handle].neojj_disable_hunk_highlight == true then
+    return
+  end
+
   for _, hl in ipairs(highlights) do
     self:add_line_highlight(unpack(hl))
   end
@@ -216,7 +220,14 @@ function Buffer:close(force)
       self.old_cwd = nil
     end
 
-    api.nvim_buf_delete(self.handle, { force = force })
+    if self.old_buf and api.nvim_buf_is_valid(self.old_buf) then
+      local ok = pcall(api.nvim_win_set_buf, self.win_handle, self.old_buf)
+      if not ok then
+        vim.cmd.enew()
+      end
+    else
+      vim.cmd.enew()
+    end
     return
   end
 
@@ -702,6 +713,11 @@ function Buffer.create(config)
   assert(config, "Buffers work better if you configure them")
 
   local buffer = Buffer.from_name(config.name)
+
+  if buffer:get_option("buftype") == "terminal" and config.buftype ~= "terminal" then
+    api.nvim_buf_delete(buffer.handle, { force = true })
+    buffer = Buffer.from_name(config.name)
+  end
 
   buffer.name = config.name
   buffer.kind = config.kind or "split"

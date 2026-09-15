@@ -234,6 +234,31 @@ local function snacks_confirm(on_select, allow_multi, refocus_status)
   return confirm, on_close
 end
 
+---Completes the finder when MiniPick confirms or cancels a selection.
+---@param on_select fun(item: any|nil)
+---@param refocus_status boolean
+---@return function choose, function on_stop
+local function mini_pick_choose(on_select, refocus_status)
+  local completed = false
+
+  local function complete(selection)
+    if completed then
+      return
+    end
+    completed = true
+    on_select(selection)
+    if refocus_status then
+      refocus_status_buffer()
+    end
+  end
+
+  return function(item)
+    complete(item)
+  end, function()
+    complete(nil)
+  end
+end
+
 --- Utility function to map finder opts to fzf
 ---@param opts FinderOpts
 ---@return table
@@ -364,6 +389,7 @@ function Finder:find(on_select)
     })
   elseif config.check_integration("mini_pick") then
     local mini_pick = require("mini.pick")
+    local choose, on_stop = mini_pick_choose(on_select, self.opts.refocus_status)
 
     -- Build a lookup from display text -> prefix_len for bold highlighting
     local prefix_lookup = {}
@@ -408,10 +434,21 @@ function Finder:find(on_select)
       end
     end
 
+    local group = vim.api.nvim_create_augroup("NeojjMiniPickStop", { clear = true })
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "MiniPickStop",
+      once = true,
+      group = group,
+      callback = function()
+        vim.api.nvim_clear_autocmds { group = group }
+        on_stop()
+      end,
+    })
+
     mini_pick.start {
       source = {
         items = string_items,
-        choose = on_select,
+        choose = choose,
         show = show or nil,
       },
     }

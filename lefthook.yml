@@ -20,12 +20,7 @@ pre-push:
       run: llscheck lua/ || echo {files}
     lua-test:
       glob: "tests/specs/**/*_spec.lua"
-      run: nvim --headless -S "./tests/init.lua" || echo {files}
-      env:
-        - CI: 1
-        - GIT_CONFIG_GLOBAL: /dev/null
-        - GIT_CONFIG_SYSTEM: /dev/null
-        - NVIM_APPNAME: neogit-test
+      run: make test
     rspec:
       only:
       - ref: master
