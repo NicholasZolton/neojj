@@ -79,6 +79,8 @@ end
 ---@field purple     string  Foreground purple
 ---@field bg_purple  string  Background purple
 ---@field md_purple  string  Background _medium_ purple. Lighter than bg_purple.
+---@field inline_green string Background for inline added text
+---@field inline_red string Background for inline deleted text
 ---@field italic     boolean enable italics?
 ---@field bold       boolean enable bold?
 ---@field underline  boolean enable underline?
@@ -123,6 +125,8 @@ local function make_palette(config)
     purple     = purple:to_css(),
     bg_purple  = purple:shade(bg_factor * -0.18):to_css(),
     md_purple  = purple:shade(0.18):to_css(),
+    inline_green = green:shade(bg_factor * -0.2):set_saturation(0.65):to_css(),
+    inline_red   = red:shade(bg_factor * 0.3):set_saturation(0.65):to_css(),
     italic     = true,
     bold       = true,
     underline  = true,
@@ -210,6 +214,8 @@ function M.setup(config)
     NeojjDiffDelete               = { bg = palette.line_red, fg = palette.bg_red, ctermfg = 1 },
     NeojjDiffDeleteHighlight      = { bg = palette.line_red, fg = palette.red, ctermfg = 1 },
     NeojjDiffDeleteCursor         = { bg = palette.bg1, fg = palette.red, ctermfg = 1 },
+    NeojjDiffAddInline            = { bg = palette.inline_green, fg = palette.line_green, bold = palette.bold },
+    NeojjDiffDeleteInline         = { bg = palette.inline_red, fg = palette.bg0, bold = palette.bold },
     NeojjPopupSectionTitle        = { link = "Function" },
     NeojjPopupBranchName          = { link = "String" },
     NeojjPopupBold                = { bold = palette.bold },
