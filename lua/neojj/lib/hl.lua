@@ -19,7 +19,7 @@ local hl_store
 local M = {}
 
 local TEXT_CONTRAST = 4.6
-local INLINE_BACKGROUND_ACCENT = 0.3
+local INLINE_BACKGROUND_ACCENT = 0.45
 
 ---@param dec number
 ---@return string
