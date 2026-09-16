@@ -172,3 +172,42 @@ describe("buffers.common abandon helpers", function()
     end)
   end)
 end)
+
+describe("buffers.common hunk rendering", function()
+  local common = require("neojj.buffers.common")
+
+  local function rendered_lines(header, content)
+    local hunk = common.Hunk {
+      header = header,
+      content = content,
+      hunk = { line = header },
+    }
+    return hunk.children[2].children
+  end
+
+  it("retains semantic line highlights when visual hunk highlighting is disabled", function()
+    local original = vim.b.neojj_disable_hunk_highlight
+    vim.b.neojj_disable_hunk_highlight = true
+    local lines = rendered_lines("@@ -1 +1 @@", { "+added" })
+    vim.b.neojj_disable_hunk_highlight = original
+
+    assert.are.equal("NeojjDiffAdd", lines[1].options.line_hl)
+  end)
+
+  it("uses the hunk prefix width for normal and combined diffs", function()
+    local normal = rendered_lines("@@ -1 +1 @@", { " - context beginning with minus" })
+
+    local combined = rendered_lines("@@@ -1,2 -1,2 +1,2 @@@", {
+      "  context",
+      " --deleted from a parent",
+      " ++added by both parents",
+      "  <<<<<<< conflict 1 of 1",
+    })
+
+    assert.are.equal("NeojjDiffContext", normal[1].options.line_hl)
+    assert.are.equal("NeojjDiffContext", combined[1].options.line_hl)
+    assert.are.equal("NeojjDiffDelete", combined[2].options.line_hl)
+    assert.are.equal("NeojjDiffAdd", combined[3].options.line_hl)
+    assert.are.equal("NeojjHunkMergeHeader", combined[4].options.line_hl)
+  end)
+end)

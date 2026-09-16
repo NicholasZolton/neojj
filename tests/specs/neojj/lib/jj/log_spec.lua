@@ -218,6 +218,12 @@ describe("jj log parser", function()
       assert.are.same({ "main" }, entries[1].bookmarks)
     end)
 
+    it("parses the working-copy flag", function()
+      local line = make_line(sample_json, "0\t0\t0\t0\t\t\tmuvq\t0\t1")
+      local entries = log.parse_enriched_lines { line }
+      assert.is_true(entries[1].current_working_copy)
+    end)
+
     it("parses change_offset (8th tab field) for divergent entries", function()
       local line = make_line(sample_json, "0\t0\t0\t1\t\t\tmuvq\t2")
       local entries = log.parse_enriched_lines { line }

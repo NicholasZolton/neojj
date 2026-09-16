@@ -46,53 +46,31 @@ M.DiffHunks = Component.new(function(diff)
   }
 end)
 
-local diff_add_start = "+"
-local diff_add_start_2 = " +"
-local diff_delete_start = "-"
-local diff_delete_start_2 = " -"
-
-local HunkLine = Component.new(function(line)
+local HunkLine = Component.new(function(line, hunk)
   local line_hl
 
-  if vim.b.neojj_disable_hunk_highlight == true then
-    return text(line)
-  end
-
-  local first_char = string.sub(line, 1, 1)
-  local first_chars = string.sub(line, 1, 2)
-
-  -- Check if there are active conflicts (jj stores conflicts in commits)
-  local has_conflicts = false
-  local ok, repo = pcall(function()
-    return jj.repo
-  end)
-  if ok and repo and repo.state and repo.state.conflicts then
-    has_conflicts = #repo.state.conflicts.items > 0
-  end
-
-  if has_conflicts then
-    if
-      line:match("..<<<<<<<")
-      or line:match("..|||||||")
-      or line:match("..=======")
-      or line:match("..>>>>>>>")
-    then
-      line_hl = "NeojjHunkMergeHeader"
-    elseif first_char == diff_add_start or first_chars == diff_add_start_2 then
-      line_hl = "NeojjDiffAdd"
-    elseif first_char == diff_delete_start or first_chars == diff_delete_start_2 then
-      line_hl = "NeojjDiffDelete"
-    else
-      line_hl = "NeojjDiffContext"
+  local prefix_length = 1
+  if hunk and hunk.line then
+    local at_signs = hunk.line:match("^(@+)")
+    if at_signs then
+      prefix_length = #at_signs - 1
     end
+  end
+
+  local prefix = line:sub(1, prefix_length)
+  if
+    line:match("^..<<<<<<<")
+    or line:match("^..|||||||")
+    or line:match("^..=======")
+    or line:match("^..>>>>>>>")
+  then
+    line_hl = "NeojjHunkMergeHeader"
+  elseif prefix:match("%+") then
+    line_hl = "NeojjDiffAdd"
+  elseif prefix:match("%-") then
+    line_hl = "NeojjDiffDelete"
   else
-    if first_char == diff_add_start then
-      line_hl = "NeojjDiffAdd"
-    elseif first_char == diff_delete_start then
-      line_hl = "NeojjDiffDelete"
-    else
-      line_hl = "NeojjDiffContext"
-    end
+    line_hl = "NeojjDiffContext"
   end
 
   return text(line, { line_hl = line_hl })
@@ -101,7 +79,9 @@ end)
 M.Hunk = Component.new(function(props)
   return col.tag("Hunk")({
     text.line_hl("NeojjHunkHeader")(props.header),
-    col.tag("HunkContent")(map(props.content, HunkLine)),
+    col.tag("HunkContent")(map(props.content, function(line)
+      return HunkLine(line, props.hunk)
+    end)),
   }, { foldable = true, folded = props.folded or false, context = true, hunk = props.hunk })
 end)
 

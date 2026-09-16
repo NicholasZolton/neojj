@@ -57,6 +57,7 @@
 ---@field remote string|nil Remote name if tracking bookmark
 ---@field timestamp string|nil Committer timestamp for sorting
 ---@field deleted boolean|nil True if bookmark has been deleted locally
+---@field shortest_prefix string|nil
 
 ---@class NeojjRepoState
 ---@field worktree_root string

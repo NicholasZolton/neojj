@@ -3,7 +3,6 @@ local ui = require("neojj.buffers.log_view.ui")
 local common = require("neojj.buffers.common")
 local config = require("neojj.config")
 local popups = require("neojj.popups")
-local status_maps = require("neojj.config").get_reversed_status_maps()
 local CommitViewBuffer = require("neojj.buffers.commit_view")
 local util = require("neojj.lib.util")
 local a = require("plenary.async")
@@ -74,6 +73,7 @@ function M:open()
   end
 
   M.instance = self
+  local status_maps = config.get_reversed_status_maps()
 
   local function guarded(action)
     return function()

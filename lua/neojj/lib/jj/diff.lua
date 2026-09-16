@@ -113,37 +113,35 @@ local function build_hunks(lines)
 
   for i = 1, #lines do
     local line = lines[i]
-    if not line:match("^%+%+%+") then
-      local index_from, index_len, disk_from, disk_len
+    local index_from, index_len, disk_from, disk_len
 
-      if line:match("^@@@") then
-        index_from, index_len, disk_from, disk_len = line:match("@@@* %-(%d+),?(%d*) .* %+(%d+),?(%d*) @@@*")
-      else
-        index_from, index_len, disk_from, disk_len = line:match("@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@")
+    if line:match("^@@@") then
+      index_from, index_len, disk_from, disk_len = line:match("^@@@* %-(%d+),?(%d*) .* %+(%d+),?(%d*) @@@*")
+    else
+      index_from, index_len, disk_from, disk_len = line:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@")
+    end
+
+    if index_from then
+      if hunk ~= nil then
+        hunk.hash = hunk_hash(hunk_content)
+        hunk_content = {}
+        insert(hunks, hunk)
       end
 
-      if index_from then
-        if hunk ~= nil then
-          hunk.hash = hunk_hash(hunk_content)
-          hunk_content = {}
-          insert(hunks, hunk)
-        end
+      hunk = {
+        index_from = tonumber(index_from),
+        index_len = tonumber(index_len) or 1,
+        disk_from = tonumber(disk_from),
+        disk_len = tonumber(disk_len) or 1,
+        line = line,
+        diff_from = i,
+        diff_to = i,
+      }
+    else
+      insert(hunk_content, line)
 
-        hunk = {
-          index_from = tonumber(index_from),
-          index_len = tonumber(index_len) or 1,
-          disk_from = tonumber(disk_from),
-          disk_len = tonumber(disk_len) or 1,
-          line = line,
-          diff_from = i,
-          diff_to = i,
-        }
-      else
-        insert(hunk_content, line)
-
-        if hunk then
-          hunk.diff_to = hunk.diff_to + 1
-        end
+      if hunk then
+        hunk.diff_to = hunk.diff_to + 1
       end
     end
   end

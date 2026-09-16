@@ -102,6 +102,17 @@ describe("jj bookmark parser", function()
     end)
   end)
 
+  describe("parse_template_list", function()
+    it("parses the shortest unique change ID prefix", function()
+      local items = bookmark.parse_template_list {
+        "main\t\ttvonrrpo\t63990385\t2026-09-02T12:00:00Z\tinitial commit\t1\t0\ttv",
+      }
+
+      assert.are.equal(1, #items)
+      assert.are.equal("tv", items[1].shortest_prefix)
+    end)
+  end)
+
   describe("normalize", function()
     it("returns a plain name unchanged", function()
       assert.are.equal("main", bookmark.normalize("main"))

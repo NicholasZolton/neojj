@@ -146,6 +146,27 @@ describe("jj diff parser", function()
       assert.are.equal(11, parsed.hunks[2].disk_from)
     end)
 
+    it("preserves diff headers inside added patch content", function()
+      local raw = {
+        "diff --git a/change.patch b/change.patch",
+        "new file mode 100644",
+        "index 0000000..abc1234",
+        "--- /dev/null",
+        "+++ b/change.patch",
+        "@@ -0,0 +1,4 @@",
+        "+--- a/hello.txt",
+        "++++ b/hello.txt",
+        "+@@ -1,1 +1,2 @@",
+        "+ added line",
+      }
+      local parsed = diff.parse(raw)
+
+      assert.are.equal(1, #parsed.hunks)
+      assert.are.equal(4, #parsed.hunks[1].lines)
+      assert.are.equal("++++ b/hello.txt", parsed.hunks[1].lines[2])
+      assert.are.equal("+@@ -1,1 +1,2 @@", parsed.hunks[1].lines[3])
+    end)
+
     it("sets file on each hunk", function()
       local raw = {
         "diff --git a/hello.txt b/hello.txt",
