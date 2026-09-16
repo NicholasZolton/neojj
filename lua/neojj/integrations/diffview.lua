@@ -15,6 +15,16 @@ local a = require("plenary.async")
 -- jj's git backing store, which contains every commit jj has created.
 local jj_backend = require("neojj.integrations.jj_backend")
 
+-- Match Diffview's buffer-side representation, which omits the final newline.
+---@param lines string[]
+---@return string[]
+local function strip_trailing_eol(lines)
+  if lines[#lines] == "" then
+    lines[#lines] = nil
+  end
+  return lines
+end
+
 local function install_adapter_patch()
   local vcs = require("diffview.vcs")
   if vcs.__neojj_patched then
@@ -150,7 +160,7 @@ local function get_local_diff_view(_, item_name, opts)
         local result =
           jj.cli.file_show.revision("@-").args(path).call { await = true, trim = false, ignore_error = true }
         if result and result.code == 0 then
-          return result.stdout
+          return strip_trailing_eol(result.stdout)
         end
         return nil
       end

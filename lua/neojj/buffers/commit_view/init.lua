@@ -5,7 +5,6 @@ local jj = require("neojj.lib.jj")
 local config = require("neojj.config")
 local popups = require("neojj.popups")
 local commit_view_maps = require("neojj.config").get_reversed_commit_view_maps()
-local status_maps = require("neojj.config").get_reversed_status_maps()
 local notification = require("neojj.lib.notification")
 local jump = require("neojj.lib.jump")
 local util = require("neojj.lib.util")
@@ -298,6 +297,7 @@ function M:open(kind)
   kind = kind or config.values.commit_view.kind
 
   M.instance = self
+  local status_maps = config.get_reversed_status_maps()
 
   self.buffer = Buffer.create {
     name = "NeojjCommitView",

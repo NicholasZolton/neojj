@@ -42,3 +42,41 @@ describe("lib.jump.translate_hunk_location", function()
     }, location)
   end)
 end)
+
+describe("lib.jump.goto_file_at", function()
+  it("checks paths relative to the repository root", function()
+    local notification = require("neojj.lib.notification")
+    local root = vim.fn.tempname()
+    vim.fn.mkdir(root, "p")
+    vim.fn.writefile({ "content" }, vim.fs.joinpath(root, "nested.txt"))
+
+    local saved_jj = package.loaded["neojj.lib.jj"]
+    local saved_jump = package.loaded["neojj.lib.jump"]
+    package.loaded["neojj.lib.jj"] = { repo = { worktree_root = root } }
+    package.loaded["neojj.lib.jump"] = nil
+    local jump = require("neojj.lib.jump")
+
+    local original_warn = notification.warn
+    local opened
+    local warning
+    jump.open = function(_, path)
+      opened = path
+    end
+    notification.warn = function(message)
+      warning = message
+    end
+
+    jump.goto_file_at("nested.txt", { 1, 0 })
+    vim.wait(100, function()
+      return opened ~= nil or warning ~= nil
+    end)
+
+    notification.warn = original_warn
+    package.loaded["neojj.lib.jump"] = saved_jump
+    package.loaded["neojj.lib.jj"] = saved_jj
+    vim.fn.delete(root, "rf")
+
+    assert.is_nil(warning)
+    assert.are.equal(vim.fs.joinpath(root, "nested.txt"), opened)
+  end)
+end)
