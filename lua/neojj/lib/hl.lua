@@ -19,6 +19,7 @@ local hl_store
 local M = {}
 
 local TEXT_CONTRAST = 4.6
+local INLINE_BACKGROUND_ACCENT = 0.45
 
 ---@param dec number
 ---@return string
@@ -193,8 +194,8 @@ local function make_palette(config)
     purple     = purple:to_css(),
     bg_purple  = purple:shade(bg_factor * -0.18):to_css(),
     md_purple  = purple:shade(0.18):to_css(),
-    inline_green = Color.from_color(green):shade(bg_factor * -0.2):set_saturation(0.65):to_css(),
-    inline_red   = Color.from_color(red):shade(bg_factor * 0.3):set_saturation(0.65):to_css(),
+    inline_green = blend(bg, green, INLINE_BACKGROUND_ACCENT):to_css(),
+    inline_red   = blend(bg, red, INLINE_BACKGROUND_ACCENT):to_css(),
     italic       = true,
     bold         = true,
     underline    = true,
