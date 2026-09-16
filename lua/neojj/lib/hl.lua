@@ -19,6 +19,7 @@ local hl_store
 local M = {}
 
 local MIN_TEXT_CONTRAST = 4.5
+local TARGET_TEXT_CONTRAST = 4.6
 
 ---@param dec number
 ---@return string
@@ -82,22 +83,45 @@ local function contrast(first, second)
   return (lighter + 0.05) / (darker + 0.05)
 end
 
----Prefer colors from the active theme, falling back to black or white when needed.
----@param background Color
+---@param first Color
+---@param second Color
+---@param amount number
+---@return Color
+local function blend(first, second, amount)
+  return Color(
+    first.red + (second.red - first.red) * amount,
+    first.green + (second.green - first.green) * amount,
+    first.blue + (second.blue - first.blue) * amount,
+    1
+  )
+end
+
+---Keep normal text while moving the accent toward the normal background until it is readable.
+---@param accent Color
 ---@param normal_fg Color
 ---@param normal_bg Color
----@return string
-local function readable_foreground(background, normal_fg, normal_bg)
-  local foreground_contrast = contrast(background, normal_fg)
-  local background_contrast = contrast(background, normal_bg)
-
-  if math.max(foreground_contrast, background_contrast) >= MIN_TEXT_CONTRAST then
-    return (foreground_contrast >= background_contrast and normal_fg or normal_bg):to_css()
+---@return string background
+---@return string foreground
+local function readable_inline_colors(accent, normal_fg, normal_bg)
+  if contrast(normal_fg, normal_bg) < MIN_TEXT_CONTRAST then
+    local black = Color.from_hex("#000000")
+    local white = Color.from_hex("#ffffff")
+    local foreground = contrast(accent, black) >= contrast(accent, white) and black or white
+    return accent:to_css(), foreground:to_css()
   end
 
-  local black = Color.from_hex("#000000")
-  local white = Color.from_hex("#ffffff")
-  return (contrast(background, black) >= contrast(background, white) and black or white):to_css()
+  local low = 0
+  local high = 1
+  for _ = 1, 12 do
+    local midpoint = (low + high) / 2
+    if contrast(normal_fg, blend(accent, normal_bg, midpoint)) >= TARGET_TEXT_CONTRAST then
+      high = midpoint
+    else
+      low = midpoint
+    end
+  end
+
+  return blend(accent, normal_bg, high):to_css(), normal_fg:to_css()
 end
 
 ---@class NeojjColorPalette
@@ -180,8 +204,9 @@ local function make_palette(config)
   }
 
   local palette = vim.tbl_extend("keep", config.highlight or {}, default)
-  palette.inline_green_fg = readable_foreground(Color.from_hex(palette.inline_green), fg, bg)
-  palette.inline_red_fg = readable_foreground(Color.from_hex(palette.inline_red), fg, bg)
+  palette.inline_green, palette.inline_green_fg =
+    readable_inline_colors(Color.from_hex(palette.inline_green), fg, bg)
+  palette.inline_red, palette.inline_red_fg = readable_inline_colors(Color.from_hex(palette.inline_red), fg, bg)
   return palette
 end
 -- stylua: ignore end

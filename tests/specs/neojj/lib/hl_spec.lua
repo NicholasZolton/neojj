@@ -65,8 +65,10 @@ describe("highlight palette", function()
 
       highlight.setup { highlight = {} }
 
+      local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
       for _, group in ipairs { "NeojjDiffAddInline", "NeojjDiffDeleteInline" } do
         local colors = vim.api.nvim_get_hl(0, { name = group, link = false })
+        assert.are.equal(normal.fg, colors.fg)
         assert.is_true(contrast(colors.fg, colors.bg) >= 4.5)
       end
     end)
