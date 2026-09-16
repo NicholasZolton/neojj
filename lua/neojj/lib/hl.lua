@@ -18,8 +18,8 @@ local Color = require("neojj.lib.color").Color
 local hl_store
 local M = {}
 
-local MIN_TEXT_CONTRAST = 4.5
-local TARGET_TEXT_CONTRAST = 4.6
+local TEXT_CONTRAST = 4.6
+local INLINE_BACKGROUND_ACCENT = 0.3
 
 ---@param dec number
 ---@return string
@@ -96,32 +96,30 @@ local function blend(first, second, amount)
   )
 end
 
----Keep normal text while moving the accent toward the normal background until it is readable.
+---Keep the semantic hue while moving it toward black or white until it is readable.
 ---@param accent Color
----@param normal_fg Color
----@param normal_bg Color
----@return string background
----@return string foreground
-local function readable_inline_colors(accent, normal_fg, normal_bg)
-  if contrast(normal_fg, normal_bg) < MIN_TEXT_CONTRAST then
-    local black = Color.from_hex("#000000")
-    local white = Color.from_hex("#ffffff")
-    local foreground = contrast(accent, black) >= contrast(accent, white) and black or white
-    return accent:to_css(), foreground:to_css()
+---@param background Color
+---@return string
+local function readable_accent(accent, background)
+  if contrast(accent, background) >= TEXT_CONTRAST then
+    return accent:to_css()
   end
 
+  local black = Color.from_hex("#000000")
+  local white = Color.from_hex("#ffffff")
+  local target = contrast(background, black) >= contrast(background, white) and black or white
   local low = 0
   local high = 1
   for _ = 1, 12 do
     local midpoint = (low + high) / 2
-    if contrast(normal_fg, blend(accent, normal_bg, midpoint)) >= TARGET_TEXT_CONTRAST then
+    if contrast(blend(accent, target, midpoint), background) >= TEXT_CONTRAST then
       high = midpoint
     else
       low = midpoint
     end
   end
 
-  return blend(accent, normal_bg, high):to_css(), normal_fg:to_css()
+  return blend(accent, target, high):to_css()
 end
 
 ---@class NeojjColorPalette
@@ -196,17 +194,16 @@ local function make_palette(config)
     purple     = purple:to_css(),
     bg_purple  = purple:shade(bg_factor * -0.18):to_css(),
     md_purple  = purple:shade(0.18):to_css(),
-    inline_green = green:shade(bg_factor * -0.2):set_saturation(0.65):to_css(),
-    inline_red   = red:shade(bg_factor * 0.3):set_saturation(0.65):to_css(),
+    inline_green = blend(bg, green, INLINE_BACKGROUND_ACCENT):to_css(),
+    inline_red   = blend(bg, red, INLINE_BACKGROUND_ACCENT):to_css(),
     italic       = true,
     bold         = true,
     underline    = true,
   }
 
   local palette = vim.tbl_extend("keep", config.highlight or {}, default)
-  palette.inline_green, palette.inline_green_fg =
-    readable_inline_colors(Color.from_hex(palette.inline_green), fg, bg)
-  palette.inline_red, palette.inline_red_fg = readable_inline_colors(Color.from_hex(palette.inline_red), fg, bg)
+  palette.inline_green_fg = readable_accent(green, Color.from_hex(palette.inline_green))
+  palette.inline_red_fg = readable_accent(red, Color.from_hex(palette.inline_red))
   return palette
 end
 -- stylua: ignore end

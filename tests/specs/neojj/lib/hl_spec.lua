@@ -58,8 +58,8 @@ describe("highlight palette", function()
         fg = background == "dark" and "#c8d3f5" or "#333333",
         bg = background == "dark" and "#1b1d2b" or "#f5f5f5",
       })
-      vim.api.nvim_set_hl(0, "ErrorMsg", { fg = "#e26886" })
-      vim.api.nvim_set_hl(0, "String", { fg = "#86aaec" })
+      vim.api.nvim_set_hl(0, "ErrorMsg", { fg = background == "dark" and "#e26886" or "#b4233f" })
+      vim.api.nvim_set_hl(0, "String", { fg = background == "dark" and "#8bd49c" or "#217a3c" })
       vim.api.nvim_set_hl(0, "NeojjDiffAddInline", {})
       vim.api.nvim_set_hl(0, "NeojjDiffDeleteInline", {})
 
@@ -68,9 +68,14 @@ describe("highlight palette", function()
       local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
       for _, group in ipairs { "NeojjDiffAddInline", "NeojjDiffDeleteInline" } do
         local colors = vim.api.nvim_get_hl(0, { name = group, link = false })
-        assert.are.equal(normal.fg, colors.fg)
+        assert.are_not.equal(normal.fg, colors.fg)
         assert.is_true(contrast(colors.fg, colors.bg) >= 4.5)
       end
+
+      local addition = vim.api.nvim_get_hl(0, { name = "NeojjDiffAddInline", link = false })
+      local deletion = vim.api.nvim_get_hl(0, { name = "NeojjDiffDeleteInline", link = false })
+      assert.are_not.equal(addition.fg, deletion.fg)
+      assert.are_not.equal(addition.bg, deletion.bg)
     end)
   end
 end)
