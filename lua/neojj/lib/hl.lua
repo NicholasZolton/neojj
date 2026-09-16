@@ -18,6 +18,8 @@ local Color = require("neojj.lib.color").Color
 local hl_store
 local M = {}
 
+local MIN_TEXT_CONTRAST = 4.5
+
 ---@param dec number
 ---@return string
 local function to_hex(dec)
@@ -55,6 +57,49 @@ local function get_bg(name)
   end
 end
 
+---@param channel number
+---@return number
+local function linearize(channel)
+  if channel <= 0.04045 then
+    return channel / 12.92
+  end
+
+  return ((channel + 0.055) / 1.055) ^ 2.4
+end
+
+---@param color Color
+---@return number
+local function luminance(color)
+  return 0.2126 * linearize(color.red) + 0.7152 * linearize(color.green) + 0.0722 * linearize(color.blue)
+end
+
+---@param first Color
+---@param second Color
+---@return number
+local function contrast(first, second)
+  local lighter = math.max(luminance(first), luminance(second))
+  local darker = math.min(luminance(first), luminance(second))
+  return (lighter + 0.05) / (darker + 0.05)
+end
+
+---Prefer colors from the active theme, falling back to black or white when needed.
+---@param background Color
+---@param normal_fg Color
+---@param normal_bg Color
+---@return string
+local function readable_foreground(background, normal_fg, normal_bg)
+  local foreground_contrast = contrast(background, normal_fg)
+  local background_contrast = contrast(background, normal_bg)
+
+  if math.max(foreground_contrast, background_contrast) >= MIN_TEXT_CONTRAST then
+    return (foreground_contrast >= background_contrast and normal_fg or normal_bg):to_css()
+  end
+
+  local black = Color.from_hex("#000000")
+  local white = Color.from_hex("#ffffff")
+  return (contrast(background, black) >= contrast(background, white) and black or white):to_css()
+end
+
 ---@class NeojjColorPalette
 ---@field bg0        string  Darkest background color
 ---@field bg1        string  Second darkest background color
@@ -66,6 +111,7 @@ end
 ---@field bg_red     string  Background red
 ---@field line_red   string  Cursor line highlight for red regions, like deleted hunks
 ---@field inline_red string  Background for inline delete word-diff highlights
+---@field inline_red_fg string Foreground for inline delete word-diff highlights
 ---@field orange     string  Foreground orange
 ---@field bg_orange  string  background orange
 ---@field yellow     string  Foreground yellow
@@ -74,6 +120,7 @@ end
 ---@field bg_green   string  Background green
 ---@field line_green string  Cursor line highlight for green regions, like added hunks
 ---@field inline_green string Background for inline add word-diff highlights
+---@field inline_green_fg string Foreground for inline add word-diff highlights
 ---@field cyan       string  Foreground cyan
 ---@field bg_cyan    string  Background cyan
 ---@field blue       string  Foreground blue
@@ -90,7 +137,7 @@ end
 ---@return NeojjColorPalette
 local function make_palette(config)
   local bg        = Color.from_hex(get_bg("Normal") or (vim.o.bg == "dark" and "#22252A" or "#eeeeee"))
-  local fg        = Color.from_hex((vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
+  local fg        = Color.from_hex(get_fg("Normal") or (vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
   local red       = Color.from_hex(config.highlight.red    or get_fg("ErrorMsg")    or "#E06C75")
   local orange    = Color.from_hex(config.highlight.orange or get_fg("SpecialChar") or "#ffcb6b")
   local yellow    = Color.from_hex(config.highlight.yellow or get_fg("PreProc")     or "#FFE082")
@@ -132,7 +179,10 @@ local function make_palette(config)
     underline    = true,
   }
 
-  return vim.tbl_extend("keep", config.highlight or {}, default)
+  local palette = vim.tbl_extend("keep", config.highlight or {}, default)
+  palette.inline_green_fg = readable_foreground(Color.from_hex(palette.inline_green), fg, bg)
+  palette.inline_red_fg = readable_foreground(Color.from_hex(palette.inline_red), fg, bg)
+  return palette
 end
 -- stylua: ignore end
 
@@ -214,8 +264,8 @@ function M.setup(config)
     NeojjDiffDelete               = { bg = palette.line_red, fg = palette.bg_red, ctermfg = 1 },
     NeojjDiffDeleteHighlight      = { bg = palette.line_red, fg = palette.red, ctermfg = 1 },
     NeojjDiffDeleteCursor         = { bg = palette.bg1, fg = palette.red, ctermfg = 1 },
-    NeojjDiffAddInline            = { bg = palette.inline_green, fg = palette.line_green, bold = palette.bold },
-    NeojjDiffDeleteInline         = { bg = palette.inline_red, fg = palette.bg0, bold = palette.bold },
+    NeojjDiffAddInline            = { bg = palette.inline_green, fg = palette.inline_green_fg, bold = palette.bold },
+    NeojjDiffDeleteInline         = { bg = palette.inline_red, fg = palette.inline_red_fg, bold = palette.bold },
     NeojjPopupSectionTitle        = { link = "Function" },
     NeojjPopupBranchName          = { link = "String" },
     NeojjPopupBold                = { bold = palette.bold },
