@@ -145,6 +145,7 @@ end
 ---@field red?        string  Foreground red
 ---@field bg_red?     string  Background red
 ---@field line_red?   string  Cursor line highlight for red regions, like deleted hunks
+---@field inline_red? string  Background for inline delete word-diff highlights
 ---@field orange?     string  Foreground orange
 ---@field bg_orange?  string  background orange
 ---@field yellow?     string  Foreground yellow
@@ -152,6 +153,7 @@ end
 ---@field green?      string  Foreground green
 ---@field bg_green?   string  Background green
 ---@field line_green? string  Cursor line highlight for green regions, like added hunks
+---@field inline_green? string Background for inline add word-diff highlights
 ---@field cyan?       string  Foreground cyan
 ---@field bg_cyan?    string  Background cyan
 ---@field blue?       string  Foreground blue
@@ -326,7 +328,8 @@ end
 ---@field notification_icon? string
 ---@field use_default_keymaps? boolean
 ---@field highlight? HighlightOptions
----@field word_diff_highlight? boolean Apply word-level highlighting to diff hunks
+---@field treesitter_diff_highlight? boolean Apply syntax highlighting to diff hunks via Tree-sitter
+---@field word_diff_highlight? boolean Apply word-level highlighting to changed text in diff hunks
 ---@field builders? { [string]: fun(builder: PopupBuilder) }
 
 ---Returns the default Neojj configuration
@@ -339,6 +342,7 @@ function M.get_default_values()
     show_project_header = true,
     disable_context_highlighting = false,
     disable_signs = false,
+    treesitter_diff_highlight = false,
     word_diff_highlight = true,
     prompt_amend_commit = true,
     graph_style = "ascii",
@@ -1014,6 +1018,8 @@ function M.validate_config()
     validate_type(config.show_project_header, "show_project_header", "boolean")
     validate_type(config.disable_context_highlighting, "disable_context_highlighting", "boolean")
     validate_type(config.disable_signs, "disable_signs", "boolean")
+    validate_type(config.treesitter_diff_highlight, "treesitter_diff_highlight", "boolean")
+    validate_type(config.word_diff_highlight, "word_diff_highlight", "boolean")
     validate_type(config.telescope_sorter, "telescope_sorter", "function")
     validate_type(config.use_per_project_settings, "use_per_project_settings", "boolean")
     validate_type(config.remember_settings, "remember_settings", "boolean")

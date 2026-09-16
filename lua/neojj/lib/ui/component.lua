@@ -36,6 +36,7 @@ local default_component_options = {
 ---@field on_open fun(fold, Ui)|nil
 ---@field hunk Hunk|nil
 ---@field filename string|nil
+---@field filepath string|nil File whose diff content this component renders
 ---@field value any
 
 ---@class Component

@@ -18,6 +18,9 @@ local Color = require("neojj.lib.color").Color
 local hl_store
 local M = {}
 
+local TEXT_CONTRAST = 4.6
+local INLINE_BACKGROUND_ACCENT = 0.45
+
 ---@param dec number
 ---@return string
 local function to_hex(dec)
@@ -55,6 +58,70 @@ local function get_bg(name)
   end
 end
 
+---@param channel number
+---@return number
+local function linearize(channel)
+  if channel <= 0.04045 then
+    return channel / 12.92
+  end
+
+  return ((channel + 0.055) / 1.055) ^ 2.4
+end
+
+---@param color Color
+---@return number
+local function luminance(color)
+  return 0.2126 * linearize(color.red) + 0.7152 * linearize(color.green) + 0.0722 * linearize(color.blue)
+end
+
+---@param first Color
+---@param second Color
+---@return number
+local function contrast(first, second)
+  local lighter = math.max(luminance(first), luminance(second))
+  local darker = math.min(luminance(first), luminance(second))
+  return (lighter + 0.05) / (darker + 0.05)
+end
+
+---@param first Color
+---@param second Color
+---@param amount number
+---@return Color
+local function blend(first, second, amount)
+  return Color(
+    first.red + (second.red - first.red) * amount,
+    first.green + (second.green - first.green) * amount,
+    first.blue + (second.blue - first.blue) * amount,
+    1
+  )
+end
+
+---Keep the semantic hue while moving it toward black or white until it is readable.
+---@param accent Color
+---@param background Color
+---@return string
+local function readable_accent(accent, background)
+  if contrast(accent, background) >= TEXT_CONTRAST then
+    return accent:to_css()
+  end
+
+  local black = Color.from_hex("#000000")
+  local white = Color.from_hex("#ffffff")
+  local target = contrast(background, black) >= contrast(background, white) and black or white
+  local low = 0
+  local high = 1
+  for _ = 1, 12 do
+    local midpoint = (low + high) / 2
+    if contrast(blend(accent, target, midpoint), background) >= TEXT_CONTRAST then
+      high = midpoint
+    else
+      low = midpoint
+    end
+  end
+
+  return blend(accent, target, high):to_css()
+end
+
 ---@class NeojjColorPalette
 ---@field bg0        string  Darkest background color
 ---@field bg1        string  Second darkest background color
@@ -65,6 +132,8 @@ end
 ---@field red        string  Foreground red
 ---@field bg_red     string  Background red
 ---@field line_red   string  Cursor line highlight for red regions, like deleted hunks
+---@field inline_red string  Background for inline delete word-diff highlights
+---@field inline_red_fg string Foreground for inline delete word-diff highlights
 ---@field orange     string  Foreground orange
 ---@field bg_orange  string  background orange
 ---@field yellow     string  Foreground yellow
@@ -72,6 +141,8 @@ end
 ---@field green      string  Foreground green
 ---@field bg_green   string  Background green
 ---@field line_green string  Cursor line highlight for green regions, like added hunks
+---@field inline_green string Background for inline add word-diff highlights
+---@field inline_green_fg string Foreground for inline add word-diff highlights
 ---@field cyan       string  Foreground cyan
 ---@field bg_cyan    string  Background cyan
 ---@field blue       string  Foreground blue
@@ -79,8 +150,6 @@ end
 ---@field purple     string  Foreground purple
 ---@field bg_purple  string  Background purple
 ---@field md_purple  string  Background _medium_ purple. Lighter than bg_purple.
----@field inline_green string Background for inline added text
----@field inline_red string Background for inline deleted text
 ---@field italic     boolean enable italics?
 ---@field bold       boolean enable bold?
 ---@field underline  boolean enable underline?
@@ -90,7 +159,7 @@ end
 ---@return NeojjColorPalette
 local function make_palette(config)
   local bg        = Color.from_hex(get_bg("Normal") or (vim.o.bg == "dark" and "#22252A" or "#eeeeee"))
-  local fg        = Color.from_hex((vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
+  local fg        = Color.from_hex(get_fg("Normal") or (vim.o.bg == "dark" and "#fcfcfc" or "#22252A"))
   local red       = Color.from_hex(config.highlight.red    or get_fg("ErrorMsg")    or "#E06C75")
   local orange    = Color.from_hex(config.highlight.orange or get_fg("SpecialChar") or "#ffcb6b")
   local yellow    = Color.from_hex(config.highlight.yellow or get_fg("PreProc")     or "#FFE082")
@@ -125,14 +194,17 @@ local function make_palette(config)
     purple     = purple:to_css(),
     bg_purple  = purple:shade(bg_factor * -0.18):to_css(),
     md_purple  = purple:shade(0.18):to_css(),
-    inline_green = green:shade(bg_factor * -0.2):set_saturation(0.65):to_css(),
-    inline_red   = red:shade(bg_factor * 0.3):set_saturation(0.65):to_css(),
-    italic     = true,
-    bold       = true,
-    underline  = true,
+    inline_green = blend(bg, green, INLINE_BACKGROUND_ACCENT):to_css(),
+    inline_red   = blend(bg, red, INLINE_BACKGROUND_ACCENT):to_css(),
+    italic       = true,
+    bold         = true,
+    underline    = true,
   }
 
-  return vim.tbl_extend("keep", config.highlight or {}, default)
+  local palette = vim.tbl_extend("keep", config.highlight or {}, default)
+  palette.inline_green_fg = readable_accent(green, Color.from_hex(palette.inline_green))
+  palette.inline_red_fg = readable_accent(red, Color.from_hex(palette.inline_red))
+  return palette
 end
 -- stylua: ignore end
 
@@ -214,8 +286,8 @@ function M.setup(config)
     NeojjDiffDelete               = { bg = palette.line_red, fg = palette.bg_red, ctermfg = 1 },
     NeojjDiffDeleteHighlight      = { bg = palette.line_red, fg = palette.red, ctermfg = 1 },
     NeojjDiffDeleteCursor         = { bg = palette.bg1, fg = palette.red, ctermfg = 1 },
-    NeojjDiffAddInline            = { bg = palette.inline_green, fg = palette.line_green, bold = palette.bold },
-    NeojjDiffDeleteInline         = { bg = palette.inline_red, fg = palette.bg0, bold = palette.bold },
+    NeojjDiffAddInline            = { bg = palette.inline_green, fg = palette.inline_green_fg, bold = palette.bold },
+    NeojjDiffDeleteInline         = { bg = palette.inline_red, fg = palette.inline_red_fg, bold = palette.bold },
     NeojjPopupSectionTitle        = { link = "Function" },
     NeojjPopupBranchName          = { link = "String" },
     NeojjPopupBold                = { bold = palette.bold },

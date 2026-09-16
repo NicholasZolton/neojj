@@ -36,6 +36,7 @@ M.DiffHunks = Component.new(function(diff)
         content = hunk.content,
         hunk = hunk,
         folded = hunk._folded,
+        filepath = diff.file,
       }
     end)
     :totable()
@@ -82,7 +83,13 @@ M.Hunk = Component.new(function(props)
     col.tag("HunkContent")(map(props.content, function(line)
       return HunkLine(line, props.hunk)
     end)),
-  }, { foldable = true, folded = props.folded or false, context = true, hunk = props.hunk })
+  }, {
+    foldable = true,
+    folded = props.folded or false,
+    context = true,
+    hunk = props.hunk,
+    filepath = props.filepath,
+  })
 end)
 
 M.List = Component.new(function(props)
