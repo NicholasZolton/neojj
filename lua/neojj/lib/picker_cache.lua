@@ -57,6 +57,23 @@ function M.get_local_bookmark_names()
   return names
 end
 
+--- Get local tags from repository state.
+---@return NeojjTagItem[]
+function M.get_local_tags()
+  local jj = require("neojj.lib.jj")
+  return jj.repo.state.tags.items
+end
+
+--- Get local tag names.
+---@return string[]
+function M.get_local_tag_names()
+  local names = {}
+  for _, item in ipairs(M.get_local_tags()) do
+    table.insert(names, item.name)
+  end
+  return names
+end
+
 --- Get remote bookmark names formatted as "name@remote"
 ---@return string[]
 function M.get_remote_bookmark_names()

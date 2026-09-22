@@ -67,6 +67,9 @@ M.popups = function(env)
     { "BookmarkPopup", "Bookmark", popups.open("bookmark", function(p)
       p(env.bookmark or {})
     end) },
+    { "TagPopup", "Tag", popups.open("tag", function(p)
+      p(env.tag or {})
+    end) },
     { "SquashPopup", "Squash", popups.open("squash", function(p)
       p(env.squash or {})
     end) },

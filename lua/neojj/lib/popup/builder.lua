@@ -81,9 +81,11 @@ local M = {}
 ---@field callback function
 ---@field heading string?
 ---@field persist_popup boolean? set to true to prevent closing the popup when invoking
+---@field refresh boolean? set to false when the action manages refresh after successful mutation
 
 ---@class PopupActionOptions
----@field persist_popup boolean Controls if the action should close the popup (false/nil) or keep it open (true)
+---@field persist_popup? boolean Controls if the action should close the popup (false/nil) or keep it open (true)
+---@field refresh? boolean Controls automatic repository refresh after the action (true/nil) or disables it (false)
 
 ---@class PopupSwitchOpts
 ---@field enabled? boolean Controls if the switch should default to 'on' state
@@ -467,6 +469,7 @@ function M:action(keys, description, callback, opts)
     description = description,
     callback = callback,
     persist_popup = opts.persist_popup or false,
+    refresh = opts.refresh ~= false,
   })
 
   return self

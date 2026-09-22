@@ -999,6 +999,17 @@ M.n_bookmark_popup = function(_self)
   return popups.open("bookmark")
 end
 
+---@param self StatusBuffer
+---@return fun(): nil
+M.n_tag_popup = function(self)
+  return popups.open("tag", function(p)
+    local ctx = cursor_context(self)
+    local revision = (ctx.kind == "change" or ctx.kind == "bookmark" or ctx.kind == "tag") and ctx.change_id
+      or "@"
+    p { revision = revision }
+  end)
+end
+
 ---@param _self StatusBuffer
 ---@return fun(): nil
 M.n_squash_popup = function(_self)
@@ -1032,6 +1043,7 @@ M.n_help_popup = function(self)
 
     p {
       bookmark = {},
+      tag = {},
       change = {},
       commit = {},
       diff = {

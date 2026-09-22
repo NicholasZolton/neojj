@@ -11,7 +11,7 @@ local meta = {}
 ---Run a jj command via the shell module (resolves real binary, bypasses shims)
 ---@param cmd string[] Command array
 ---@param cwd string Working directory
----@return string[]|nil lines, number code
+---@return string[]|nil lines, number code, string[] stderr
 local function jj_exec(cmd, cwd)
   local shell = require("neojj.lib.jj.shell")
   return shell.exec(cmd, cwd)

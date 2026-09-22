@@ -57,6 +57,7 @@ local function minimal_state()
     conflicts = { items = {} },
     recent = { items = {} },
     bookmarks = { items = {} },
+    tags = { items = {} },
   }
 end
 
@@ -158,6 +159,25 @@ describe("status file highlights", function()
       assert.are.equal(expected[mode], mode_label.options.highlight)
       assert.is_nil(filename.options.highlight)
     end
+  end)
+end)
+
+describe("status tags", function()
+  it("shows local tag target and name", function()
+    local values = config.get_default_values()
+    values.disable_hint = true
+    local state = minimal_state()
+    state.tags.items = {
+      { name = "v1.0.0", change_id = "abcdefgh", shortest_prefix = "abc", description = "Release" },
+    }
+
+    local layout = status_ui.Status(state, values)
+    local tag = find_component_by_kind(layout[1], "tag")
+
+    assert.is_not_nil(tag)
+    assert.are.equal("v1.0.0", tag.options.yankable)
+    assert.are.equal("abcdefgh", tag.options.oid)
+    assert.are.equal("NeojjTagName", highlight_for_text(layout[1], "v1.0.0"))
   end)
 end)
 

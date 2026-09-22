@@ -42,11 +42,14 @@ workflow rather than git's commit-based workflow.
 2. REQUIREMENTS                                          *neojj-requirements*
 
 - Neovim >= 0.10
-- jj (Jujutsu VCS) installed and available in `$PATH`
+- jj (Jujutsu VCS) >= 0.35 installed and available in `$PATH`
+  (CI currently tests against jj 0.42.)
 - plenary.nvim (https://github.com/nvim-lua/plenary.nvim)
 
 Optional dependencies:
 
+- git                              Required for tag pushes; tags must be in a
+                                   colocated jj/Git repository
 - diffview.nvim or codediff.nvim   For side-by-side diff viewing
 - telescope.nvim                   For fuzzy finding menus
 - fzf-lua                         Alternative fuzzy finder
@@ -69,10 +72,10 @@ Add Neojj to your plugin manager and call setup: >lua
 :Neojj                  Open the Neojj status buffer for the current
                         workspace.
 
-:Neojj {popup}          Open a specific popup directly. Valid values
-                        include: commit, bookmark, change, squash, diff,
-                        fetch, push, rebase, log, remote, split, resolve,
-                        yank, help.
+:Neojj {popup}          Open a specific popup directly. Available popups
+                        include: bookmark, commit, diff, fetch, help, log,
+                        margin, push, rebase, remote, squash, tag, and
+                        workspace.
 
 :Neojj cwd={path}       Open the status buffer for a specific workspace
                         path.
@@ -250,16 +253,26 @@ the available options with their defaults: >lua
 
       -- Section visibility and fold state
       sections = {
-        modified = {
+        sequencer = {
           folded = false,
           hidden = false,
         },
-        conflicts = {
+        untracked = {
           folded = false,
           hidden = false,
         },
         recent = {
           folded = true,
+          hidden = false,
+        },
+        bookmarks = {
+          folded = false,
+          hidden = false,
+          show_deleted = true,
+          show_remote = true,
+        },
+        tags = {
+          folded = false,
           hidden = false,
         },
       },
@@ -310,6 +323,7 @@ POPUP TRIGGERS (from status buffer) ~
   `p`       Push popup
   `r`       Rebase popup
   `s`       Squash popup
+  `t`       Tag popup
   `u`       Undo popup
   `w`       Workspace popup
 
@@ -349,17 +363,24 @@ BOOKMARK POPUP ~
   `f`   Forget bookmark
   `t`   Track remote bookmark
 
-CHANGE POPUP ~
-                                                    *neojj-change-popup*
-  `n`   New change (creates a new empty change on top of @)
-  `N`   New change on a specific revision
-  `m`   Merge (create a new change with multiple parents)
-
 COMMIT POPUP ~
                                                     *neojj-commit-popup*
   `c`   Commit (finalize current change, start new empty change)
-  `d`   Describe (edit description of current change)
-  `m`   Commit with inline message
+  `C`   Commit and move bookmarks
+  `n`   New change
+  `N`   New change and move bookmarks
+  `o`   New change on a selected revision
+  `O`   New change on a selected revision and move bookmarks
+  `p`   New change on a selected bookmark
+  `P`   New change on a selected bookmark and move bookmarks
+  `b`   New change before a selected revision
+  `e`   Edit selected change
+  `E`   Edit selected bookmark
+  `d`   Describe in editor
+  `D`   Describe with message
+  `a`   Abandon a change
+  `u`   Duplicate a change
+  `r`   Revert a change
 
 DIFF POPUP ~
                                                       *neojj-diff-popup*
@@ -390,6 +411,11 @@ PUSH POPUP ~
   `b`   Push a bookmark
   `c`   Push a change
   `a`   Push all bookmarks
+  `T`   Push one selected local tag
+  `t`   Push all tags
+
+Tag pushes use Git fallback. They require `git` executable and colocated
+jj/Git repository. Neojj does not force tag updates or delete remote tags.
 
 REBASE POPUP ~
                                                     *neojj-rebase-popup*
@@ -404,29 +430,20 @@ REMOTE POPUP ~
   `d`   Remove a remote
   `l`   List all remotes
 
-RESOLVE POPUP ~
-                                                   *neojj-resolve-popup*
-  `r`   Resolve a conflicted file
-  `l`   List all conflicts
+TAG POPUP ~
+                                                       *neojj-tag-popup*
+  `t`   Tag selected revision (or working copy when none is selected)
+  `m`   Move a local tag
+  `x`   Delete a local tag
 
-SPLIT POPUP ~
-                                                     *neojj-split-popup*
-  `s`   Split the current change
-  `r`   Split a specific revision
+Moving a tag is an unrestricted local move after confirmation. Root cannot
+be tagged. Tagging the working-copy change requires confirmation because jj
+makes it immutable and creates a new working-copy child.
 
 SQUASH POPUP ~
                                                     *neojj-squash-popup*
   `p`   Squash into parent
   `r`   Squash into a specific revision
-
-YANK POPUP ~
-                                                      *neojj-yank-popup*
-  `c`   Yank change ID
-  `C`   Yank commit ID
-  `s`   Yank subject (first line of description)
-  `m`   Yank full message (description)
-  `d`   Yank diff
-  `a`   Yank author
 
 ==============================================================================
 8. STATUS BUFFER                                            *neojj-status*
@@ -458,6 +475,12 @@ RECENT CHANGES ~
 
 A log of recent changes in the repository, showing change IDs,
 descriptions, authors, and bookmarks.
+
+TAGS ~
+
+Lists local tags with their associated changes. Configure visibility and
+initial fold state with `sections.tags.folded` and `sections.tags.hidden`.
+Press `t` in status buffer to open Tag popup.
 
 BOOKMARKS ~
 

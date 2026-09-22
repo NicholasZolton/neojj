@@ -59,6 +59,17 @@
 ---@field deleted boolean|nil True if bookmark has been deleted locally
 ---@field shortest_prefix string|nil
 
+---@class NeojjTagItem
+---@field name string
+---@field change_id string
+---@field commit_id string
+---@field description string
+---@field remote string|nil Defensive support for future remote tag rows
+---@field timestamp string|nil Committer timestamp for sorting
+---@field deleted boolean|nil
+---@field conflict boolean|nil
+---@field shortest_prefix string|nil
+
 ---@class NeojjRepoState
 ---@field worktree_root string
 ---@field head NeojjRepoHead
@@ -67,6 +78,7 @@
 ---@field conflicts { items: NeojjConflictItem[] }
 ---@field recent { items: NeojjChangeLogEntry[] }
 ---@field bookmarks { items: NeojjBookmarkItem[] }
+---@field tags { items: NeojjTagItem[], error: string|nil }
 
 local M = {}
 
@@ -92,6 +104,7 @@ local function empty_state()
     conflicts = { items = {} },
     recent = { items = {} },
     bookmarks = { items = {} },
+    tags = { items = {}, error = nil },
   }
 end
 
@@ -141,6 +154,7 @@ function Repo.new(root)
   self:register("status", require("neojj.lib.jj.status").meta)
   self:register("log", require("neojj.lib.jj.log").meta)
   self:register("bookmark", require("neojj.lib.jj.bookmark").meta)
+  self:register("tag", require("neojj.lib.jj.tag").meta)
 
   return self
 end
@@ -208,6 +222,9 @@ function Repo:refresh(opts)
   end
   if self.lib.bookmark and self.lib.bookmark.update then
     self.lib.bookmark.update(self.state)
+  end
+  if self.lib.tag and self.lib.tag.update then
+    self.lib.tag.update(self.state)
   end
 
   self:run_callbacks()

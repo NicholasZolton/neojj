@@ -760,3 +760,320 @@ describe("push popup actions remote mode", function()
     assert.are.equal("Push remote", finder_calls[1].prompt_prefix)
   end)
 end)
+
+local function with_git_executable(value, fn)
+  local executable = vim.fn.executable
+  vim.fn.executable = function(name)
+    if name == "git" then
+      return value
+    end
+    return executable(name)
+  end
+
+  local ok, err = pcall(fn)
+  vim.fn.executable = executable
+  assert.is_true(ok, err)
+end
+
+---@param opts table
+---@return table<string, any>, table
+local function tag_push_stubs(opts)
+  local state = {
+    finder_calls = {},
+    info_messages = {},
+    warn_messages = {},
+    permission_messages = {},
+    process_opts = nil,
+    runner_opts = nil,
+    refreshes = 0,
+  }
+  local selections = opts.selections or {}
+
+  return {
+    ["neojj.lib.jj"] = {
+      cli = {
+        git_remote_list = {
+          call = function()
+            return opts.remote_result or { code = 0, stdout = { "origin git@example/origin" } }
+          end,
+        },
+      },
+      repo = {
+        worktree_root = "/workspace",
+      },
+    },
+    ["neojj.watcher"] = {
+      instance = function(root)
+        state.refresh_root = root
+        return {
+          dispatch_refresh = function()
+            state.refreshes = state.refreshes + 1
+          end,
+        }
+      end,
+    },
+    ["neojj.lib.input"] = {
+      get_permission = function(message)
+        table.insert(state.permission_messages, message)
+        return opts.permission ~= false
+      end,
+    },
+    ["neojj.lib.notification"] = {
+      info = function(message)
+        table.insert(state.info_messages, message)
+      end,
+      warn = function(message)
+        table.insert(state.warn_messages, message)
+      end,
+    },
+    ["neojj.buffers.fuzzy_finder"] = {
+      new = function(items)
+        return {
+          open_async = function(_, finder_opts)
+            table.insert(state.finder_calls, { items = items, prompt_prefix = finder_opts.prompt_prefix })
+            return table.remove(selections, 1)
+          end,
+        }
+      end,
+    },
+    ["neojj.lib.picker_cache"] = {
+      get_local_tag_names = function()
+        return opts.tags or { "v1.0.0" }
+      end,
+      error_msg = function()
+        return "remote list failed"
+      end,
+    },
+    ["neojj.integrations.jj_backend"] = {
+      colocated_git_dir = function()
+        return opts.git_dir
+      end,
+    },
+    ["neojj.process"] = {
+      new = function(process_opts)
+        state.process_opts = process_opts
+        return process_opts
+      end,
+    },
+    ["neojj.runner"] = {
+      call = function(_, runner_opts)
+        state.runner_opts = runner_opts
+        return opts.push_result or { code = 0, stdout = {}, stderr = {} }
+      end,
+    },
+  },
+    state
+end
+
+describe("push popup tag actions", function()
+  it("pushes selected local tag with an explicit non-deleting refspec", function()
+    local stubs, state = tag_push_stubs {
+      tags = { "release;candidate" },
+      selections = { "release;candidate", "origin" },
+      git_dir = "/primary/.git",
+    }
+
+    with_git_executable(1, function()
+      with_actions_module(stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+
+    assert.are.same(
+      { "git", "push", "--", "origin", "refs/tags/release;candidate:refs/tags/release;candidate" },
+      state.process_opts.cmd
+    )
+    assert.are.equal("/workspace", state.process_opts.cwd)
+    assert.are.same({ GIT_DIR = "/primary/.git" }, state.process_opts.env)
+    assert.is_false(state.process_opts.on_error())
+    assert.are.equal("/workspace", state.refresh_root)
+    assert.are.equal("Push local tag", state.finder_calls[1].prompt_prefix)
+    assert.are.equal("Push remote", state.finder_calls[2].prompt_prefix)
+    assert.are.equal(1, state.refreshes)
+    for _, arg in ipairs(state.process_opts.cmd) do
+      assert.is_nil(arg:match("^%-%-force"))
+    end
+  end)
+
+  it("pushes all tags only after remote selection and confirmation", function()
+    local stubs, state = tag_push_stubs {
+      selections = { "origin" },
+      git_dir = "/primary/.git",
+    }
+
+    with_git_executable(1, function()
+      with_actions_module(stubs, function(actions)
+        actions.push_all_tags {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+
+    assert.are.same({ "git", "push", "--tags", "--", "origin" }, state.process_opts.cmd)
+    assert.are.equal("Push remote", state.finder_calls[1].prompt_prefix)
+    assert.are.same({ "Push all local tags to origin?" }, state.permission_messages)
+    assert.are.equal(1, state.refreshes)
+  end)
+
+  it("rejects typed values that are not selected local tags or configured remotes", function()
+    local tag_stubs, tag_state = tag_push_stubs {
+      tags = { "v1.0.0" },
+      selections = { "refs/tags/other" },
+      git_dir = "/primary/.git",
+    }
+    with_git_executable(1, function()
+      with_actions_module(tag_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.is_nil(tag_state.process_opts)
+    assert.is_true(has_message(tag_state.warn_messages, "select a local tag"))
+
+    local remote_stubs, remote_state = tag_push_stubs {
+      selections = { "v1.0.0", "ssh://attacker.example/repo" },
+      git_dir = "/primary/.git",
+    }
+    with_git_executable(1, function()
+      with_actions_module(remote_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.is_nil(remote_state.process_opts)
+    assert.is_true(has_message(remote_state.warn_messages, "select a configured remote"))
+  end)
+
+  it("does not start a tag push when tag or remote selection is canceled", function()
+    local stubs, state = tag_push_stubs { selections = {}, git_dir = "/primary/.git" }
+
+    with_git_executable(1, function()
+      with_actions_module(stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+
+    assert.is_nil(state.process_opts)
+
+    local remote_stubs, remote_state = tag_push_stubs {
+      selections = { "v1.0.0" },
+      git_dir = "/primary/.git",
+    }
+    with_git_executable(1, function()
+      with_actions_module(remote_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+
+    assert.is_nil(remote_state.process_opts)
+    assert.is_true(has_message(remote_state.warn_messages, "Push aborted: no remote selected"))
+  end)
+
+  it("does not start all-tags push when confirmation is declined", function()
+    local stubs, state = tag_push_stubs {
+      selections = { "origin" },
+      permission = false,
+      git_dir = "/primary/.git",
+    }
+
+    with_git_executable(1, function()
+      with_actions_module(stubs, function(actions)
+        actions.push_all_tags {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+
+    assert.is_nil(state.process_opts)
+    assert.are.equal(1, #state.permission_messages)
+  end)
+
+  it("rejects missing Git and non-colocated repositories before process start", function()
+    local missing_stubs, missing_state = tag_push_stubs {
+      selections = { "v1.0.0" },
+      git_dir = "/primary/.git",
+    }
+    with_git_executable(0, function()
+      with_actions_module(missing_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.is_nil(missing_state.process_opts)
+    assert.is_true(has_message(missing_state.warn_messages, "Git executable not found"))
+
+    local colocated_stubs, colocated_state = tag_push_stubs { selections = { "v1.0.0" } }
+    with_git_executable(1, function()
+      with_actions_module(colocated_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.is_nil(colocated_state.process_opts)
+    assert.is_true(has_message(colocated_state.warn_messages, "requires a colocated jj/Git repository"))
+  end)
+
+  it("surfaces complete Git output and refreshes only after success", function()
+    local failure_stubs, failure_state = tag_push_stubs {
+      selections = { "v1.0.0", "origin" },
+      git_dir = "/primary/.git",
+      push_result = { code = 1, stderr = { "remote rejected" }, stdout = { "tag status" } },
+    }
+    with_git_executable(1, function()
+      with_actions_module(failure_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.are.equal(0, failure_state.refreshes)
+    assert.is_true(has_message(failure_state.warn_messages, "remote rejected\ntag status"))
+
+    local success_stubs, success_state = tag_push_stubs {
+      selections = { "v1.0.0", "origin" },
+      git_dir = "/primary/.git",
+    }
+    with_git_executable(1, function()
+      with_actions_module(success_stubs, function(actions)
+        actions.push_tag {
+          get_internal_arguments = function()
+            return {}
+          end,
+        }
+      end)
+    end)
+    assert.are.equal(1, success_state.refreshes)
+    assert.are.same(false, success_state.runner_opts.hidden)
+    assert.are.same(false, success_state.runner_opts.trim)
+  end)
+end)

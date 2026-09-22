@@ -15,6 +15,8 @@ function M.create(env)
     :action("b", "Bookmark", actions.push_bookmark)
     :action("c", "Change", actions.push_change)
     :action("a", "All bookmarks", actions.push_all)
+    :action("T", "Tag", actions.push_tag, { refresh = false })
+    :action("t", "All tags", actions.push_all_tags, { refresh = false })
     :env(env or {})
     :build()
 

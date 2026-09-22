@@ -107,4 +107,25 @@ function M.jj_backing_git_dir(workspace)
   return nil
 end
 
+---@param workspace string
+---@return string|nil git_dir Shared Git directory for a colocated jj workspace
+function M.colocated_git_dir(workspace)
+  local repo_dir = M.resolve_jj_repo_dir(workspace)
+  local git_dir = M.jj_backing_git_dir(workspace)
+  if not repo_dir or not git_dir then
+    return nil
+  end
+
+  local primary_jj_dir = vim.fn.fnamemodify(repo_dir, ":h")
+  local primary_workspace = vim.fn.fnamemodify(primary_jj_dir, ":h")
+  local expected_git_dir = vim.fn.resolve(primary_workspace .. "/.git")
+  if
+    vim.fn.isdirectory(expected_git_dir) ~= 1
+    or vim.fs.normalize(git_dir) ~= vim.fs.normalize(expected_git_dir)
+  then
+    return nil
+  end
+  return git_dir
+end
+
 return M

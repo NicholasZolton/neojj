@@ -110,7 +110,6 @@ end
 
 ---@alias Popup
 ---| "bookmark"
----| "change"
 ---| "commit"
 ---| "diff"
 ---| "fetch"
@@ -120,10 +119,10 @@ end
 ---| "push"
 ---| "rebase"
 ---| "remote"
----| "resolve"
----| "split"
 ---| "squash"
----| "yank"
+---| "tag"
+---| "undo"
+---| "workspace"
 
 ---@class OpenOpts
 ---@field cwd string|nil
@@ -247,7 +246,6 @@ function M.complete(arglead)
     "kind=",
     "cwd=",
     "bookmark",
-    "change",
     "commit",
     "diff",
     "fetch",
@@ -257,10 +255,10 @@ function M.complete(arglead)
     "push",
     "rebase",
     "remote",
-    "resolve",
-    "split",
     "squash",
-    "yank",
+    "tag",
+    "undo",
+    "workspace",
   })
 end
 
