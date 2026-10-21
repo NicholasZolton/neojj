@@ -51,7 +51,13 @@ describe("status tag popup context", function()
         buffer = {
           ui = {
             get_selection = function()
-              return { item = case.item }
+              error("Normal tag actions must not read stale visual selection")
+            end,
+            get_current_section = function()
+              return nil
+            end,
+            get_item_under_cursor = function()
+              return case.item
             end,
             context_under_cursor = function()
               return case.context
