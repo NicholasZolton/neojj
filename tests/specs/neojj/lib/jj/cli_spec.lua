@@ -147,6 +147,20 @@ describe("jj cli builder", function()
     end)
   end)
 
+  describe("chunk command options", function()
+    for _, name in ipairs { "restore", "split", "commit", "squash" } do
+      it("supports interactive tool selection for " .. name, function()
+        local str = tostring(cli[name].interactive.tool("neojj-chunks"))
+        assert.truthy(str:find("-i", 1, true))
+        assert.truthy(str:find("--tool neojj-chunks", 1, true))
+      end)
+    end
+    it("supports a split description and diffedit tool", function()
+      assert.truthy(tostring(cli.split.message("selected")):find("-m selected", 1, true))
+      assert.truthy(tostring(cli.diffedit.tool("neojj-chunks")):find("--tool neojj-chunks", 1, true))
+    end)
+  end)
+
   describe("git init command", function()
     it("builds a colocated init command", function()
       local str = tostring(cli.git_init.colocate.args("/tmp/project"))

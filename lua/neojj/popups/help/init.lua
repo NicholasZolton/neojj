@@ -5,6 +5,8 @@ local M = {}
 
 -- TODO: Better alignment for labels, keys
 function M.create(env)
+  env = env or {}
+  local context = env.context or {}
   local p = popup.builder():name("NeojjHelpPopup"):group_heading("Commands")
 
   local popups = actions.popups(env)
@@ -16,20 +18,23 @@ function M.create(env)
     end
   end
 
-  p = p:new_action_group():new_action_group("Context actions")
-  local ctx = actions.context()
-  for _, cmd in ipairs(actions.actions()) do
-    table.insert(ctx, cmd)
-  end
-  for i, cmd in ipairs(ctx) do
+  p = p:new_action_group():new_action_group("Revisions (cursor)")
+  for _, cmd in ipairs(actions.revisions(context)) do
     p = p:action(cmd.keys, cmd.name, cmd.fn)
-    if i == math.floor(#ctx / 2) then
-      p = p:new_action_group()
-    end
   end
 
-  p = p:new_action_group():new_action_group("Essential commands")
-  for _, cmd in ipairs(actions.essential()) do
+  p = p:group_heading("Bookmarks (cursor)")
+  for _, cmd in ipairs(actions.bookmarks(context)) do
+    p = p:action(cmd.keys, cmd.name, cmd.fn)
+  end
+
+  p = p:new_action_group("Selected changes (files)")
+  for _, cmd in ipairs(actions.selection(context)) do
+    p = p:action(cmd.keys, cmd.name, cmd.fn)
+  end
+
+  p = p:new_action_group():new_action_group("Navigation")
+  for _, cmd in ipairs(actions.navigation()) do
     p = p:action(cmd.keys, cmd.name, cmd.fn)
   end
 

@@ -270,6 +270,16 @@ the available options with their defaults: >lua
 
 All mappings can be customized via `require("neojj").setup({ mappings = ... })`.
 
+Help (`?`) groups status shortcuts by scope: Revisions (cursor), Bookmarks
+(cursor), Selected changes (files), and Navigation. Revision/bookmark actions
+remain normal-mode commands; selected-change commands also accept visual
+selection. Groups remain visible as a keybinding reference.
+
+In normal-mode help, `x` is listed with the applicable scope: discard files,
+abandon a recent change, or delete/restore a local bookmark. Remote bookmark
+rows show `F` as Track remote bookmark and omit unsupported `x` deletion.
+This grouping changes help labels only, not command bindings or behavior.
+
 STATUS BUFFER ~
                                                     *neojj-mappings-status*
   Key            Action ~
@@ -282,7 +292,10 @@ STATUS BUFFER ~
   `<C-x>`          Open file in horizontal split
   `<C-t>`          Open file in new tab
   `o`              Open tree view
-  `x`              Discard / abandon the item under cursor
+  `x`              Discard selection / abandon the item under cursor
+  `S`              Split selected changes into a commit
+  `C`              Commit selected changes
+  `gs`             Squash selected changes into parent
   `q`              Close the status buffer
   `Q`              Open command input
   `$`              Show command history
@@ -296,6 +309,36 @@ STATUS BUFFER ~
   `<C-r>`          Refresh buffer
   `1` `2` `3` `4`     Set fold depth
   `I`              Init repository
+
+CHUNK COMMANDS ~
+                                                    *neojj-chunk-commands*
+  In the files section, `x`, `S`, `C` and `gs` act on the hunk under the
+  cursor. File headers select whole files; the section header selects all
+  changed files. Folded hunk headers select complete hunks.
+
+  In visual mode, these keys select changed diff rows across hunks/files.
+  Including a hunk/file header selects its whole hunk/file. Context-only
+  selections are ignored; blockwise visual selection is unsupported.
+  Selecting only `+` or `-` rows does not infer matching replacement lines,
+  just as in Neogit. Select both sides for a complete replacement.
+
+  `x` always asks permission. `C` and `S` open the description editor;
+  cancelling aborts the transaction. `gs` retains the parent's description.
+  `C` retains bookmarks on the selected commit; `S` uses jj split's normal
+  bookmark-forwarding behavior. Remaining changes stay in the working copy.
+  Use the undo popup (`u`) or `jj undo` to recover.
+
+  Mappings: Discard, SplitSelection, CommitSelection, SquashSelection.
+  Existing commit (`c`) and squash (`s`) popups are unchanged.
+
+  Stale selections fail with a refresh/retry message. Chunk editing requires
+  regular files and conflict-free source/parent revisions. Whole-file
+  selection uses native jj commands, including binary files and symlinks.
+  Executable-bit changes require whole-file selection. Renamed/copied chunks
+  are unsupported; unresolved source/destination paths require native jj.
+  Renames/copies cannot be mixed with chunks. CRLF and missing final newlines are preserved; unsafe
+  partial selections of unterminated replacements abort instead of joining
+  lines. Mixed whole-file/chunk operations also require regular files.
 
 POPUP TRIGGERS (from status buffer) ~
                                                     *neojj-mappings-popups*
@@ -643,6 +686,7 @@ Available events:
   `NeojjPushComplete`           A push operation completed
   `NeojjFetchComplete`          A fetch operation completed
   `NeojjSquashComplete`         A squash operation completed
+  `NeojjSplitComplete`          A selected-changes split completed
 
 ==============================================================================
 13. JJ CONCEPTS                                        *neojj-jj-concepts*

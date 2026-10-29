@@ -89,25 +89,47 @@ M.popups = function(env)
   return present(items)
 end
 
-M.actions = function()
-  return present {
-    { "Discard", "Discard", NONE },
-  }
-end
-
-M.context = function()
-  return {
+M.revisions = function(context)
+  local commands = {
     { name = "Describe", keys = { "D" }, fn = NONE },
     { name = "Edit change", keys = { "E" }, fn = NONE },
     { name = "New change on", keys = { "O" }, fn = NONE },
     { name = "New change before", keys = { "B" }, fn = NONE },
-    { name = "Forget bookmark", keys = { "F" }, fn = NONE },
-    { name = "Open in browser", keys = { "o" }, fn = NONE },
   }
+  if context.section == "recent" then
+    vim.list_extend(commands, present { { "Discard", "Abandon change", NONE } })
+  end
+  return commands
 end
 
-M.essential = function()
-  return present {
+M.bookmarks = function(context)
+  local label = "Forget local / track remote"
+  local remote = context.remote and context.remote ~= ""
+  if context.section == "bookmarks" then
+    label = remote and "Track remote bookmark" or "Forget local bookmark"
+  end
+  local commands = { { name = label, keys = { "F" }, fn = NONE } }
+  if context.section == "bookmarks" and not remote then
+    local delete_label = context.deleted and "Restore bookmark from origin" or "Delete bookmark"
+    vim.list_extend(commands, present { { "Discard", delete_label, NONE } })
+  end
+  return commands
+end
+
+M.selection = function(context)
+  local commands = {
+    { "SplitSelection", "Split selection", NONE },
+    { "CommitSelection", "Commit selection", NONE },
+    { "SquashSelection", "Squash selection into parent", NONE },
+  }
+  if not context.section or context.section == "files" then
+    table.insert(commands, { "Discard", "Discard selection", NONE })
+  end
+  return present(commands)
+end
+
+M.navigation = function()
+  local commands = present {
     {
       "RefreshBuffer",
       "Refresh",
@@ -121,6 +143,8 @@ M.essential = function()
     { "GoToFile", "Go to file", NONE },
     { "Toggle", "Toggle", NONE },
   }
+  table.insert(commands, 1, { name = "Open in browser", keys = { "o" }, fn = NONE })
+  return commands
 end
 
 return M
