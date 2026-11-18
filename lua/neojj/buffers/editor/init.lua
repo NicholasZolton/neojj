@@ -158,10 +158,30 @@ function M:open(kind)
         end
       end)
 
-      -- Find the first JJ: comment line and insert help lines before it
-      local first_comment_line = vim.fn.search("^JJ:", "cnW")
-      if first_comment_line > 0 then
-        buffer:set_lines(first_comment_line - 1, first_comment_line - 1, false, help_lines)
+      -- jj split puts instructions before the description. Move them into the
+      -- footer so the cursor, summary syntax, and message cycling start at the description.
+      local header = {}
+      for _, line in ipairs(buffer:get_lines(0, -1)) do
+        if not line:match("^JJ:") then
+          break
+        end
+        table.insert(header, line)
+      end
+      if #header > 0 then
+        buffer:set_lines(0, #header, false, {})
+        vim.list_extend(help_lines, header)
+      end
+
+      local lines = buffer:get_lines(0, -1)
+      local footer_line = #header > 0 and #lines or nil
+      for i, line in ipairs(lines) do
+        if line:match("^JJ:") then
+          footer_line = i - 1
+          break
+        end
+      end
+      if footer_line then
+        buffer:set_lines(footer_line, footer_line, false, help_lines)
       end
       buffer:write()
       buffer:move_cursor(1)
