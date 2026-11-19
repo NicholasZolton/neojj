@@ -20,6 +20,20 @@ local function contrast(foreground, background)
 end
 
 describe("highlight palette", function()
+  before_each(function()
+    vim.o.background = "dark"
+    vim.cmd("highlight clear")
+  end)
+
+  local function assert_inline_contrast()
+    for _, kind in ipairs { "Add", "Delete" } do
+      local inline = vim.api.nvim_get_hl(0, { name = "NeojjDiff" .. kind .. "Inline", link = false })
+      local line = vim.api.nvim_get_hl(0, { name = "NeojjDiff" .. kind, link = false })
+      assert.is_true(contrast(inline.bg, line.bg) >= 2, kind .. " inline background should stand out")
+      assert.is_true(contrast(inline.fg, inline.bg) >= 4.5, kind .. " inline text should remain readable")
+    end
+  end
+
   it("scopes fallback colors to status highlights", function()
     vim.api.nvim_set_hl(0, "Error", { fg = "#192330" })
     vim.api.nvim_set_hl(0, "ErrorMsg", { fg = "#e26886" })
@@ -65,6 +79,7 @@ describe("highlight palette", function()
 
       highlight.setup { highlight = {} }
 
+      assert_inline_contrast()
       local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
       for _, group in ipairs { "NeojjDiffAddInline", "NeojjDiffDeleteInline" } do
         local colors = vim.api.nvim_get_hl(0, { name = group, link = false })
@@ -78,4 +93,74 @@ describe("highlight palette", function()
       assert.are_not.equal(addition.bg, deletion.bg)
     end)
   end
+
+  for _, scheme in ipairs { "blue", "vim" } do
+    it("distinguishes inline changes from diff lines with stock " .. scheme, function()
+      vim.cmd.colorscheme(scheme)
+      highlight.setup { highlight = {} }
+      assert_inline_contrast()
+    end)
+  end
+
+  it("uses overridden diff line backgrounds when ensuring inline contrast", function()
+    highlight.setup {
+      highlight = { line_green = "#777777", line_red = "#888888" },
+    }
+    assert_inline_contrast()
+  end)
+
+  it("resolves named diff line colors before calculating inline contrast", function()
+    highlight.setup {
+      highlight = { line_green = "pink", line_red = "LightBlue" },
+    }
+    local addition = vim.api.nvim_get_hl(0, { name = "NeojjDiffAdd", link = false })
+    local deletion = vim.api.nvim_get_hl(0, { name = "NeojjDiffDelete", link = false })
+    assert.are.equal(vim.api.nvim_get_color_by_name("pink"), addition.bg)
+    assert.are.equal(vim.api.nvim_get_color_by_name("LightBlue"), deletion.bg)
+    assert_inline_contrast()
+  end)
+
+  it("leaves generated inline backgrounds unchanged when they already stand out", function()
+    vim.api.nvim_set_hl(0, "Normal", { bg = "#ffffff" })
+    highlight.setup {
+      highlight = {
+        green = "#00ff00",
+        red = "#ff0000",
+        line_green = "#000000",
+        line_red = "#000000",
+      },
+    }
+    local addition = vim.api.nvim_get_hl(0, { name = "NeojjDiffAddInline", link = false })
+    local deletion = vim.api.nvim_get_hl(0, { name = "NeojjDiffDeleteInline", link = false })
+    assert.are.equal(0x8cff8c, addition.bg)
+    assert.are.equal(0xff8c8c, deletion.bg)
+    assert_inline_contrast()
+  end)
+
+  it("preserves explicit inline background overrides even with low contrast", function()
+    highlight.setup {
+      highlight = {
+        line_green = "#777777",
+        line_red = "#888888",
+        inline_green = "#777777",
+        inline_red = "#888888",
+      },
+    }
+    local addition = vim.api.nvim_get_hl(0, { name = "NeojjDiffAddInline", link = false })
+    local deletion = vim.api.nvim_get_hl(0, { name = "NeojjDiffDeleteInline", link = false })
+    assert.are.equal(0x777777, addition.bg)
+    assert.are.equal(0x888888, deletion.bg)
+    assert.is_true(contrast(addition.fg, addition.bg) >= 4.5)
+    assert.is_true(contrast(deletion.fg, deletion.bg) >= 4.5)
+  end)
+
+  it("preserves theme-provided inline highlight groups", function()
+    vim.api.nvim_set_hl(0, "NeojjDiffAddInline", { bg = "#123456", bold = true })
+    vim.api.nvim_set_hl(0, "NeojjDiffDeleteInline", { link = "DiffText" })
+    local addition = vim.api.nvim_get_hl(0, { name = "NeojjDiffAddInline" })
+    local deletion = vim.api.nvim_get_hl(0, { name = "NeojjDiffDeleteInline" })
+    highlight.setup { highlight = {} }
+    assert.are.same(addition, vim.api.nvim_get_hl(0, { name = "NeojjDiffAddInline" }))
+    assert.are.same(deletion, vim.api.nvim_get_hl(0, { name = "NeojjDiffDeleteInline" }))
+  end)
 end)
