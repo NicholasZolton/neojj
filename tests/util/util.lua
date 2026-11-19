@@ -38,31 +38,14 @@ end
 
 M.neojj_test_base_dir = "/tmp/neojj-testing/"
 
-local function is_macos()
-  return vim.uv.os_uname().sysname == "Darwin"
-end
-
-local function is_gnu_mktemp()
-  vim.fn.system { "bash", "-c", "mktemp --version | grep GNU" }
-  return vim.v.shell_error == 0
-end
-
----Create a temporary directory for use
----@param suffix string? The suffix to be appended to the temp directory, ideally avoid spaces in your suffix
+---Create a directory inside Neovim's temporary directory, which it cleans up on exit.
+---@param suffix string? Optional label for the directory
 ---@return string The path to the temporary directory
 function M.create_temp_dir(suffix)
-  suffix = "neojj-" .. (suffix or "")
-
-  local cmd
-  if is_gnu_mktemp() then
-    cmd = string.format("mktemp -d --suffix=%s", suffix)
-  else
-    -- assumes BSD mktemp for macos
-    cmd = string.format("mktemp -d -t %s", suffix)
-  end
-
-  local prefix = is_macos() and "/private" or ""
-  return prefix .. vim.trim(M.system(vim.split(cmd, " ")))
+  local temp_dir = vim.fs.dirname(vim.fn.tempname())
+  local template = vim.fs.joinpath(temp_dir, "neojj-" .. (suffix or "test") .. "-XXXXXX")
+  local path = assert(vim.uv.fs_mkdtemp(template))
+  return assert(vim.uv.fs_realpath(path))
 end
 
 function M.ensure_installed(repo, path)
