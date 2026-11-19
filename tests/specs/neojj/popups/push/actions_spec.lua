@@ -866,6 +866,41 @@ local function tag_push_stubs(opts)
 end
 
 describe("push popup tag actions", function()
+  for _, action in ipairs { "push_tag", "push_all_tags" } do
+    it(action .. " forwards only dry-run to Git without refreshing or claiming a push", function()
+      local stubs, state = tag_push_stubs {
+        selections = action == "push_tag" and { "v1.0.0", "origin" } or { "origin" },
+        git_dir = "/primary/.git",
+      }
+
+      with_git_executable(1, function()
+        with_actions_module(stubs, function(actions)
+          actions[action] {
+            get_arguments = function()
+              return { "--dry-run", "--allow-new", "--deleted" }
+            end,
+            get_internal_arguments = function()
+              return {}
+            end,
+          }
+        end)
+      end)
+
+      local expected = { "git", "push", "--dry-run" }
+      if action == "push_all_tags" then
+        table.insert(expected, "--tags")
+      end
+      vim.list_extend(expected, { "--", "origin" })
+      if action == "push_tag" then
+        table.insert(expected, "refs/tags/v1.0.0:refs/tags/v1.0.0")
+      end
+      assert.are.same(expected, state.process_opts.cmd)
+      assert.are.equal(0, state.refreshes)
+      assert.is_true(has_message(state.info_messages, "Dry run complete"))
+      assert.is_false(has_message(state.info_messages, "Pushed"))
+    end)
+  end
+
   it("pushes selected local tag with an explicit non-deleting refspec", function()
     local stubs, state = tag_push_stubs {
       tags = { "release;candidate" },
@@ -876,6 +911,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -908,6 +946,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(stubs, function(actions)
         actions.push_all_tags {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -930,6 +971,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(tag_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -946,6 +990,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(remote_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -962,6 +1009,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -978,6 +1028,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(remote_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -999,6 +1052,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(stubs, function(actions)
         actions.push_all_tags {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -1018,6 +1074,9 @@ describe("push popup tag actions", function()
     with_git_executable(0, function()
       with_actions_module(missing_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -1031,6 +1090,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(colocated_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -1050,6 +1112,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(failure_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,
@@ -1066,6 +1131,9 @@ describe("push popup tag actions", function()
     with_git_executable(1, function()
       with_actions_module(success_stubs, function(actions)
         actions.push_tag {
+          get_arguments = function()
+            return {}
+          end,
           get_internal_arguments = function()
             return {}
           end,

@@ -126,6 +126,40 @@ describe("tag popup actions", function()
     assert.are.equal(1, refreshes())
   end)
 
+  for _, permitted in ipairs { true, false } do
+    it("direct action defaults to working copy with permission " .. tostring(permitted), function()
+      local created_target, permission_message
+      local modules, refreshes = stubs {
+        ["neojj.lib.input"] = {
+          get_user_input = function()
+            return "v1.0.0"
+          end,
+          get_permission = function(message)
+            permission_message = message
+            return permitted
+          end,
+        },
+        ["neojj.lib.jj.tag"] = {
+          create = function(_, target)
+            created_target = target
+            return { code = 0, stderr = {}, stdout = {} }
+          end,
+        },
+      }
+      modules["neojj.lib.jj"].repo.dispatch_refresh = function(_, opts)
+        opts.callback()
+      end
+
+      with_actions_module(modules, function()
+        require("neojj").action("tag", "create")()
+      end)
+
+      assert.is_truthy(permission_message:find("immutable", 1, true))
+      assert.are.equal(permitted and "@" or nil, created_target)
+      assert.are.equal(permitted and 1 or 0, refreshes())
+    end)
+  end
+
   it("warns and asks before creating at working copy", function()
     local permission_message
     local modules = stubs {

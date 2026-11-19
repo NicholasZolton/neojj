@@ -87,6 +87,122 @@ local function ref_oid(git_dir, ref)
   return vim.trim(result.stdout or "")
 end
 
+local function check_action_dry_run(action, all_tags)
+  local workspace = harness.prepare_repository { colocated = true, cd = false }
+  local git_dir = assert(jj_backend.colocated_git_dir(workspace))
+  local remote = bare_remote()
+  assert_success(
+    run { "jj", "--repository", workspace, "git", "remote", "add", "origin", remote },
+    "configure origin"
+  )
+  local names = { "v-selected", "v-unselected" }
+  local local_oids = {}
+  for _, name in ipairs(names) do
+    set_tag(workspace, name, "@-")
+    local_oids[name] = assert(ref_oid(git_dir, "refs/tags/" .. name))
+  end
+
+  local results = {}
+  local stubs = {
+    ["neojj.lib.jj"] = {
+      repo = { worktree_root = workspace },
+      cli = {
+        git_remote_list = {
+          call = function()
+            return { code = 0, stdout = { "origin " .. remote } }
+          end,
+        },
+      },
+    },
+    ["neojj.lib.input"] = {
+      get_permission = function()
+        return true
+      end,
+    },
+    ["neojj.lib.notification"] = {
+      info = function() end,
+      warn = function(message)
+        error(message)
+      end,
+    },
+    ["neojj.buffers.fuzzy_finder"] = {
+      new = function(items)
+        return {
+          open_async = function()
+            return items[1]
+          end,
+        }
+      end,
+    },
+    ["neojj.lib.picker_cache"] = {
+      get_local_tag_names = function()
+        return names
+      end,
+    },
+    ["neojj.process"] = {
+      new = function(opts)
+        return opts
+      end,
+    },
+    ["neojj.runner"] = {
+      call = function(process)
+        local result = run(process.cmd, { cwd = process.cwd, env = process.env })
+        assert_success(result, "execute " .. action)
+        table.insert(results, result)
+        return { code = result.code, stdout = {}, stderr = {} }
+      end,
+    },
+    ["neojj.watcher"] = {
+      instance = function()
+        return { dispatch_refresh = function() end }
+      end,
+    },
+  }
+  local module = "neojj.popups.push.actions"
+  local saved = { [module] = package.loaded[module] }
+  for name, stub in pairs(stubs) do
+    saved[name] = package.loaded[name]
+    package.loaded[name] = stub
+  end
+  package.loaded[module] = nil
+
+  local ok, err = xpcall(function()
+    local actions = require(module)
+    local arguments = { "--dry-run" }
+    local popup = {
+      get_arguments = function()
+        return arguments
+      end,
+      get_internal_arguments = function()
+        return {}
+      end,
+    }
+    actions[action](popup)
+    assert.are.equal(1, #results)
+    for _, name in ipairs(names) do
+      assert.is_nil(ref_oid(remote, "refs/tags/" .. name))
+      assert.are.equal(local_oids[name], ref_oid(git_dir, "refs/tags/" .. name))
+    end
+
+    arguments = {}
+    actions[action](popup)
+    assert.are.equal(2, #results)
+    for index, name in ipairs(names) do
+      local expected = (all_tags or index == 1) and local_oids[name] or nil
+      assert.are.equal(expected, ref_oid(remote, "refs/tags/" .. name))
+      assert.are.equal(local_oids[name], ref_oid(git_dir, "refs/tags/" .. name))
+    end
+  end, debug.traceback)
+
+  package.loaded[module] = saved[module]
+  for name in pairs(stubs) do
+    package.loaded[name] = saved[name]
+  end
+  if not ok then
+    error(err, 0)
+  end
+end
+
 describe("jj tags", function()
   it("creates, moves, deletes, and lists local tags through tag library", function()
     if skip_if_tools_missing() then
@@ -120,6 +236,20 @@ describe("jj tags", function()
 end)
 
 describe("Git tag fallback", function()
+  it("dry-runs the selected tag action without changing remote or local tags", function()
+    if skip_if_tools_missing() then
+      return
+    end
+    check_action_dry_run("push_tag", false)
+  end)
+
+  it("dry-runs the all-tags action without changing remote or local tags", function()
+    if skip_if_tools_missing() then
+      return
+    end
+    check_action_dry_run("push_all_tags", true)
+  end)
+
   it("pushes only selected tag to temporary bare remote", function()
     if skip_if_tools_missing() then
       return

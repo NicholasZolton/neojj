@@ -191,6 +191,9 @@ function M.action(popup, action, args)
             fn {
               close = function() end,
               state = { env = {} },
+              get_env = function(self, key)
+                return self.state.env[key]
+              end,
               get_arguments = function()
                 return args
               end,

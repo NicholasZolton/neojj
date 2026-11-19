@@ -200,15 +200,20 @@ local function colocated_git_context()
   return workspace, git_dir
 end
 
+---@param popup PopupData
 ---@param workspace string
 ---@param git_dir string
 ---@param remote string
 ---@param args string[]
 ---@param subject string
-local function run_git_tag_push(workspace, git_dir, remote, args, subject)
-  notification.info("Pushing " .. subject .. " to " .. remote)
+local function run_git_tag_push(popup, workspace, git_dir, remote, args, subject)
+  local dry_run = vim.tbl_contains(popup:get_arguments(), "--dry-run")
+  notification.info((dry_run and "Dry run: pushing " or "Pushing ") .. subject .. " to " .. remote)
 
   local cmd = { "git", "push" }
+  if dry_run then
+    table.insert(cmd, "--dry-run")
+  end
   if args[1] == "--tags" then
     table.insert(cmd, "--tags")
   end
@@ -237,8 +242,12 @@ local function run_git_tag_push(workspace, git_dir, remote, args, subject)
   )
 
   if result and result.code == 0 then
-    notification.info("Pushed " .. subject .. " to " .. remote, { dismiss = true })
-    Watcher.instance(workspace):dispatch_refresh()
+    if dry_run then
+      notification.info("Dry run complete: " .. subject .. " to " .. remote, { dismiss = true })
+    else
+      notification.info("Pushed " .. subject .. " to " .. remote, { dismiss = true })
+      Watcher.instance(workspace):dispatch_refresh()
+    end
   else
     notification.warn("Tag push failed: " .. git_push_error(result), { dismiss = true })
   end
@@ -267,7 +276,7 @@ function M.push_tag(popup)
   end
 
   local ref = "refs/tags/" .. name
-  run_git_tag_push(workspace, git_dir, remote, { ref .. ":" .. ref }, "tag " .. name)
+  run_git_tag_push(popup, workspace, git_dir, remote, { ref .. ":" .. ref }, "tag " .. name)
 end
 
 function M.push_all_tags(popup)
@@ -285,7 +294,7 @@ function M.push_all_tags(popup)
     return
   end
 
-  run_git_tag_push(workspace, git_dir, remote, { "--tags" }, "all local tags")
+  run_git_tag_push(popup, workspace, git_dir, remote, { "--tags" }, "all local tags")
 end
 
 return M

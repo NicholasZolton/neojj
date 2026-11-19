@@ -1000,13 +1000,19 @@ M.n_bookmark_popup = function(_self)
 end
 
 ---@param self StatusBuffer
+---@return table
+local function tag_popup_env(self)
+  local ctx = cursor_context(self)
+  local revision = (ctx.kind == "change" or ctx.kind == "bookmark" or ctx.kind == "tag") and ctx.change_id
+    or "@"
+  return { revision = revision }
+end
+
+---@param self StatusBuffer
 ---@return fun(): nil
 M.n_tag_popup = function(self)
   return popups.open("tag", function(p)
-    local ctx = cursor_context(self)
-    local revision = (ctx.kind == "change" or ctx.kind == "bookmark" or ctx.kind == "tag") and ctx.change_id
-      or "@"
-    p { revision = revision }
+    p(tag_popup_env(self))
   end)
 end
 
@@ -1043,7 +1049,7 @@ M.n_help_popup = function(self)
 
     p {
       bookmark = {},
-      tag = {},
+      tag = tag_popup_env(self),
       change = {},
       commit = {},
       diff = {
