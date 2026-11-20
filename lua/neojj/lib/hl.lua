@@ -19,6 +19,8 @@ local hl_store
 local M = {}
 
 local TEXT_CONTRAST = 4.6
+-- Aim slightly above 2:1 so RGB rounding still leaves a distinct inline region.
+local INLINE_BACKGROUND_CONTRAST = 2.1
 local INLINE_BACKGROUND_ACCENT = 0.45
 
 ---@param dec number
@@ -96,12 +98,13 @@ local function blend(first, second, amount)
   )
 end
 
----Keep the semantic hue while moving it toward black or white until it is readable.
+---Keep the hue while moving toward black or white to reach the requested contrast.
 ---@param accent Color
 ---@param background Color
+---@param minimum number
 ---@return string
-local function readable_accent(accent, background)
-  if contrast(accent, background) >= TEXT_CONTRAST then
+local function contrasting_color(accent, background, minimum)
+  if contrast(accent, background) >= minimum then
     return accent:to_css()
   end
 
@@ -112,7 +115,7 @@ local function readable_accent(accent, background)
   local high = 1
   for _ = 1, 12 do
     local midpoint = (low + high) / 2
-    if contrast(blend(accent, target, midpoint), background) >= TEXT_CONTRAST then
+    if contrast(blend(accent, target, midpoint), background) >= minimum then
       high = midpoint
     else
       low = midpoint
@@ -202,8 +205,17 @@ local function make_palette(config)
   }
 
   local palette = vim.tbl_extend("keep", config.highlight or {}, default)
-  palette.inline_green_fg = readable_accent(green, Color.from_hex(palette.inline_green))
-  palette.inline_red_fg = readable_accent(red, Color.from_hex(palette.inline_red))
+  for _, color in ipairs { "green", "red" } do
+    local inline = "inline_" .. color
+    if not config.highlight[inline] then
+      local line_bg = vim.api.nvim_get_color_by_name(palette["line_" .. color])
+      palette[inline] = contrasting_color(
+        Color.from_hex(palette[inline]), Color.from_hex("#" .. to_hex(line_bg)), INLINE_BACKGROUND_CONTRAST
+      )
+    end
+  end
+  palette.inline_green_fg = contrasting_color(green, Color.from_hex(palette.inline_green), TEXT_CONTRAST)
+  palette.inline_red_fg = contrasting_color(red, Color.from_hex(palette.inline_red), TEXT_CONTRAST)
   return palette
 end
 -- stylua: ignore end
