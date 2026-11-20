@@ -112,6 +112,37 @@ describe("jj_backend.jj_backing_git_dir — secondary workspaces", function()
   end)
 end)
 
+describe("jj_backend.colocated_git_dir", function()
+  it("rejects an external backing directory named .git", function()
+    local root = vim.fn.tempname()
+    local workspace = root .. "/workspace"
+    local external_git = root .. "/external/.git"
+    vim.fn.mkdir(workspace .. "/.jj/repo/store", "p")
+    vim.fn.mkdir(external_git, "p")
+    vim.fn.writefile({ external_git }, workspace .. "/.jj/repo/store/git_target")
+
+    assert.are.equal(canon(external_git), canon(jj_backend.jj_backing_git_dir(workspace)))
+    assert.is_nil(jj_backend.colocated_git_dir(workspace))
+  end)
+
+  it("rejects a non-colocated backing Git directory", function()
+    if skip_if_no_jj() then
+      return
+    end
+    local ws = harness.prepare_repository { colocated = false, cd = false }
+    assert.is_nil(jj_backend.colocated_git_dir(ws))
+  end)
+
+  it("resolves shared Git directory from a secondary colocated workspace", function()
+    if skip_if_no_jj() then
+      return
+    end
+    local primary = harness.prepare_repository { colocated = true, cd = false }
+    local secondary = harness.add_secondary_workspace(primary, "secondary-tag-push")
+    assert.are.equal(canon(primary .. "/.git"), canon(jj_backend.colocated_git_dir(secondary)))
+  end)
+end)
+
 describe("jj_backend.resolve_jj_repo_dir", function()
   it("returns nil when `.jj/repo` is absent", function()
     local tmp = vim.fn.tempname()

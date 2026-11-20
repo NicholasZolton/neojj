@@ -452,6 +452,34 @@ local SectionItemBookmark = Component.new(function(item)
   })
 end)
 
+local SectionItemTag = Component.new(function(item)
+  local label_highlight = item.conflict and "NeojjConflict" or "NeojjTagName"
+  local parts = {
+    text.highlight(label_highlight)(item.name),
+  }
+
+  if item.conflict then
+    table.insert(parts, text.highlight("NeojjConflict")(" (conflicted)"))
+  elseif item.deleted then
+    table.insert(parts, text.highlight("NeojjSubtleText")(" (deleted)"))
+  else
+    local change_id = (item.change_id or ""):sub(1, 8)
+    local prefix_len = item.shortest_prefix and #item.shortest_prefix or #change_id
+    table.insert(parts, text(" "))
+    table.insert(parts, text.highlight("NeojjChangeIdPrefix")(change_id:sub(1, prefix_len)))
+    table.insert(parts, text.highlight("NeojjChangeIdRest")(change_id:sub(prefix_len + 1)))
+    table.insert(parts, text(" "))
+    table.insert(parts, text(item.description and vim.split(item.description, "\n")[1] or "(no description)"))
+  end
+
+  return row(parts, {
+    kind = "tag",
+    yankable = item.name,
+    oid = (item.change_id and item.change_id ~= "") and item.change_id or nil,
+    item = item,
+  })
+end)
+
 local SectionItemConflict = Component.new(function(item)
   return row({
     text.highlight("NeojjGraphRed")("C "),
@@ -477,6 +505,9 @@ function M.Status(state, config)
 
   local bookmarks_hidden = config.sections and config.sections.bookmarks and config.sections.bookmarks.hidden
   local show_bookmarks = not bookmarks_hidden and state.bookmarks and #state.bookmarks.items > 0
+
+  local tags_hidden = config.sections and config.sections.tags and config.sections.tags.hidden
+  local show_tags = not tags_hidden and state.tags and #state.tags.items > 0
 
   local HEAD_padding = config.status and config.status.HEAD_padding or 10
 
@@ -540,6 +571,14 @@ function M.Status(state, config)
           items = state.recent.items,
           folded = config.sections and config.sections.recent and config.sections.recent.folded,
           name = "recent",
+        },
+        show_tags and Section {
+          title = SectionTitle { title = "Tags", highlight = "NeojjSectionBookmarks" },
+          count = true,
+          render = SectionItemTag,
+          items = state.tags.items,
+          folded = config.sections and config.sections.tags and config.sections.tags.folded,
+          name = "tags",
         },
         show_bookmarks and Section {
           title = SectionTitle { title = "Bookmarks", highlight = "NeojjSectionBookmarks" },

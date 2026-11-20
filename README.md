@@ -21,11 +21,11 @@ Neojj is a hard fork of [Neogit](https://github.com/NeogitOrg/neogit), adapted t
 
 **Maintainer:** [Nicholas Zolton](https://github.com/nicholaszolton)
 
-> **Note:** Some features (specifically diffview and codediff integration) currently require a [git-colocated repository](https://jj-vcs.github.io/jj/latest/git-compatibility/#co-located-jujutsugit-repos). Work is underway to remove this dependency.
+> **Note:** Diffview, codediff, and tag pushes require a [git-colocated repository](https://jj-vcs.github.io/jj/latest/git-compatibility/#co-located-jujutsugit-repos). Tag pushes also require `git` on `PATH`. Work is underway to remove this dependency for diff integrations.
 
 ## Installation
 
-Requires [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) to be installed and available on your `PATH`.
+Requires [jj (Jujutsu VCS)](https://github.com/jj-vcs/jj) >= 0.35, installed and available on your `PATH`. CI currently tests against jj 0.42.
 
 Here's an example spec for [Lazy](https://github.com/folke/lazy.nvim), but you're free to use whichever plugin manager suits you.
 
@@ -321,11 +321,7 @@ neojj.setup {
     hosts = {},
   },
   sections = {
-    files = {
-      folded = false,
-      hidden = false,
-    },
-    conflicts = {
+    sequencer = {
       folded = false,
       hidden = false,
     },
@@ -333,14 +329,18 @@ neojj.setup {
       folded = false,
       hidden = false,
     },
-    bookmarks = {
+    recent = {
       folded = true,
+      hidden = false,
+    },
+    bookmarks = {
+      folded = false,
       hidden = false,
       show_deleted = true,
       show_remote = true,
     },
-    recent = {
-      folded = true,
+    tags = {
+      folded = false,
       hidden = false,
     },
   },
@@ -389,6 +389,7 @@ neojj.setup {
       ["p"] = "PushPopup",
       ["r"] = "RebasePopup",
       ["s"] = "SquashPopup",
+      ["t"] = "TagPopup",
       ["u"] = "UndoPopup",
       ["w"] = "WorkspacePopup",
     },
@@ -452,6 +453,7 @@ The following popup menus are available from the status buffer (press `?` for th
 | `p` | **Push** | Push bookmarks to remotes |
 | `r` | **Rebase** | Rebase changes (single, range, onto revision) |
 | `s` | **Squash** | Squash changes into parent |
+| `t` | **Tag** | Create, move, or delete local tags |
 | `u` | **Undo** | Undo/redo jj operations |
 | `w` | **Workspace** | Add, delete, forget, rename, list workspaces. Quick-add to worktrees directory. |
 
@@ -465,7 +467,27 @@ The status buffer shows:
 - **Conflicts** section (if any unresolved conflicts exist)
 - **Modified files** with inline diff support (toggle with `<tab>`)
 - **Recent Changes** showing ancestor commits
+- **Tags** section with local tags
 - **Bookmarks** section with local and remote bookmarks (unpushed bookmarks marked with `*`)
+
+### Tags
+
+The `Tags` status section lists local tags. Configure its visibility and initial fold state with `sections.tags`:
+
+```lua
+neojj.setup {
+  sections = {
+    tags = {
+      folded = false,
+      hidden = false,
+    },
+  },
+}
+```
+
+Press `t` in status buffer to open **TagPopup**. Its actions are `t` **Tag**, `m` **Move tag**, and `x` **Delete local tag**. Moving a tag is an unrestricted local move: Neojj confirms it, rejects root, and warns before targeting the working-copy change because jj makes the tagged change immutable and creates a new working-copy child.
+
+PushPopup adds `T` **Tag** for one selected local tag and `t` **All tags**. These pushes use Git fallback, requiring `git` executable and colocated jj/Git repository. Neojj never forces tag updates or deletes remote tags.
 
 ### Context Actions
 

@@ -110,7 +110,6 @@ end
 
 ---@alias Popup
 ---| "bookmark"
----| "change"
 ---| "commit"
 ---| "diff"
 ---| "fetch"
@@ -120,10 +119,10 @@ end
 ---| "push"
 ---| "rebase"
 ---| "remote"
----| "resolve"
----| "split"
 ---| "squash"
----| "yank"
+---| "tag"
+---| "undo"
+---| "workspace"
 
 ---@class OpenOpts
 ---@field cwd string|nil
@@ -192,6 +191,9 @@ function M.action(popup, action, args)
             fn {
               close = function() end,
               state = { env = {} },
+              get_env = function(self, key)
+                return self.state.env[key]
+              end,
               get_arguments = function()
                 return args
               end,
@@ -247,7 +249,6 @@ function M.complete(arglead)
     "kind=",
     "cwd=",
     "bookmark",
-    "change",
     "commit",
     "diff",
     "fetch",
@@ -257,10 +258,10 @@ function M.complete(arglead)
     "push",
     "rebase",
     "remote",
-    "resolve",
-    "split",
     "squash",
-    "yank",
+    "tag",
+    "undo",
+    "workspace",
   })
 end
 

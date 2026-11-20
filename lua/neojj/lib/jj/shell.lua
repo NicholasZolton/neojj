@@ -83,7 +83,7 @@ end
 ---Execute a jj command using the resolved real binary via vim.system (no shim overhead)
 ---@param cmd string[] Command array where cmd[1] is "jj"
 ---@param cwd string Working directory
----@return string[]|nil lines, number code
+---@return string[]|nil lines, number code, string[] stderr
 function M.exec(cmd, cwd)
   local real_jj = M.resolve_jj()
 
@@ -95,10 +95,11 @@ function M.exec(cmd, cwd)
 
   local result = vim.system(real_cmd, { cwd = cwd, text = true }):wait()
 
+  local stderr = result.stderr and vim.split(result.stderr, "\n", { trimempty = true }) or {}
   if result.code == 0 and result.stdout and result.stdout ~= "" then
-    return vim.split(result.stdout, "\n", { trimempty = true }), result.code
+    return vim.split(result.stdout, "\n", { trimempty = true }), result.code, stderr
   end
-  return nil, result.code
+  return nil, result.code, stderr
 end
 
 ---Clear cached path (e.g., after mise install)

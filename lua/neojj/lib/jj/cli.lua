@@ -37,6 +37,7 @@ local runner = require("neojj.runner")
 ---@field all_remotes NeojjCliBuilder
 ---@field colocate NeojjCliBuilder
 ---@field allow_backwards NeojjCliBuilder
+---@field allow_move NeojjCliBuilder
 ---@field overwrite_existing NeojjCliBuilder
 ---@field all NeojjCliBuilder
 ---@field dry_run NeojjCliBuilder
@@ -92,6 +93,9 @@ local runner = require("neojj.runner")
 ---@field bookmark_rename NeojjCliBuilder
 ---@field bookmark_set NeojjCliBuilder
 ---@field bookmark_advance NeojjCliBuilder
+---@field tag_list NeojjCliBuilder
+---@field tag_set NeojjCliBuilder
+---@field tag_delete NeojjCliBuilder
 ---@field git_init NeojjCliBuilder
 ---@field git_push NeojjCliBuilder
 ---@field git_fetch NeojjCliBuilder
@@ -250,6 +254,7 @@ function M._build_cmd(tbl)
     ["log"] = true,
     ["show"] = true,
     ["bookmark list"] = true,
+    ["tag list"] = true,
     ["op log"] = true,
     ["file list"] = true,
     ["file annotate"] = true,
@@ -578,6 +583,30 @@ define_command("bookmark advance", {
     to = "--to",
   },
 })
+
+-- jj tag list
+define_command("tag list", {
+  flags = {
+    all_remotes = "--all-remotes",
+  },
+  options = {
+    template = "-T",
+    revisions = "-r",
+  },
+})
+
+-- jj tag set
+define_command("tag set", {
+  flags = {
+    allow_move = "--allow-move",
+  },
+  options = {
+    revision = "-r",
+  },
+})
+
+-- jj tag delete
+define_command("tag delete", {})
 
 -- jj git init
 define_command("git init", {

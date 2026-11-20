@@ -131,6 +131,7 @@ end
 ---@field recent NeojjConfigSection|nil
 ---@field sequencer NeojjConfigSection|nil
 ---@field bookmarks NeojjConfigSection|nil
+---@field tags NeojjConfigSection|nil
 
 ---@class HighlightOptions
 ---@field italic?     boolean
@@ -230,6 +231,7 @@ end
 ---| "SquashPopup"
 ---| "UndoPopup"
 ---| "BookmarkPopup"
+---| "TagPopup"
 ---| "WorkspacePopup"
 ---| false
 
@@ -472,6 +474,10 @@ function M.get_default_values()
         show_deleted = true,
         show_remote = true,
       },
+      tags = {
+        folded = false,
+        hidden = false,
+      },
     },
     ignored_settings = {},
     mappings = {
@@ -525,6 +531,7 @@ function M.get_default_values()
         ["s"] = "SquashPopup",
         ["u"] = "UndoPopup",
         ["b"] = "BookmarkPopup",
+        ["t"] = "TagPopup",
         ["w"] = "WorkspacePopup",
       },
       status = {

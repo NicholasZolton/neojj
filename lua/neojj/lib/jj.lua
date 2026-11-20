@@ -5,6 +5,7 @@
 ---@field log     NeojjLog
 ---@field diff    NeojjDiff
 ---@field bookmark NeojjBookmark
+---@field tag NeojjTag
 local JJ = {}
 
 setmetatable(JJ, {

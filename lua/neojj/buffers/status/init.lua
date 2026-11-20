@@ -204,6 +204,7 @@ function M:open(kind)
         [popups.mapping_for("RemotePopup")]     = self:_action("n_remote_popup"),
         [popups.mapping_for("SquashPopup")]     = self:_action("n_squash_popup"),
         [popups.mapping_for("UndoPopup")]      = self:_action("n_undo_popup"),
+        [popups.mapping_for("TagPopup")]       = self:_action("n_tag_popup"),
         [popups.mapping_for("WorkspacePopup")] = self:_action("n_workspace_popup"),
         ["b"]                                   = self:_action("n_bookmark_popup"),
         ["V"]                                   = function()

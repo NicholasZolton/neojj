@@ -164,7 +164,7 @@ function Ui:get_cursor_context(line)
   end)
 end
 
----@alias UiContextKind "change"|"file"|"bookmark"|"conflict"|"project"
+---@alias UiContextKind "change"|"file"|"bookmark"|"tag"|"conflict"|"project"
 
 ---@class UiContext
 ---@field kind UiContextKind

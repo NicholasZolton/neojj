@@ -373,7 +373,9 @@ function M:mappings()
             end
 
             action.callback(self)
-            Watcher.instance():dispatch_refresh()
+            if action.refresh ~= false then
+              Watcher.instance():dispatch_refresh()
+            end
           end)
         end
       else
