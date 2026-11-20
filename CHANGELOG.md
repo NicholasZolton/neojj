@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.9.0 (2026-11-20)
+
+## What's Changed
+* feat(tags): add tag management and publishing by @atimofeev in https://github.com/NicholasZolton/neojj/pull/57
+
+
+**Full Changelog**: https://github.com/NicholasZolton/neojj/compare/v1.8.2...v1.9.0
+
 ## 1.8.2 (2026-11-19)
 
 ## What's Changed
