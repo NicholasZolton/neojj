@@ -154,6 +154,9 @@ function M:open(kind)
     mappings = {
       v = {
         [mappings["Discard"]]                   = self:_action("v_discard"),
+        [mappings["SplitSelection"]]            = self:_action("v_split_selection"),
+        [mappings["CommitSelection"]]           = self:_action("v_commit_selection"),
+        [mappings["SquashSelection"]]           = self:_action("v_squash_selection"),
         [popups.mapping_for("DiffPopup")]       = self:_action("v_diff_popup"),
         [popups.mapping_for("HelpPopup")]       = self:_action("v_help_popup"),
         [popups.mapping_for("LogPopup")]        = self:_action("v_log_popup"),
@@ -177,6 +180,9 @@ function M:open(kind)
         [mappings["YankSelected"]]              = self:_action("n_yank_commit_hash"),
         [mappings["ShowRefs"]]                  = self:_action("n_yank_selected"),
         [mappings["Discard"]]                   = self:_action("n_context_delete"),
+        [mappings["SplitSelection"]]            = self:_action("n_split_selection"),
+        [mappings["CommitSelection"]]           = self:_action("n_commit_selection"),
+        [mappings["SquashSelection"]]           = self:_action("n_squash_selection"),
         [mappings["GoToNextHunkHeader"]]        = self:_action("n_go_to_next_hunk_header"),
         [mappings["GoToPreviousHunkHeader"]]    = self:_action("n_go_to_previous_hunk_header"),
         [mappings["GoToFile"]]                  = self:_action("n_goto_file"),
