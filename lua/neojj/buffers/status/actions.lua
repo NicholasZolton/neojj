@@ -16,7 +16,7 @@ local fn = vim.fn
 ---@field commit_id string|nil The commit ID under cursor (from item or the line's context node)
 ---@field bookmarks string[] Bookmark names rendered on the line
 ---@field section string|nil Section name (e.g. "files", "recent", "bookmarks")
----@field item StatusItem|nil The item under cursor (from get_selection)
+---@field item StatusItem|nil The item under cursor
 ---@field yank string|nil Raw yankable value under cursor
 ---@field immutable boolean Whether the change is immutable
 
@@ -25,10 +25,10 @@ local fn = vim.fn
 ---@param self StatusBuffer
 ---@return CursorContext
 local function cursor_context(self)
-  local selection = self.buffer.ui:get_selection()
   local ui_ctx = self.buffer.ui:context_under_cursor()
-  local item = selection.item
-  local section = selection.section and selection.section.name
+  local item = self.buffer.ui:get_item_under_cursor()
+  local current_section = self.buffer.ui:get_current_section()
+  local section = current_section and current_section.options.section
   local yank = self.buffer.ui:get_yankable_under_cursor()
 
   local change_id
@@ -87,29 +87,16 @@ local M = {}
 ---@param self StatusBuffer
 ---@return fun(): nil
 M.v_discard = function(self)
-  return a.void(function()
-    local selection = self.buffer.ui:get_selection()
+  return require("neojj.buffers.status.chunks").action(self, "discard", true)
+end
 
-    local file_count = 0
-    local files_to_restore = {}
-
-    for _, section in ipairs(selection.sections) do
-      if section.name == "files" then
-        file_count = file_count + #section.items
-        for _, item in ipairs(section.items) do
-          table.insert(files_to_restore, item.fileset_path)
-        end
-      end
-    end
-
-    if #files_to_restore > 0 then
-      local message = ("Discard %s files?"):format(file_count)
-      if input.get_permission(message) then
-        jj.cli.restore.files(unpack(files_to_restore)).call()
-        self:dispatch_refresh(nil, "v_discard")
-      end
-    end
-  end)
+for _, operation in ipairs { "split", "commit", "squash" } do
+  M["n_" .. operation .. "_selection"] = function(self)
+    return require("neojj.buffers.status.chunks").action(self, operation, false)
+  end
+  M["v_" .. operation .. "_selection"] = function(self)
+    return require("neojj.buffers.status.chunks").action(self, operation, true)
+  end
 end
 
 ---@param self StatusBuffer
@@ -423,46 +410,17 @@ end
 ---@return fun(): nil
 M.n_discard = function(self)
   return a.void(function()
-    local selection = self.buffer.ui:get_selection()
-    if not selection.section then
-      return
-    end
-
-    local section = selection.section.name
-    local action, message
-
-    if selection.item and selection.item.first == fn.line(".") then
-      -- Discard a single file
-      if section == "files" then
-        message = ("Discard %q?"):format(selection.item.name)
-        action = function()
-          jj.cli.restore.files(selection.item.fileset_path).call()
-        end
-      end
-    elseif selection.item then
-      -- Discard hunk - for now, restore the whole file
-      -- TODO: hunk-level restore when jj supports it
-      if section == "files" then
-        message = ("Discard changes in %q?"):format(selection.item.name)
-        action = function()
-          jj.cli.restore.files(selection.item.fileset_path).call()
-        end
-      end
-    else
-      -- Discard entire section
-      if section == "files" then
-        message = ("Discard all %s modified files?"):format(#selection.section.items)
-        action = function()
-          -- jj restore with no args restores all files
+    for _, section in ipairs(self.buffer.ui.item_index) do
+      if section.name == "files" and section.first == fn.line(".") then
+        if input.get_permission(("Discard all %s modified files?"):format(#section.items)) then
+          -- Restore the whole tree without interpreting status's rename display paths.
           jj.cli.restore.call()
+          self:dispatch_refresh(nil, "n_discard")
         end
+        return
       end
     end
-
-    if action and input.get_permission(message) then
-      action()
-      self:dispatch_refresh(nil, "n_discard")
-    end
+    require("neojj.buffers.status.chunks").action(self, "discard", false)()
   end)
 end
 
@@ -470,6 +428,11 @@ end
 ---@return fun(): nil
 M.n_context_delete = function(self)
   return a.void(function()
+    local section = self.buffer.ui:get_current_section()
+    if section and section.options.section == "files" then
+      M.n_discard(self)()
+      return
+    end
     local ctx = cursor_context(self)
     if not ctx.section then
       return
@@ -477,30 +440,7 @@ M.n_context_delete = function(self)
 
     local item = ctx.item
 
-    if ctx.section == "files" then
-      -- Delegate to discard logic for files
-      local action, message
-      if item and item.first == fn.line(".") then
-        message = ("Discard %q?"):format(item.name)
-        action = function()
-          jj.cli.restore.files(item.fileset_path).call()
-        end
-      elseif item then
-        message = ("Discard changes in %q?"):format(item.name)
-        action = function()
-          jj.cli.restore.files(item.fileset_path).call()
-        end
-      else
-        message = "Discard all modified files?"
-        action = function()
-          jj.cli.restore.call()
-        end
-      end
-      if action and input.get_permission(message) then
-        action()
-        self:dispatch_refresh(nil, "n_context_delete")
-      end
-    elseif ctx.section == "recent" and item then
+    if ctx.section == "recent" and item then
       common.abandon_at_cursor(item, function()
         self:dispatch_refresh(nil, "n_context_delete")
       end)
@@ -1039,15 +979,17 @@ end
 ---@return fun(): nil
 M.n_help_popup = function(self)
   return popups.open("help", function(p)
-    local section = self.buffer.ui:get_selection().section
-    local section_name
-    if section then
-      section_name = section.name
-    end
-
+    local section = self.buffer.ui:get_current_section()
+    local section_name = section and section.options.section
+    local item = self.buffer.ui:get_item_under_cursor()
     local ref = self.buffer.ui:get_commit_under_cursor() or self.buffer.ui:get_yankable_under_cursor()
 
     p {
+      context = {
+        section = section_name,
+        remote = item and item.remote,
+        deleted = item and item.deleted,
+      },
       bookmark = {},
       tag = tag_popup_env(self),
       change = {},

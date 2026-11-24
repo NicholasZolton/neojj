@@ -429,9 +429,11 @@ define_command("new", {
 define_command("commit", {
   flags = {
     reset_author = "--reset-author",
+    interactive = "-i",
   },
   options = {
     message = "-m",
+    tool = "--tool",
   },
 })
 
@@ -447,6 +449,7 @@ define_command("squash", {
     from = "--from",
     into = "--into",
     message = "-m",
+    tool = "--tool",
   },
 })
 
@@ -457,6 +460,8 @@ define_command("split", {
   },
   options = {
     revision = "-r",
+    tool = "--tool",
+    message = "-m",
   },
 })
 
@@ -468,7 +473,11 @@ define_command("abandon", {})
 
 -- jj restore
 define_command("restore", {
+  flags = {
+    interactive = "-i",
+  },
   options = {
+    tool = "--tool",
     from = "--from",
     to = "--to",
     revision = "-r",
@@ -691,6 +700,7 @@ define_command("revert", {
 -- jj diffedit
 define_command("diffedit", {
   options = {
+    tool = "--tool",
     revision = "-r",
     from = "--from",
     to = "--to",

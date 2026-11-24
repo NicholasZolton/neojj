@@ -1,3 +1,5 @@
+local fileset = require("neojj.lib.jj.fileset")
+
 local insert = table.insert
 
 ---@class Diff
@@ -232,7 +234,7 @@ function M.build(item)
           "diff",
           "--git",
           "--",
-          "file:" .. item.name,
+          fileset.root_file(item.name),
         }, target_cwd)
         lines = lines or {}
 
@@ -323,7 +325,7 @@ function M.file_diff(item, revision)
   if revision then
     builder = builder.revision(revision)
   end
-  local result = builder.files("file:" .. item.name).call { hidden = true, trim = true }
+  local result = builder.files(fileset.root_file(item.name)).call { hidden = true, trim = true }
   if result and result.code == 0 then
     return result.stdout
   end

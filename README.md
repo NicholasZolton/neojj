@@ -136,6 +136,36 @@ If you are coming from git, here are some key differences in jj:
 - **Operations log and undo**: Every jj operation is recorded. You can undo any operation with `jj undo`.
 - **First-class conflicts**: Conflicts are recorded in commits rather than blocking operations. You can continue working and resolve them later.
 
+### Chunk Commands
+
+Expand a file with `<Tab>`, then act directly on its diff:
+
+| Key | Action |
+| --- | --- |
+| `x` | Discard selection (with confirmation) |
+| `S` | Split selection into a commit |
+| `C` | Commit selection, leaving remaining changes in the working copy |
+| `gs` | Squash selection into the parent, keeping its description |
+
+Normal mode selects the hunk under the cursor, the entire file on its header,
+or all changed files on the files-section header. Visual mode selects changed
+lines across hunks and files; selecting a file or hunk header includes that
+entire file or hunk. Folded headers work too. Selecting only context does
+nothing. Commit and split use NeoJJ's existing multiline description editor;
+cancelling it aborts the operation. Existing `c` and `s` popups are unchanged.
+
+Like Neogit, visual selection acts on literal `+` and `-` diff rows, not inferred
+old/new line pairs. Select both sides to move a complete replacement. There is
+no Git-style staging index: these commands perform real Jujutsu operations.
+Recover with the undo popup (`u`) or `jj undo`.
+
+Chunk commands validate the displayed revision and cached hunks, use Jujutsu's
+transactional diff editor, and preserve CRLF and missing final newlines. Tested
+with jj 0.41. Chunk editing requires regular files and conflict-free source and
+parent revisions; binary files, symlinks and executable-bit changes must be
+selected as whole files. Renamed/copied chunks and blockwise visual selections
+are unsupported. See [chunk command details](docs/chunk-commands.md).
+
 ## Configuration
 
 You can configure Neojj by running the `require('neojj').setup {}` function, passing a table as the argument.
