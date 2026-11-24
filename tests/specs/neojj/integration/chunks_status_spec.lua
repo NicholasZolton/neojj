@@ -19,13 +19,15 @@ local function contents(first, last)
 end
 
 describe("chunk commands in rendered status", function()
-  local cwd, status, permission
+  local cwd, status, permission, encode
   before_each(function()
     cwd = vim.fn.getcwd()
     permission = input.get_permission
+    encode = vim.json.encode
   end)
   after_each(function()
     input.get_permission = permission
+    vim.json.encode = encode
     vim.cmd("normal! \27")
     if status then
       local win = status.buffer and status.buffer.win_handle
@@ -114,15 +116,24 @@ describe("chunk commands in rendered status", function()
     assert.are.same({ "line 1", "line 2", "line 3" }, vim.fn.readfile(root .. "/a.txt"))
   end)
 
-  it("maps normal x to one hunk and visual x to selected diff rows, then refreshes", function()
+  it("discards a hunk or selected diff rows in a nested file, then refreshes", function()
     local root = harness.prepare_repository { cd = true }
-    vim.fn.writefile(contents(), root .. "/a.txt")
+    local path = root .. "/nested/a.txt"
+    vim.fn.mkdir(vim.fs.dirname(path))
+    vim.fn.writefile(contents(), path)
     run(root, "describe", "-m", "status base")
     run(root, "new")
     require("neojj").setup { disable_hint = true, kind = "split" }
 
+    -- Reproduce Neovim 0.10's JSON slash escaping on newer versions.
+    if encode("/") == '"/"' then
+      vim.json.encode = function(value)
+        return (encode(value):gsub("/", "\\/"))
+      end
+    end
+
     for _, visual in ipairs { false, true } do
-      vim.fn.writefile(contents("first changed", "last changed"), root .. "/a.txt")
+      vim.fn.writefile(contents("first changed", "last changed"), path)
       if status then
         require("neojj.lib.jj").repo:refresh()
         status:redraw()
@@ -194,7 +205,7 @@ describe("chunk commands in rendered status", function()
               return false
             end
           end
-          return vim.fn.readfile(root .. "/a.txt")[2] ~= "first changed"
+          return vim.fn.readfile(path)[2] ~= "first changed"
         end),
         "status did not refresh after mapped command"
       )
@@ -203,7 +214,7 @@ describe("chunk commands in rendered status", function()
       if visual then
         table.remove(expected, 2)
       end
-      assert.are.same(expected, vim.fn.readfile(root .. "/a.txt"))
+      assert.are.same(expected, vim.fn.readfile(path))
       assert.is_true(vim.fn.mode() ~= "V")
     end
   end)

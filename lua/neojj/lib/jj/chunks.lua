@@ -1,3 +1,5 @@
+local fileset = require("neojj.lib.jj.fileset")
+
 local M = {}
 local source = debug.getinfo(1, "S").source:sub(2)
 local plugin_root = vim.fn.fnamemodify(source, ":p:h:h:h:h:h")
@@ -36,9 +38,9 @@ function M.run(selection, operation, message)
 
   local paths, whole = {}, true
   for _, file in ipairs(selection.files) do
-    table.insert(paths, "root-file:" .. vim.json.encode(file.path))
+    table.insert(paths, fileset.root_file(file.path))
     if file.original_path then
-      table.insert(paths, "root-file:" .. vim.json.encode(file.original_path))
+      table.insert(paths, fileset.root_file(file.original_path))
     end
     whole = whole and file.whole == true
   end
