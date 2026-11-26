@@ -140,6 +140,22 @@ describe("status chunk selection", function()
     end)
   end)
 
+  it("selects both paths of a parsed rename as a whole file", function()
+    local ui = make_ui()
+    local item =
+      require("neojj.lib.jj.status").parse_diff_summary({ "R {old.txt => new.txt}" }, "/workspace")[1]
+    ui.item_index[1].items[1] = vim.tbl_extend("force", ui.item_index[1].items[1], item)
+    move(2)
+    local file = select(ui).files[1]
+    assert.is_true(file.whole)
+    assert.are.equal("new.txt", file.path)
+    assert.are.equal("old.txt", file.original_path)
+    move(5)
+    assert.has_error(function()
+      select(ui)
+    end)
+  end)
+
   it("rejects chunks of renamed and conflicted files instead of broadening scope", function()
     local ui = make_ui()
     ui.item_index[1].items[1].original_name = "old.txt"

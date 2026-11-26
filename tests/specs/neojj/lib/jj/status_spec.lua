@@ -96,6 +96,44 @@ describe("jj status parser", function()
     end)
   end)
 
+  for _, parser in ipairs { "parse_diff_summary", "parse_status_files" } do
+    describe(parser .. " renames", function()
+      local function parse(line)
+        local lines = parser == "parse_status_files" and { "Working copy changes:", line } or { line }
+        return status[parser](lines, "/workspace")[1]
+      end
+
+      it("stores destination paths separately from the source", function()
+        local item = parse("R rules/{old.yaml => new.yaml}")
+        assert.are.equal("R", item.mode)
+        assert.are.equal("rules/new.yaml", item.name)
+        assert.are.equal("rules/old.yaml", item.original_name)
+        assert.are.equal("/workspace/rules/new.yaml", item.absolute_path)
+        assert.are.equal("rules/new.yaml", item.escaped_path)
+        assert.are.equal("file:rules/new.yaml", item.fileset_path)
+      end)
+
+      it("handles directory renames and escaped destination paths", function()
+        local item = parse("R src/{old dir => new dir}/file.txt")
+        assert.are.equal("src/new dir/file.txt", item.name)
+        assert.are.equal("src/old dir/file.txt", item.original_name)
+        assert.are.equal("/workspace/src/new dir/file.txt", item.absolute_path)
+        assert.are.equal(vim.fn.fnameescape(item.name), item.escaped_path)
+      end)
+
+      it("preserves literal rename notation in ordinary filenames", function()
+        local item = parse("M {old => new}.txt")
+        assert.are.equal("{old => new}.txt", item.name)
+        assert.is_nil(item.original_name)
+      end)
+
+      it("keeps copy mutations guarded until their source scope is supported", function()
+        local item = parse("C {source => copy}.txt")
+        assert.is_nil(item.original_name)
+      end)
+    end)
+  end
+
   describe("parse_diff_summary", function()
     it("parses modified file entries", function()
       local files = status.parse_diff_summary({ "M hello.txt" }, "/workspace")

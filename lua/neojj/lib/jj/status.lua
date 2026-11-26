@@ -1,3 +1,5 @@
+local paths = require("neojj.lib.jj.paths")
+
 ---@class NeojjStatus
 ---@field parse_diff_summary fun(lines: string[], root: string): NeojjFileItem[]
 ---@field parse_status_files fun(lines: string[], root: string): NeojjFileItem[]
@@ -17,6 +19,27 @@ local function jj_exec(cmd, cwd)
   return shell.exec(cmd, cwd)
 end
 
+---@param mode string
+---@param name string
+---@param root string
+---@return NeojjFileItem
+local function file_item(mode, name, root)
+  local original_name
+  if mode == "R" then
+    name, original_name = paths.parse(name, mode)
+  end
+  return {
+    name = name,
+    mode = mode,
+    absolute_path = root .. "/" .. name,
+    escaped_path = vim.fn.fnameescape(name),
+    fileset_path = "file:" .. name,
+    original_name = original_name,
+    diff = nil,
+    folded = nil,
+  }
+end
+
 ---Parse `jj diff --summary` output into file items
 ---@param lines string[]
 ---@param root string Workspace root for absolute paths
@@ -26,16 +49,7 @@ function M.parse_diff_summary(lines, root)
   for _, line in ipairs(lines) do
     local mode, name = line:match("^(%a)%s+(.+)$")
     if mode and name then
-      table.insert(items, {
-        name = name,
-        mode = mode,
-        absolute_path = root .. "/" .. name,
-        escaped_path = vim.fn.fnameescape(name),
-        fileset_path = "file:" .. name,
-        original_name = nil,
-        diff = nil,
-        folded = nil,
-      })
+      table.insert(items, file_item(mode, name, root))
     end
   end
   return items
@@ -55,16 +69,7 @@ function M.parse_status_files(lines, root)
     elseif in_changes then
       local mode, name = line:match("^(%a)%s+(.+)$")
       if mode and name then
-        table.insert(items, {
-          name = name,
-          mode = mode,
-          absolute_path = root .. "/" .. name,
-          escaped_path = vim.fn.fnameescape(name),
-          fileset_path = "file:" .. name,
-          original_name = nil,
-          diff = nil,
-          folded = nil,
-        })
+        table.insert(items, file_item(mode, name, root))
       else
         in_changes = false
       end

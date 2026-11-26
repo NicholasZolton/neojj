@@ -210,7 +210,7 @@ end
 ---Supports both sync (vim.system:wait) and async (plenary.async) contexts.
 ---@param item NeojjFileItem
 function M.build(item)
-  local name = paths.parse(item.name, item.mode)
+  local name = paths.parse(item.name, item.mode, item.original_name)
   local empty_diff = {
     kind = "modified",
     lines = {},
@@ -337,7 +337,7 @@ function M.file_diff(item, revision)
   if revision then
     builder = builder.revision(revision)
   end
-  local name = paths.parse(item.name, item.mode)
+  local name = paths.parse(item.name, item.mode, item.original_name)
   local result = builder.files(fileset.root_file(name)).call { hidden = true, trim = true }
   if result and result.code == 0 then
     return result.stdout

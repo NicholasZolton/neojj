@@ -35,6 +35,12 @@ describe("jj display paths", function()
     end
   end)
 
+  it("does not expand an already normalized destination a second time", function()
+    local name, original_name = paths.parse("{old => new}.txt", "R", "source.txt")
+    assert.are.equal("{old => new}.txt", name)
+    assert.are.equal("source.txt", original_name)
+  end)
+
   it("preserves paths without rename notation", function()
     local name, original_name = paths.parse("new.txt", "R")
     assert.are.equal("new.txt", name)
