@@ -1,4 +1,5 @@
 local fileset = require("neojj.lib.jj.fileset")
+local paths = require("neojj.lib.jj.paths")
 
 local insert = table.insert
 
@@ -44,9 +45,13 @@ local function build_file(header, kind)
   if kind == "modified" then
     return header[3] and header[3]:match("%-%-%- ./(.*)") or ""
   elseif kind == "renamed" then
-    local from = header[3] and header[3]:match("rename from (.*)") or ""
-    local to = header[4] and header[4]:match("rename to (.*)") or ""
-    return ("%s -> %s"):format(from, to)
+    for _, line in ipairs(header) do
+      local to = line:match("^rename to (.*)")
+      if to then
+        return to
+      end
+    end
+    return ""
   elseif kind == "new file" then
     return header[5] and header[5]:match("%+%+%+ b/(.*)") or ""
   elseif kind == "deleted file" then
@@ -63,9 +68,15 @@ local function build_kind(header)
   local info = {}
   local header_count = #header
 
-  if header_count >= 4 and header[2]:match("^similarity index") then
+  local from, to
+  for _, line in ipairs(header) do
+    from = line:match("^rename from .+") or from
+    to = line:match("^rename to .+") or to
+  end
+
+  if from and to then
     kind = "renamed"
-    info = { header[3], header[4] }
+    info = { from, to }
   elseif header_count == 4 then
     kind = "modified"
   elseif header_count == 5 then
@@ -199,10 +210,11 @@ end
 ---Supports both sync (vim.system:wait) and async (plenary.async) contexts.
 ---@param item NeojjFileItem
 function M.build(item)
+  local name = paths.parse(item.name, item.mode)
   local empty_diff = {
     kind = "modified",
     lines = {},
-    file = item.name,
+    file = name,
     info = {},
     stats = { additions = 0, deletions = 0 },
     hunks = {},
@@ -234,7 +246,7 @@ function M.build(item)
           "diff",
           "--git",
           "--",
-          fileset.root_file(item.name),
+          fileset.root_file(name),
         }, target_cwd)
         lines = lines or {}
 
@@ -325,7 +337,8 @@ function M.file_diff(item, revision)
   if revision then
     builder = builder.revision(revision)
   end
-  local result = builder.files(fileset.root_file(item.name)).call { hidden = true, trim = true }
+  local name = paths.parse(item.name, item.mode)
+  local result = builder.files(fileset.root_file(name)).call { hidden = true, trim = true }
   if result and result.code == 0 then
     return result.stdout
   end

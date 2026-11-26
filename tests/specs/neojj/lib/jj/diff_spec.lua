@@ -2,6 +2,48 @@ local diff = require("neojj.lib.jj.diff")
 
 describe("jj diff parser", function()
   describe("parse", function()
+    for _, similarity in ipairs { false, true } do
+      it(
+        "parses a modified rename " .. (similarity and "with" or "without") .. " a similarity index",
+        function()
+          local raw = {
+            "diff --git a/rules/old.yaml b/rules/new.yaml",
+            "rename from rules/old.yaml",
+            "rename to rules/new.yaml",
+            "index aaa..bbb 100644",
+            "--- a/rules/old.yaml",
+            "+++ b/rules/new.yaml",
+            "@@ -1,2 +1,2 @@",
+            "-Name: old",
+            "+Name: new",
+            " Priority: 22",
+          }
+          if similarity then
+            table.insert(raw, 2, "similarity index 50%")
+          end
+          local parsed = diff.parse(raw)
+          assert.are.equal("renamed", parsed.kind)
+          assert.are.equal("rules/new.yaml", parsed.file)
+          assert.are.same({ "rename from rules/old.yaml", "rename to rules/new.yaml" }, parsed.info)
+          assert.are.equal(1, #parsed.hunks)
+          assert.are.equal("rules/new.yaml", parsed.hunks[1].file)
+          assert.are.same({ "-Name: old", "+Name: new", " Priority: 22" }, parsed.hunks[1].lines)
+        end
+      )
+    end
+
+    it("parses a rename without content changes", function()
+      local parsed = diff.parse {
+        "diff --git a/old.txt b/new.txt",
+        "rename from old.txt",
+        "rename to new.txt",
+      }
+      assert.are.equal("renamed", parsed.kind)
+      assert.are.equal("new.txt", parsed.file)
+      assert.are.same({ "rename from old.txt", "rename to new.txt" }, parsed.info)
+      assert.are.same({}, parsed.hunks)
+    end)
+
     it("handles modified files", function()
       local raw = {
         "diff --git a/hello.txt b/hello.txt",
