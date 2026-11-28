@@ -97,6 +97,17 @@ describe("jj status parser", function()
   end)
 
   describe("parse_diff_summary", function()
+    it("keeps a text-only rename displayable without treating it as a path", function()
+      local label = "{old => draft.txt => new.txt}"
+      local files = status.parse_diff_summary({ "R " .. label }, "/workspace")
+      assert.are.same({ name = label, mode = "R" }, files[1])
+
+      local diff = require("neojj.lib.jj.diff")
+      diff.build(files[1])
+      assert.are.same({}, files[1].diff.lines)
+      assert.are.same({}, diff.file_diff(files[1]))
+    end)
+
     it("parses modified file entries", function()
       local files = status.parse_diff_summary({ "M hello.txt" }, "/workspace")
       assert.are.equal(1, #files)

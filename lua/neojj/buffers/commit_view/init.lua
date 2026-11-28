@@ -255,8 +255,8 @@ local function diff_visit_file(self, component, worktree)
     return
   end
 
-  local path = vim.trim(hunk.file)
-  if path == "" then
+  local path = hunk.file
+  if not path or path == "" then
     notification.warn("Unable to determine file path for diff line")
     return
   end
