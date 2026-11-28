@@ -2,6 +2,100 @@ local diff = require("neojj.lib.jj.diff")
 
 describe("jj diff parser", function()
   describe("parse", function()
+    for _, similarity in ipairs { false, true } do
+      it(
+        "parses a modified rename " .. (similarity and "with" or "without") .. " a similarity index",
+        function()
+          local raw = {
+            "diff --git a/rules/old.yaml b/rules/new.yaml",
+            "rename from rules/old.yaml",
+            "rename to rules/new.yaml",
+            "index aaa..bbb 100644",
+            "--- a/rules/old.yaml",
+            "+++ b/rules/new.yaml",
+            "@@ -1,2 +1,2 @@",
+            "-Name: old",
+            "+Name: new",
+            " Priority: 22",
+          }
+          if similarity then
+            table.insert(raw, 2, "similarity index 50%")
+          end
+          local parsed = diff.parse(raw)
+          assert.are.equal("renamed", parsed.kind)
+          assert.are.equal("rules/new.yaml", parsed.file)
+          assert.are.equal("rules/old.yaml", parsed.original_file)
+          assert.are.same({ "rename from rules/old.yaml", "rename to rules/new.yaml" }, parsed.info)
+          assert.are.equal(1, #parsed.hunks)
+          assert.are.equal("rules/new.yaml", parsed.hunks[1].file)
+          assert.are.equal("rules/old.yaml", parsed.hunks[1].original_file)
+          assert.are.same({ "-Name: old", "+Name: new", " Priority: 22" }, parsed.hunks[1].lines)
+        end
+      )
+    end
+
+    it("parses a rename without content changes", function()
+      local parsed = diff.parse {
+        "diff --git a/old.txt b/new.txt",
+        "rename from old.txt",
+        "rename to new.txt",
+      }
+      assert.are.equal("renamed", parsed.kind)
+      assert.are.equal("new.txt", parsed.file)
+      assert.are.equal("old.txt", parsed.original_file)
+      assert.are.same({ "rename from old.txt", "rename to new.txt" }, parsed.info)
+      assert.are.same({}, parsed.hunks)
+    end)
+
+    for _, prefixes in ipairs { true, false } do
+      it("parses a binary rename with mode changes and prefixes=" .. tostring(prefixes), function()
+        local left = (prefixes and "a/" or "") .. "old.txt"
+        local right = (prefixes and "b/" or "") .. "new.txt"
+        local parsed = diff.parse {
+          "diff --git " .. left .. " " .. right,
+          "rename from old.txt",
+          "rename to new.txt",
+          "old mode 100644",
+          "new mode 100755",
+          "index aaa..bbb",
+          "Binary files " .. left .. " and " .. right .. " differ",
+        }
+        assert.are.equal("renamed", parsed.kind)
+        assert.are.equal("new.txt", parsed.file)
+        assert.are.equal("old.txt", parsed.original_file)
+      end)
+    end
+
+    for _, paths in ipairs {
+      { "old\nname.txt", "new.txt" },
+      { "old.txt", "new\nname.txt" },
+      { "old.txt", "new\nrename to other.txt" },
+    } do
+      it("does not expose paths from an ambiguous rename header: " .. vim.inspect(paths), function()
+        local source, target = paths[1], paths[2]
+        local raw = vim.split(
+          table.concat({
+            "diff --git a/" .. source .. " b/" .. target,
+            "rename from " .. source,
+            "rename to " .. target,
+            "index aaa..bbb 100644",
+            "--- a/" .. source,
+            "+++ b/" .. target,
+            "@@ -1 +1 @@",
+            "-old",
+            "+new",
+          }, "\n"),
+          "\n",
+          { plain = true }
+        )
+        local parsed = diff.parse(raw)
+        assert.are.equal("", parsed.file)
+        assert.is_nil(parsed.original_file)
+        assert.are.equal("", parsed.hunks[1].file)
+        assert.is_nil(parsed.hunks[1].original_file)
+      end)
+    end
+
     it("handles modified files", function()
       local raw = {
         "diff --git a/hello.txt b/hello.txt",

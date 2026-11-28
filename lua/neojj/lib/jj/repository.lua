@@ -16,9 +16,9 @@
 
 ---@class NeojjFileItem
 ---@field name string File path
----@field absolute_path string Full file path
----@field escaped_path string Vim-escaped path
----@field fileset_path string jj fileset-safe path (file: prefixed)
+---@field absolute_path? string Full file path, absent for unresolved renames/copies
+---@field escaped_path? string Vim-escaped path
+---@field fileset_path? string jj fileset-safe path (file: prefixed)
 ---@field mode string "M", "A", "D", "R"
 ---@field original_name string|nil For renames
 ---@field diff any|nil Lazy-loaded diff

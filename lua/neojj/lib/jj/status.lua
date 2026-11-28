@@ -17,6 +17,67 @@ local function jj_exec(cmd, cwd)
   return shell.exec(cmd, cwd)
 end
 
+---@param mode string
+---@param name string
+---@param root string
+---@param source? string
+---@return NeojjFileItem
+local function file_item(mode, name, root, source)
+  if (mode == "R" or mode == "C") and not source then
+    return { name = name, mode = mode }
+  end
+  return {
+    name = name,
+    mode = mode,
+    absolute_path = root .. "/" .. name,
+    escaped_path = vim.fn.fnameescape(name),
+    fileset_path = "file:" .. name,
+    original_name = mode == "R" and source or nil,
+  }
+end
+
+local diff_modes = { modified = "M", added = "A", removed = "D", renamed = "R", copied = "C" }
+local diff_template =
+  [["[" ++ json(status) ++ "," ++ json(source.path()) ++ "," ++ json(target.path()) ++ "]\n"]]
+
+---Read paths from the same revision as status instead of splitting its display text.
+---@param root string
+---@param commit_id string
+---@return NeojjFileItem[]|nil
+local function read_diff_files(root, commit_id)
+  if commit_id == "" then
+    return nil
+  end
+  local lines = jj_exec({
+    "jj",
+    "--no-pager",
+    "--color=never",
+    "--ignore-working-copy",
+    "diff",
+    "-r",
+    commit_id,
+    "-T",
+    diff_template,
+  }, root)
+  if not lines then
+    return nil
+  end
+
+  local items = {}
+  for _, line in ipairs(lines) do
+    local ok, entry = pcall(vim.json.decode, line)
+    if not ok or type(entry) ~= "table" then
+      return nil
+    end
+    local mode, source, target = diff_modes[entry[1]], entry[2], entry[3]
+    if not mode or type(source) ~= "string" or source == "" or type(target) ~= "string" or target == "" then
+      return nil
+    end
+    table.insert(items, file_item(mode, mode == "D" and source or target, root, source))
+  end
+  return items
+end
+
 ---Parse `jj diff --summary` output into file items
 ---@param lines string[]
 ---@param root string Workspace root for absolute paths
@@ -26,16 +87,7 @@ function M.parse_diff_summary(lines, root)
   for _, line in ipairs(lines) do
     local mode, name = line:match("^(%a)%s+(.+)$")
     if mode and name then
-      table.insert(items, {
-        name = name,
-        mode = mode,
-        absolute_path = root .. "/" .. name,
-        escaped_path = vim.fn.fnameescape(name),
-        fileset_path = "file:" .. name,
-        original_name = nil,
-        diff = nil,
-        folded = nil,
-      })
+      table.insert(items, file_item(mode, name, root))
     end
   end
   return items
@@ -55,16 +107,7 @@ function M.parse_status_files(lines, root)
     elseif in_changes then
       local mode, name = line:match("^(%a)%s+(.+)$")
       if mode and name then
-        table.insert(items, {
-          name = name,
-          mode = mode,
-          absolute_path = root .. "/" .. name,
-          escaped_path = vim.fn.fnameescape(name),
-          fileset_path = "file:" .. name,
-          original_name = nil,
-          diff = nil,
-          folded = nil,
-        })
+        table.insert(items, file_item(mode, name, root))
       else
         in_changes = false
       end
@@ -180,11 +223,17 @@ end
 function meta.update(state)
   local cwd = state.worktree_root
 
-  -- Single jj status call: parses files, head/parent info, and conflicts
   local status_lines = jj_exec({ "jj", "--no-pager", "--color=never", "status" }, cwd)
   if status_lines then
-    -- Parse file changes from "Working copy changes:" section
-    state.files.items = M.parse_status_files(status_lines, cwd)
+    local parsed = M.parse_status_lines(status_lines)
+    local items = M.parse_status_files(status_lines, cwd)
+    for _, item in ipairs(items) do
+      if item.mode == "R" or item.mode == "C" then
+        items = read_diff_files(cwd, parsed.head.commit_id) or items
+        break
+      end
+    end
+    state.files.items = items
 
     -- Attach lazy diff loading to each file item
     local jj_diff = require("neojj.lib.jj.diff")
@@ -194,7 +243,6 @@ function meta.update(state)
 
     -- Parse head/parent info
     local picker_cache = require("neojj.lib.picker_cache")
-    local parsed = M.parse_status_lines(status_lines)
     state.head.change_id = parsed.head.change_id
     state.head.commit_id = parsed.head.commit_id
     state.head.empty = parsed.head.empty
