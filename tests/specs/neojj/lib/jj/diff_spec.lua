@@ -2,6 +2,31 @@ local diff = require("neojj.lib.jj.diff")
 
 describe("jj diff parser", function()
   describe("parse", function()
+    for _, with_similarity in ipairs { false, true } do
+      it("parses a rename with similarity index " .. tostring(with_similarity), function()
+        local raw = {
+          "diff --git a/rules/old.yaml b/rules/new.yaml",
+          "rename from rules/old.yaml",
+          "rename to rules/new.yaml",
+          "index aaa..bbb 100644",
+          "--- a/rules/old.yaml",
+          "+++ b/rules/new.yaml",
+          "@@ -1 +1 @@",
+          "-old",
+          "+new",
+        }
+        if with_similarity then
+          table.insert(raw, 2, "similarity index 50%")
+        end
+        local parsed = diff.parse(raw)
+        assert.are.equal("renamed", parsed.kind)
+        assert.are.equal("rules/new.yaml", parsed.file)
+        assert.are.same({ "rename from rules/old.yaml", "rename to rules/new.yaml" }, parsed.info)
+        assert.are.equal("rules/new.yaml", parsed.hunks[1].file)
+        assert.are.same({ "-old", "+new" }, parsed.hunks[1].lines)
+      end)
+    end
+
     it("handles modified files", function()
       local raw = {
         "diff --git a/hello.txt b/hello.txt",

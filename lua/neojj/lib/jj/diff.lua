@@ -37,16 +37,65 @@ local function build_diff_header(output)
   return header, start_idx
 end
 
+---JJ writes paths with literal newlines in Git headers. Only trust an intact rename header.
+---@param header string[]
+---@param info string[]
+---@param has_hunks boolean
+---@return string
+local function rename_file(header, info, has_hunks)
+  local source = info[1]:sub(#"rename from " + 1)
+  local destination = info[2]:sub(#"rename to " + 1)
+  local left, right = "a/" .. source, "b/" .. destination
+  if header[1] == "diff --git " .. source .. " " .. destination then
+    left, right = source, destination
+  elseif header[1] ~= "diff --git " .. left .. " " .. right then
+    return ""
+  end
+
+  local first = header[2]:match("^similarity index %d+%%$") and 3 or 2
+  if header[first] ~= info[1] or header[first + 1] ~= info[2] then
+    return ""
+  end
+
+  local next_line = first + 2
+  if
+    (header[next_line] or ""):match("^old mode %d+$")
+    and (header[next_line + 1] or ""):match("^new mode %d+$")
+  then
+    next_line = next_line + 2
+  end
+  if (header[next_line] or ""):match("^index %x+%.%.%x+ *%d*$") then
+    next_line = next_line + 1
+  end
+  if has_hunks then
+    if
+      #header == next_line + 1
+      and header[next_line] == "--- " .. left
+      and header[next_line + 1] == "+++ " .. right
+    then
+      return destination
+    end
+  elseif
+    #header < next_line
+    or (
+      #header == next_line and header[next_line] == "Binary files " .. left .. " and " .. right .. " differ"
+    )
+  then
+    return destination
+  end
+  return ""
+end
+
 ---@param header string[]
 ---@param kind string
+---@param info string[]
+---@param has_hunks boolean
 ---@return string
-local function build_file(header, kind)
+local function build_file(header, kind, info, has_hunks)
   if kind == "modified" then
     return header[3] and header[3]:match("%-%-%- ./(.*)") or ""
   elseif kind == "renamed" then
-    local from = header[3] and header[3]:match("rename from (.*)") or ""
-    local to = header[4] and header[4]:match("rename to (.*)") or ""
-    return ("%s -> %s"):format(from, to)
+    return rename_file(header, info, has_hunks)
   elseif kind == "new file" then
     return header[5] and header[5]:match("%+%+%+ b/(.*)") or ""
   elseif kind == "deleted file" then
@@ -63,10 +112,16 @@ local function build_kind(header)
   local info = {}
   local header_count = #header
 
-  if header_count >= 4 and header[2]:match("^similarity index") then
-    kind = "renamed"
-    info = { header[3], header[4] }
-  elseif header_count == 4 then
+  local from, to
+  for _, line in ipairs(header) do
+    from = line:match("^rename from .+") or from
+    to = line:match("^rename to .+") or to
+  end
+  if from and to then
+    return "renamed", { from, to }
+  end
+
+  if header_count == 4 then
     kind = "modified"
   elseif header_count == 5 then
     kind = header[2]:match("(.*) mode %d+") or header[3]:match("(.*) mode %d+") or ""
@@ -173,7 +228,7 @@ function M.parse(raw_diff)
   local lines = build_lines(raw_diff, start_idx)
   local hunks = build_hunks(lines)
   local kind, info = build_kind(header)
-  local file = build_file(header, kind)
+  local file = build_file(header, kind, info, #hunks > 0)
 
   for _, hunk in ipairs(hunks) do
     hunk.file = file
@@ -207,6 +262,10 @@ function M.build(item)
     stats = { additions = 0, deletions = 0 },
     hunks = {},
   }
+  if (item.mode == "R" or item.mode == "C") and not item.absolute_path then
+    item.diff = empty_diff
+    return
+  end
 
   setmetatable(item, {
     __index = function(self, method)
@@ -320,6 +379,10 @@ end
 ---@param revision? string
 ---@return string[] Raw diff lines for this file
 function M.file_diff(item, revision)
+  if (item.mode == "R" or item.mode == "C") and not item.absolute_path then
+    return {}
+  end
+
   local jj = require("neojj.lib.jj")
   local builder = jj.cli.diff.git
   if revision then
