@@ -140,10 +140,9 @@ describe("status chunk selection", function()
     end)
   end)
 
-  it("selects both paths of a parsed rename as a whole file", function()
+  it("selects both paths of a resolved rename as a whole file", function()
     local ui = make_ui()
-    local item =
-      require("neojj.lib.jj.status").parse_diff_summary({ "R {old.txt => new.txt}" }, "/workspace")[1]
+    local item = { mode = "R", name = "new.txt", original_name = "old.txt" }
     ui.item_index[1].items[1] = vim.tbl_extend("force", ui.item_index[1].items[1], item)
     move(2)
     local file = select(ui).files[1]
@@ -154,6 +153,18 @@ describe("status chunk selection", function()
     assert.has_error(function()
       select(ui)
     end)
+  end)
+
+  it("rejects unresolved rename labels even for whole-file selections", function()
+    local ui = make_ui()
+    local item = require("neojj.lib.jj.status").parse_diff_summary({
+      "R {old => draft.txt => new.txt}",
+    }, "/workspace")[1]
+    ui.item_index[1].items[1] = vim.tbl_extend("force", ui.item_index[1].items[1], item)
+    move(2)
+    assert.has_error(function()
+      select(ui)
+    end, "Status has no separate source/destination paths for this rename/copy; use native jj commands")
   end)
 
   it("rejects chunks of renamed and conflicted files instead of broadening scope", function()

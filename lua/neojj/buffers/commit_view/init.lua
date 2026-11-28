@@ -255,8 +255,8 @@ local function diff_visit_file(self, component, worktree)
     return
   end
 
-  local path = vim.trim(hunk.file)
-  if path == "" then
+  local path = hunk.file
+  if not path or path == "" then
     notification.warn("Unable to determine file path for diff line")
     return
   end
@@ -276,6 +276,9 @@ local function diff_visit_file(self, component, worktree)
     if not target_commit then
       notification.warn("Unable to retrieve parent change")
       return nil, cursor
+    end
+    if location.line:sub(1, 1) == "-" then
+      path = hunk.original_file or path
     end
     jump.goto_file_in_commit_at(target_commit, path, cursor, get_reopen_cb(self))
   end

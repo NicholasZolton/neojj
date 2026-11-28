@@ -1,6 +1,5 @@
 local harness = require("tests.util.jj_harness")
 local diff = require("neojj.lib.jj.diff")
-local status = require("neojj.lib.jj.status")
 
 local function run(root, ...)
   local cmd = { "jj", "--no-pager", "--color=never", "-R", root }
@@ -48,16 +47,15 @@ for _, colocated in ipairs { false, true } do
         end
         vim.fn.writefile({ "unrelated edit" }, root .. "/a.txt")
 
-        local items = status.parse_status_files(run(root, "status"), root)
+        local repo = require("neojj.lib.jj").repo
+        repo:refresh()
         local item
-        for _, candidate in ipairs(items) do
+        for _, candidate in ipairs(repo.state.files.items) do
           if candidate.mode == "R" then
             item = candidate
           end
         end
         assert.is_not_nil(item, "fixture must contain a detected rename")
-        diff.build(item)
-
         local raw = require("plenary.async").util.block_on(function()
           return diff.file_diff(item, "@")
         end)

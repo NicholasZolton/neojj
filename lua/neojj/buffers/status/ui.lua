@@ -305,7 +305,7 @@ local SectionItemFile = function(section, config)
     return col.tag("Item")({
       row {
         text.highlight(highlight)(mode_text),
-        text(name),
+        text(vim.fn.strtrans(name)),
       },
     }, {
       foldable = true,
@@ -314,8 +314,8 @@ local SectionItemFile = function(section, config)
       context = true,
       id = ("%s--%s"):format(section, item.name),
       kind = "file",
-      yankable = item.name,
-      filename = item.name,
+      yankable = item.absolute_path and item.name,
+      filename = item.absolute_path and item.name,
       item = item,
     })
   end)

@@ -1,5 +1,4 @@
 local fileset = require("neojj.lib.jj.fileset")
-local paths = require("neojj.lib.jj.paths")
 
 local insert = table.insert
 
@@ -7,6 +6,7 @@ local insert = table.insert
 ---@field kind string
 ---@field lines string[]
 ---@field file string
+---@field original_file? string Source path of an unambiguous rename
 ---@field info table
 ---@field stats { additions: integer, deletions: integer }
 ---@field hunks Hunk[]
@@ -38,20 +38,65 @@ local function build_diff_header(output)
   return header, start_idx
 end
 
+---JJ writes paths with literal newlines in Git headers. Only trust an intact rename header.
+---@param header string[]
+---@param info string[]
+---@param has_hunks boolean
+---@return string, string|nil
+local function rename_file(header, info, has_hunks)
+  local source = info[1]:sub(#"rename from " + 1)
+  local destination = info[2]:sub(#"rename to " + 1)
+  local left, right = "a/" .. source, "b/" .. destination
+  if header[1] == "diff --git " .. source .. " " .. destination then
+    left, right = source, destination
+  elseif header[1] ~= "diff --git " .. left .. " " .. right then
+    return ""
+  end
+
+  local first = header[2]:match("^similarity index %d+%%$") and 3 or 2
+  if header[first] ~= info[1] or header[first + 1] ~= info[2] then
+    return ""
+  end
+
+  local next_line = first + 2
+  if
+    (header[next_line] or ""):match("^old mode %d+$")
+    and (header[next_line + 1] or ""):match("^new mode %d+$")
+  then
+    next_line = next_line + 2
+  end
+  if (header[next_line] or ""):match("^index %x+%.%.%x+ *%d*$") then
+    next_line = next_line + 1
+  end
+  if has_hunks then
+    if
+      #header == next_line + 1
+      and header[next_line] == "--- " .. left
+      and header[next_line + 1] == "+++ " .. right
+    then
+      return destination, source
+    end
+  elseif
+    #header < next_line
+    or (
+      #header == next_line and header[next_line] == "Binary files " .. left .. " and " .. right .. " differ"
+    )
+  then
+    return destination, source
+  end
+  return ""
+end
+
 ---@param header string[]
 ---@param kind string
----@return string
-local function build_file(header, kind)
+---@param info string[]
+---@param has_hunks boolean
+---@return string, string|nil
+local function build_file(header, kind, info, has_hunks)
   if kind == "modified" then
     return header[3] and header[3]:match("%-%-%- ./(.*)") or ""
   elseif kind == "renamed" then
-    for _, line in ipairs(header) do
-      local to = line:match("^rename to (.*)")
-      if to then
-        return to
-      end
-    end
-    return ""
+    return rename_file(header, info, has_hunks)
   elseif kind == "new file" then
     return header[5] and header[5]:match("%+%+%+ b/(.*)") or ""
   elseif kind == "deleted file" then
@@ -184,16 +229,18 @@ function M.parse(raw_diff)
   local lines = build_lines(raw_diff, start_idx)
   local hunks = build_hunks(lines)
   local kind, info = build_kind(header)
-  local file = build_file(header, kind)
+  local file, original_file = build_file(header, kind, info, #hunks > 0)
 
   for _, hunk in ipairs(hunks) do
     hunk.file = file
+    hunk.original_file = original_file
   end
 
   return {
     kind = kind,
     lines = lines,
     file = file,
+    original_file = original_file,
     info = info,
     stats = { additions = 0, deletions = 0 },
     hunks = hunks,
@@ -210,15 +257,18 @@ end
 ---Supports both sync (vim.system:wait) and async (plenary.async) contexts.
 ---@param item NeojjFileItem
 function M.build(item)
-  local name = paths.parse(item.name, item.mode, item.original_name)
   local empty_diff = {
     kind = "modified",
     lines = {},
-    file = name,
+    file = item.name,
     info = {},
     stats = { additions = 0, deletions = 0 },
     hunks = {},
   }
+  if (item.mode == "R" or item.mode == "C") and not item.absolute_path then
+    item.diff = empty_diff
+    return
+  end
 
   setmetatable(item, {
     __index = function(self, method)
@@ -246,7 +296,7 @@ function M.build(item)
           "diff",
           "--git",
           "--",
-          fileset.root_file(name),
+          fileset.root_file(item.name),
         }, target_cwd)
         lines = lines or {}
 
@@ -332,13 +382,16 @@ end
 ---@param revision? string
 ---@return string[] Raw diff lines for this file
 function M.file_diff(item, revision)
+  if (item.mode == "R" or item.mode == "C") and not item.absolute_path then
+    return {}
+  end
+
   local jj = require("neojj.lib.jj")
   local builder = jj.cli.diff.git
   if revision then
     builder = builder.revision(revision)
   end
-  local name = paths.parse(item.name, item.mode, item.original_name)
-  local result = builder.files(fileset.root_file(name)).call { hidden = true, trim = true }
+  local result = builder.files(fileset.root_file(item.name)).call { hidden = true, trim = true }
   if result and result.code == 0 then
     return result.stdout
   end

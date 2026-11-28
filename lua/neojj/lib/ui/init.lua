@@ -15,6 +15,7 @@ local logger = require("neojj.logger")
 ---@field hash string|nil
 ---@field lines string[]
 ---@field file string|nil
+---@field original_file? string Source path of an unambiguous rename
 ---@field first integer|nil
 ---@field last integer|nil
 

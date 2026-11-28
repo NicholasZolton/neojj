@@ -103,23 +103,20 @@ describe("jj status parser", function()
         return status[parser](lines, "/workspace")[1]
       end
 
-      it("stores destination paths separately from the source", function()
-        local item = parse("R rules/{old.yaml => new.yaml}")
-        assert.are.equal("R", item.mode)
-        assert.are.equal("rules/new.yaml", item.name)
-        assert.are.equal("rules/old.yaml", item.original_name)
-        assert.are.equal("/workspace/rules/new.yaml", item.absolute_path)
-        assert.are.equal("rules/new.yaml", item.escaped_path)
-        assert.are.equal("file:rules/new.yaml", item.fileset_path)
-      end)
-
-      it("handles directory renames and escaped destination paths", function()
-        local item = parse("R src/{old dir => new dir}/file.txt")
-        assert.are.equal("src/new dir/file.txt", item.name)
-        assert.are.equal("src/old dir/file.txt", item.original_name)
-        assert.are.equal("/workspace/src/new dir/file.txt", item.absolute_path)
-        assert.are.equal(vim.fn.fnameescape(item.name), item.escaped_path)
-      end)
+      for _, name in ipairs {
+        "rules/{old.yaml => new.yaml}",
+        "src/{old dir => new dir}/file.txt",
+        "{old => draft.txt => new.txt}",
+      } do
+        it("keeps an unresolved rename display-only: " .. name, function()
+          local item = parse("R " .. name)
+          assert.are.same({ name = name, mode = "R" }, item)
+          local diff = require("neojj.lib.jj.diff")
+          diff.build(item)
+          assert.are.same({}, item.diff.lines)
+          assert.are.same({}, diff.file_diff(item))
+        end)
+      end
 
       it("preserves literal rename notation in ordinary filenames", function()
         local item = parse("M {old => new}.txt")
@@ -129,7 +126,7 @@ describe("jj status parser", function()
 
       it("keeps copy mutations guarded until their source scope is supported", function()
         local item = parse("C {source => copy}.txt")
-        assert.is_nil(item.original_name)
+        assert.are.same({ name = "{source => copy}.txt", mode = "C" }, item)
       end)
     end)
   end
@@ -186,6 +183,112 @@ describe("jj status parser", function()
       }, "/workspace")
       assert.are.equal(1, #files)
       assert.are.equal("hello.txt", files[1].name)
+    end)
+  end)
+
+  describe("structured rename paths", function()
+    local shell = require("neojj.lib.jj.shell")
+    local exec, calls, state, status_lines, diff_lines
+
+    before_each(function()
+      exec = shell.exec
+      calls = {}
+      state = require("neojj.lib.jj.repository").Repo.new("/workspace").state
+      status_lines = {
+        "Working copy changes:",
+        "R {old => draft.txt => new.txt}",
+        "Working copy  (@) : muvqvxnn 7809cff3 (no description set)",
+        "Parent commit (@-): tvonrrpo 63990385 initial commit",
+      }
+      diff_lines = { vim.json.encode { "renamed", "old => draft.txt", "new.txt" } }
+      shell.exec = function(cmd, cwd)
+        assert.are.equal("/workspace", cwd)
+        table.insert(calls, cmd)
+        if cmd[4] == "status" then
+          return status_lines, 0, {}
+        end
+        return diff_lines, diff_lines and 0 or 1, {}
+      end
+    end)
+
+    after_each(function()
+      shell.exec = exec
+    end)
+
+    it("reads exact paths at the status revision without another snapshot", function()
+      status.meta.update(state)
+      assert.are.equal(2, #calls)
+      assert.are.same({
+        "jj",
+        "--no-pager",
+        "--color=never",
+        "--ignore-working-copy",
+        "diff",
+        "-r",
+        "7809cff3",
+        "-T",
+      }, vim.list_slice(calls[2], 1, 8))
+      local item = state.files.items[1]
+      assert.are.equal("new.txt", item.name)
+      assert.are.equal("old => draft.txt", item.original_name)
+      assert.are.equal("/workspace/new.txt", item.absolute_path)
+    end)
+
+    it("preserves special paths and handles other changes in the same response", function()
+      local target = " new\n{literal => name}.txt "
+      diff_lines = {
+        vim.json.encode { "renamed", "old => draft.txt", target },
+        vim.json.encode { "added", "added.txt", "added.txt" },
+        vim.json.encode { "removed", "deleted.txt", "deleted.txt" },
+        vim.json.encode { "modified", "edited.txt", "edited.txt" },
+        vim.json.encode { "copied", "source.txt", "copy.txt" },
+      }
+      status.meta.update(state)
+      local items = state.files.items
+      assert.are.equal(5, #items)
+      assert.are.equal(target, items[1].name)
+      assert.are.equal("/workspace/" .. target, items[1].absolute_path)
+      assert.are.equal(vim.fn.fnameescape(target), items[1].escaped_path)
+      assert.are.equal("file:" .. target, items[1].fileset_path)
+      assert.are.equal("A", items[2].mode)
+      assert.are.equal("deleted.txt", items[3].name)
+      assert.are.equal("D", items[3].mode)
+      assert.are.equal("M", items[4].mode)
+      assert.are.equal("copy.txt", items[5].name)
+      assert.is_nil(items[5].original_name)
+    end)
+
+    for _, response in ipairs {
+      { name = "failed command" },
+      { name = "invalid JSON", lines = { "not JSON" } },
+      { name = "unknown status", lines = { ' ["unknown","old","new"]' } },
+      { name = "missing path", lines = { '["renamed","old",null]' } },
+      { name = "empty path", lines = { '["renamed","old",""]' } },
+      { name = "partial response", lines = { '["renamed","old","new"]', "invalid" } },
+    } do
+      it("leaves renames non-actionable after " .. response.name, function()
+        diff_lines = response.lines
+        status.meta.update(state)
+        local item = state.files.items[1]
+        assert.are.equal("{old => draft.txt => new.txt}", item.name)
+        assert.is_nil(item.absolute_path)
+        assert.is_nil(item.original_name)
+        assert.are.same({}, item.diff.lines)
+      end)
+    end
+
+    it("does not query metadata without a status commit", function()
+      status_lines = { "Working copy changes:", "R {old => new}" }
+      status.meta.update(state)
+      assert.are.equal(1, #calls)
+      assert.is_nil(state.files.items[1].absolute_path)
+    end)
+
+    it("does not add a query for ordinary modified files", function()
+      status_lines[2] = "M file.txt"
+      status.meta.update(state)
+      assert.are.equal(1, #calls)
+      assert.are.equal("/workspace/file.txt", state.files.items[1].absolute_path)
     end)
   end)
 
